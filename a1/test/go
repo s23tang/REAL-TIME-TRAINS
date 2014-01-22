@@ -1,2 +1,3 @@
+rm /u/cs452/tftp/ARM/wt/wtA1.elf
 cp wtA1.elf /u/cs452/tftp/ARM/wt/wtA1.elf
 chmod a+rw /u/cs452/tftp/ARM/wt/wtA1.elf
