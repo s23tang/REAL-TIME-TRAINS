@@ -21,11 +21,31 @@ typedef struct {
 	int spsr;
 	int retVal;
 	enum { ACTIVE, READY, BLOCKED, ZOMBIE } state;
+	unsigned int tid;
+	unsigned int parentTid;
+	struct TD *nextTask;
 } TD;
 
-// not sure if this is needed
-typedef struct {
+/*
+ *	A simple queue of a linked list of TD's
+ */
+typedef struct Queues{
+	TD *headOfQueue;
+	TD *tailOfQueue;
+};
 
+/*
+ *	Request structure, initialized in main and
+ *	passed around
+ */
+typedef struct {
+	int arg0;
+	int arg1;
+	int arg2;
+	int arg3;
+	unsigned int freeTid;
+	TD *freeList;
+	TD **priorityQueues;
 } Request;
 
 void firstUserTask() {
