@@ -1,23 +1,4 @@
 	.file	"wtA1.c"
-	.text
-	.align	2
-	.global	testFunc
-	.type	testFunc, %function
-testFunc:
-	@ args = 0, pretend = 0, frame = 16
-	@ frame_needed = 1, uses_anonymous_args = 0
-	mov	ip, sp
-	stmfd	sp!, {fp, ip, lr, pc}
-	sub	fp, ip, #4
-	sub	sp, sp, #16
-	str	r0, [fp, #-16]
-	str	r1, [fp, #-20]
-	str	r2, [fp, #-24]
-	str	r3, [fp, #-28]
-	swi 1
-	sub	sp, fp, #12
-	ldmfd	sp, {fp, sp, pc}
-	.size	testFunc, .-testFunc
 	.section	.rodata
 	.align	2
 .LC0:
@@ -38,36 +19,31 @@ firstUserTask:
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	ldr	sl, .L7
-.L6:
+	ldr	sl, .L5
+.L4:
 	add	sl, pc, sl
 	mov	r0, #1
-	ldr	r3, .L7+4
+	ldr	r3, .L5+4
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
-.L4:
+.L2:
 	mov	r0, #1
-	ldr	r3, .L7+8
+	ldr	r3, .L5+8
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
-	mov	r0, #33
-	mov	r1, #34
-	mov	r2, #35
-	mov	r3, #36
-	bl	testFunc(PLT)
 	swi
 	mov	r0, #1
-	ldr	r3, .L7+12
+	ldr	r3, .L5+12
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
-	b	.L4
-.L8:
+	b	.L2
+.L6:
 	.align	2
-.L7:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L6+8)
+.L5:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L4+8)
 	.word	.LC0(GOTOFF)
 	.word	.LC1(GOTOFF)
 	.word	.LC2(GOTOFF)
@@ -85,6 +61,7 @@ Create:
 	str	r0, [fp, #-16]
 	str	r1, [fp, #-20]
 	swi 1
+	mov pc, lr
 	mov	r3, #0
 	mov	r0, r3
 	sub	sp, fp, #12
@@ -99,6 +76,8 @@ MyTid:
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
+	swi 2
+	mov pc, lr
 	mov	r3, #0
 	mov	r0, r3
 	ldmfd	sp, {fp, sp, pc}
@@ -112,6 +91,8 @@ MyParentTid:
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
+	swi 3
+	mov pc, lr
 	mov	r3, #0
 	mov	r0, r3
 	ldmfd	sp, {fp, sp, pc}
@@ -125,6 +106,7 @@ Pass:
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
+	swi 4
 	ldmfd	sp, {fp, sp, pc}
 	.size	Pass, .-Pass
 	.align	2
@@ -136,13 +118,9 @@ Exit:
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
+	swi 5
 	ldmfd	sp, {fp, sp, pc}
 	.size	Exit, .-Exit
-	.section	.rodata
-	.align	2
-.LC3:
-	.ascii	"args: %d %d %d %d %d\012\015\000"
-	.text
 	.align	2
 	.global	getNextRequest
 	.type	getNextRequest, %function
@@ -152,13 +130,13 @@ getNextRequest:
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #24
-	ldr	sl, .L23
-.L22:
+	sub	sp, sp, #12
+	ldr	sl, .L21
+.L20:
 	add	sl, pc, sl
 	str	r0, [fp, #-24]
 	str	r1, [fp, #-28]
-	ldr	r3, .L23+4
+	ldr	r3, .L21+4
 	add	r3, sl, r3
 	str	r3, [fp, #-20]
 	mov	r2, #40
@@ -184,7 +162,7 @@ getNextRequest:
 	msr SPSR, r2
 	mov lr, r3
 	movs pc, lr
-.L20:
+.L18:
 	stmfd sp!, {r0-r3}
 	ldr r0, [lr, #-4];
 	bic r1, r0, #0xFF000000
@@ -215,34 +193,13 @@ getNextRequest:
 	ldmfd sp!, {r0, r4-r9, sl, fp}
 	str ip, [r0, #0]
 	str r1, [r0, #4]
-	ldr	r3, [fp, #-28]
-	ldr	ip, [r3, #0]
-	ldr	r3, [fp, #-28]
-	ldr	lr, [r3, #4]
-	ldr	r3, [fp, #-28]
-	ldr	r2, [r3, #8]
-	ldr	r3, [fp, #-28]
-	ldr	r1, [r3, #12]
-	ldr	r3, [fp, #-28]
-	ldr	r3, [r3, #16]
-	str	r2, [sp, #0]
-	str	r1, [sp, #4]
-	str	r3, [sp, #8]
-	mov	r0, #1
-	ldr	r3, .L23+8
-	add	r3, sl, r3
-	mov	r1, r3
-	mov	r2, ip
-	mov	r3, lr
-	bl	bwprintf(PLT)
 	sub	sp, fp, #16
 	ldmfd	sp, {sl, fp, sp, pc}
-.L24:
+.L22:
 	.align	2
-.L23:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L22+8)
-	.word	.L20(GOTOFF)
-	.word	.LC3(GOTOFF)
+.L21:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L20+8)
+	.word	.L18(GOTOFF)
 	.size	getNextRequest, .-getNextRequest
 	.align	2
 	.global	initialize
@@ -254,16 +211,16 @@ initialize:
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #20
-	ldr	sl, .L34
-.L33:
+	ldr	sl, .L32
+.L31:
 	add	sl, pc, sl
 	str	r0, [fp, #-28]
 	str	r1, [fp, #-32]
 	str	r2, [fp, #-36]
 	mov	r3, #0
 	str	r3, [fp, #-24]
-	b	.L26
-.L27:
+	b	.L24
+.L25:
 	ldr	r3, [fp, #-24]
 	mov	r3, r3, asl #3
 	mov	r2, r3
@@ -274,15 +231,15 @@ initialize:
 	ldr	r3, [fp, #-24]
 	add	r3, r3, #1
 	str	r3, [fp, #-24]
-.L26:
+.L24:
 	ldr	r3, [fp, #-24]
 	cmp	r3, #7
-	bls	.L27
+	bls	.L25
 	ldr	r2, [fp, #-28]
-	ldr	r3, .L34+4
+	ldr	r3, .L32+4
 	str	r3, [r2, #0]
 	ldr	r2, [fp, #-28]
-	ldr	r3, .L34+8
+	ldr	r3, .L32+8
 	str	r3, [r2, #4]
 	ldr	r2, [fp, #-28]
 	mov	r3, #0
@@ -299,7 +256,7 @@ initialize:
 	ldr	r2, [fp, #-28]
 	mov	r3, #0
 	str	r3, [r2, #24]
-	ldr	r3, .L34+12
+	ldr	r3, .L32+12
 	ldr	r3, [sl, r3]
 	str	r3, [fp, #-20]
 	ldr	r3, [fp, #-28]
@@ -309,8 +266,8 @@ initialize:
 	str	r3, [r2, #0]
 	mov	r3, #12
 	str	r3, [fp, #-24]
-	b	.L29
-.L30:
+	b	.L27
+.L28:
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #0]
 	sub	r2, r3, #4
@@ -323,10 +280,10 @@ initialize:
 	ldr	r3, [fp, #-24]
 	sub	r3, r3, #1
 	str	r3, [fp, #-24]
-.L29:
+.L27:
 	ldr	r3, [fp, #-24]
 	cmp	r3, #3
-	bhi	.L30
+	bhi	.L28
 	ldr	r3, [fp, #-32]
 	add	r2, r3, #8
 	ldr	r3, [fp, #-28]
@@ -340,16 +297,16 @@ initialize:
 	str	r3, [r2, #20]
 	ldr	r2, [fp, #-36]
 	ldr	r3, [fp, #-28]
-	str	r3, [r2, #24]
+	str	r3, [r2, #28]
 	ldr	r2, [fp, #-36]
 	ldr	r3, [fp, #-32]
-	str	r3, [r2, #28]
+	str	r3, [r2, #32]
 	sub	sp, fp, #16
 	ldmfd	sp, {sl, fp, sp, pc}
-.L35:
+.L33:
 	.align	2
-.L34:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L33+8)
+.L32:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L31+8)
 	.word	1286400
 	.word	1610612752
 	.word	firstUserTask(GOT)
@@ -358,17 +315,18 @@ initialize:
 	.global	schedule
 	.type	schedule, %function
 schedule:
-	@ args = 0, pretend = 0, frame = 16
+	@ args = 0, pretend = 0, frame = 20
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #16
+	sub	sp, sp, #20
 	str	r0, [fp, #-24]
+	str	r1, [fp, #-28]
 	mov	r3, #0
 	str	r3, [fp, #-20]
-	b	.L37
-.L38:
+	b	.L35
+.L36:
 	ldr	r3, [fp, #-20]
 	mov	r3, r3, asl #3
 	mov	r2, r3
@@ -376,7 +334,7 @@ schedule:
 	add	r3, r2, r3
 	ldr	r3, [r3, #0]
 	cmp	r3, #0
-	beq	.L39
+	beq	.L37
 	ldr	r3, [fp, #-20]
 	mov	r3, r3, asl #3
 	mov	r2, r3
@@ -387,7 +345,7 @@ schedule:
 	ldr	r3, [fp, #-16]
 	ldr	r3, [r3, #24]
 	cmp	r3, #0
-	beq	.L41
+	beq	.L39
 	ldr	r3, [fp, #-20]
 	mov	r3, r3, asl #3
 	mov	r2, r3
@@ -411,35 +369,38 @@ schedule:
 	add	r2, r2, r3
 	ldr	r3, [fp, #-16]
 	str	r3, [r2, #4]
-.L41:
-	ldr	r3, [fp, #-16]
-	str	r3, [fp, #-28]
-	b	.L43
 .L39:
+	ldr	r2, [fp, #-28]
+	ldr	r3, [fp, #-20]
+	str	r3, [r2, #24]
+	ldr	r3, [fp, #-16]
+	str	r3, [fp, #-32]
+	b	.L41
+.L37:
 	ldr	r3, [fp, #-20]
 	add	r3, r3, #1
 	str	r3, [fp, #-20]
-.L37:
+.L35:
 	ldr	r3, [fp, #-20]
 	cmp	r3, #7
-	bls	.L38
+	bls	.L36
 	mov	r3, #0
-	str	r3, [fp, #-28]
-.L43:
-	ldr	r3, [fp, #-28]
+	str	r3, [fp, #-32]
+.L41:
+	ldr	r3, [fp, #-32]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
 	.size	schedule, .-schedule
 	.section	.rodata
 	.align	2
-.LC4:
+.LC3:
 	.ascii	"kerxit.c: Hello.\012\015\000"
 	.align	2
-.LC5:
+.LC4:
 	.ascii	"kerxit.c: Activating.\012\015\000"
 	.align	2
-.LC6:
+.LC5:
 	.ascii	"kerxit.c: Good-bye.\012\015\000"
 	.text
 	.align	2
@@ -452,18 +413,18 @@ kerxit:
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #8
-	ldr	sl, .L49
-.L48:
+	ldr	sl, .L47
+.L46:
 	add	sl, pc, sl
 	str	r0, [fp, #-20]
 	str	r1, [fp, #-24]
 	mov	r0, #1
-	ldr	r3, .L49+4
+	ldr	r3, .L47+4
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
 	mov	r0, #1
-	ldr	r3, .L49+8
+	ldr	r3, .L47+8
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
@@ -471,32 +432,33 @@ kerxit:
 	ldr	r1, [fp, #-24]
 	bl	getNextRequest(PLT)
 	mov	r0, #1
-	ldr	r3, .L49+12
+	ldr	r3, .L47+12
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
 	sub	sp, fp, #16
 	ldmfd	sp, {sl, fp, sp, pc}
-.L50:
+.L48:
 	.align	2
-.L49:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L48+8)
+.L47:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L46+8)
+	.word	.LC3(GOTOFF)
 	.word	.LC4(GOTOFF)
 	.word	.LC5(GOTOFF)
-	.word	.LC6(GOTOFF)
 	.size	kerxit, .-kerxit
 	.align	2
 	.global	handle
 	.type	handle, %function
 handle:
-	@ args = 0, pretend = 0, frame = 8
+	@ args = 0, pretend = 0, frame = 12
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #8
+	sub	sp, sp, #12
 	str	r0, [fp, #-16]
 	str	r1, [fp, #-20]
+	str	r2, [fp, #-24]
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
 	.size	handle, .-handle
@@ -504,62 +466,68 @@ handle:
 	.global	main
 	.type	main, %function
 main:
-	@ args = 0, pretend = 0, frame = 1040
+	@ args = 0, pretend = 0, frame = 1044
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #1040
-	str	r0, [fp, #-1044]
-	str	r1, [fp, #-1048]
+	sub	sp, sp, #4
+	str	r0, [fp, #-1048]
+	str	r1, [fp, #-1052]
 	sub	r2, fp, #944
 	sub	r1, fp, #1008
 	sub	r3, fp, #1024
 	sub	r3, r3, #12
-	sub	r3, r3, #4
+	sub	r3, r3, #8
 	mov	r0, r2
 	mov	r2, r3
 	bl	initialize(PLT)
 	mov	r3, #0
 	str	r3, [fp, #-20]
-	b	.L54
-.L55:
-	sub	r3, fp, #1008
-	mov	r0, r3
+	b	.L52
+.L53:
+	sub	r2, fp, #1008
+	sub	r3, fp, #1024
+	sub	r3, r3, #12
+	sub	r3, r3, #8
+	mov	r0, r2
+	mov	r1, r3
 	bl	schedule(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-16]
 	ldr	r3, [fp, #-16]
 	cmp	r3, #0
-	bne	.L56
+	bne	.L54
 	mov	r3, #0
-	str	r3, [fp, #-1052]
-	b	.L58
-.L56:
+	str	r3, [fp, #-1056]
+	b	.L56
+.L54:
 	sub	r3, fp, #1024
 	sub	r3, r3, #12
-	sub	r3, r3, #4
+	sub	r3, r3, #8
 	ldr	r0, [fp, #-16]
 	mov	r1, r3
 	bl	kerxit(PLT)
 	sub	r2, fp, #944
+	sub	r1, fp, #1008
 	sub	r3, fp, #1024
 	sub	r3, r3, #12
-	sub	r3, r3, #4
+	sub	r3, r3, #8
 	mov	r0, r2
-	mov	r1, r3
+	mov	r2, r3
 	bl	handle(PLT)
 	ldr	r3, [fp, #-20]
 	add	r3, r3, #1
 	str	r3, [fp, #-20]
-.L54:
+.L52:
 	ldr	r3, [fp, #-20]
 	cmp	r3, #3
-	bls	.L55
+	bls	.L53
 	mov	r3, #0
-	str	r3, [fp, #-1052]
-.L58:
-	ldr	r3, [fp, #-1052]
+	str	r3, [fp, #-1056]
+.L56:
+	ldr	r3, [fp, #-1056]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
