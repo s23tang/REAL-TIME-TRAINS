@@ -49,14 +49,16 @@ typedef struct {
 	Queues *priorityQueues;
 } Request;
 
-void firstUserTask() {
-	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
-	FOREVER {
-		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
-		asm("swi");
-		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
-	}
-} // firstUserTask
+
+
+// void firstUserTask() {
+// 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
+// 	FOREVER {
+// 		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
+// 		asm("swi");
+// 		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
+// 	}
+// } // firstUserTask
 
 /*
  *	Kernel primitives (system calls) are implemented
@@ -102,6 +104,40 @@ void Pass ( ) {
 void Exit ( ) {
 
 } // Exit
+
+
+/*
+ * User tasks
+ */
+void theOtherTask(){
+	int myTid, myParentTid;
+	myTid = MyTid();
+	myParentTid = MyParentTid();
+	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
+	Pass();
+	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
+	Exit();
+}
+
+void firstUserTask(){
+	void (*otherTask)();
+	otherTask = theOtherTask;
+	//Create four instances 
+	unsigned int retVal;
+	retVal = Create(2, otherTask);	  //instances with lower priority
+	bwprintf(COM2, "Created: %d\n\r", retVal);
+	retVal = Create(2, otherTask);
+	bwprintf(COM2, "Created: %d\n\r", retVal);
+	retVal = Create(0, otherTask);     //instances with higher priority
+	bwprintf(COM2, "Created: %d\n\r", retVal);
+	retVal = Create(0, otherTask);
+	bwprintf(COM2, "Created: %d\n\r", retVal);
+
+	//exit
+	bwprintf(COM2, "First: exiting\n\r");
+	Exit();
+}
+
 
 /*
  *	The function getNextRequest will allow for context
