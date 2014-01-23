@@ -9,45 +9,11 @@
 #define LOAD_LOC		0x00218000
 #define MAX_TASKS		33
 #define MAX_PRIORITIES	8
+#define STACK_START		0x00044f88
+#define STACK_SIZE		0xf5178
 
 // use 33 tasks max so 0xf5178 bytes each
 // start at 0x00044f88 - 0x01fdd000
-
-/*
- *	Task descriptor structure
- */
-typedef struct {
-	int *sp;
-	int spsr;
-	int retVal;
-	enum { ACTIVE, READY, BLOCKED, ZOMBIE } state;
-	unsigned int tid;
-	unsigned int parentTid;
-	struct TD *nextTask;
-} TD;
-
-/*
- *	A simple queue of a linked list of TD's
- */
-typedef struct{
-	TD *headOfQueue;
-	TD *tailOfQueue;
-} Queues;
-
-/*
- *	Request structure, initialized in main and
- *	passed around
- */
-typedef struct {
-	int arg0;
-	int arg1;
-	int arg2;
-	int arg3;
-	unsigned int type;
-	unsigned int freeIndex;
-	TD *tds;
-	Queues *priorityQueues;
-} Request;
 
 void firstUserTask() {
 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
@@ -69,23 +35,26 @@ void firstUserTask() {
 //-----------------------------------------------------
 int Create( int priority, void (*code) ( ) ) {
 	asm("swi 1");
-	return 0;
+	asm("mov pc, lr");
+	return 0;	// never reached
 } // Create
 
 //-----------------------------------------------------
 //	Get the task id of the calling task
 //-----------------------------------------------------
 int MyTid( ) {
-
-	return 0;
+	asm("swi 2");
+	asm("mov pc, lr");
+	return 0;	// never reached
 } // MyTid
 
 //-----------------------------------------------------
 //	Get the task id of the parent task
 //-----------------------------------------------------
 int MyParentTid( ) {
-
-	return 0;
+	asm("swi 3");
+	asm("mov pc, lr");
+	return 0;	// never reached
 } // MyParentTid
 
 //-----------------------------------------------------
@@ -93,14 +62,14 @@ int MyParentTid( ) {
 //	on the end of the priority queue
 //-----------------------------------------------------
 void Pass ( ) {
-
+	asm("swi 4");
 } // Pass
 
 //-----------------------------------------------------
 //	Calling task ends its execution and becomes zombie
 //-----------------------------------------------------
 void Exit ( ) {
-
+	asm("swi 5");
 } // Exit
 
 /*
@@ -123,10 +92,12 @@ void getNextRequest(TD *active, Request *req){
 	syscall = &&kerent;
 	*(int *)(0x28) = syscall;
 
+	// asm("mov r0, #1\n\t"
+	// 	"ldr r1, [fp, #-28]\n\t"
+	// 	"bl bwputr(PLT)");
 	// 1. push the kernel registers onto its stack
 	asm("stmfd sp!, {r0, r4-r9, sl, fp}");
 	asm("stmfd sp!, {r1}"); //req
-
 	// 2. change to system state
 	asm("mrs r1, CPSR\n\t"
 	    "bic r1, r1, #0x1F\n\t"
@@ -155,7 +126,11 @@ void getNextRequest(TD *active, Request *req){
 
 kerent:
 	// 1. acquire the arguments of the request
-	asm("stmfd sp!, {r0-r3}");
+	asm("stmfd sp!, {r0-r3}\n\t"
+		"ldr r0, [lr, #-4];\n\t"
+		"bic r1, r0, #0xFF000000\n\t"
+		"stmfd sp!, {r1}");
+
 	// 1.5 get the start of the TDs out from stack
 	// 1.6 get SPSR of the active task into the SP_SVC
 	asm("mrs r1, SPSR\n\t"
@@ -182,7 +157,15 @@ kerent:
 	// 7.5 get SPSR of the active task from SP_SVC
 	asm("ldmfd sp!, {r1}");
 	// 10. fill in the request of the kernel from its stack
-	asm("ldmfd sp!, {r0,r2-r5}");
+	asm("ldmfd sp!, {r0,r2-r6}");
+		// asm("mov r0, #1\n\t"
+		// "mov r1, r6\n\t"
+		// "bl bwputr(PLT)");
+	asm("str r2, [r6, #0]\n\t"
+		"str r3, [r6, #4]\n\t"
+		"str r4, [r6, #8]\n\t"
+		"str r5, [r6, #12]\n\t"
+		"str r0, [r6, #16]");
 	// 9. pop the registers from its stack
 	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
 	// 6. acquire the sp of the active task;
@@ -208,12 +191,12 @@ void initialize( TD *tds, Queues *priorityQueues, Request *req ) {
 
 	// Set stack pointer, PSR, and return value
 	tds[0].sp = (int *)0x0013A100;		// 0x00044f88 + 0xf5178
-	tds[0].spsr = PSR_USR;
-	tds[0].retVal = 0;
-	tds[0].state = READY;
-	tds[0].tid = 1;
-	tds[0].parentTid = 0;
-	tds[0].nextTask = 0;
+	tds[0].spsr = PSR_USR;				// Initialize to user mode
+	tds[0].retVal = 0;					// Initialize return value to 0
+	tds[0].state = READY;				// Task is ready
+	tds[0].tid = 1;						// First user task has ID 1
+	tds[0].parentTid = 0;				// Parent is 0 (kernel)
+	tds[0].nextTask = 0;				// No next task in priority queue
 
 	// Set lr to the location of the firstUserTask
 	void (*syscall)();
@@ -235,7 +218,7 @@ void initialize( TD *tds, Queues *priorityQueues, Request *req ) {
 	req->priorityQueues = priorityQueues;
 } // initialize
 
-TD *schedule( Queues *priorityQueues ) {
+TD *schedule( Queues *priorityQueues, Request *req ) {
 	unsigned int i;
 	for ( i = 0; i < MAX_PRIORITIES; i++ ) {
 		if ( priorityQueues[i].headOfQueue != 0 ) {
@@ -245,6 +228,7 @@ TD *schedule( Queues *priorityQueues ) {
 				priorityQueues[i].tailOfQueue->nextTask = (struct TD *)scheduled;
 				priorityQueues[i].tailOfQueue = scheduled;
 			}
+			req->taskPriority = i;
 			return scheduled;
 		}
 	} // for
@@ -258,8 +242,59 @@ void kerxit( TD *active, Request *req ) {
 	bwprintf( COM2, "kerxit.c: Good-bye.\n\r" );
 } // kerxit
 
-void handle( TD *tds, Request *req ) {
+void handle( TD *tds, Queues *priorityQueues, Request *req ) {
+	switch( req->type ) {
+		case 1:
+			unsigned int freeIndex 	= req->freeIndex;
+			unsigned int newTid		= freeIndex + 1;
+			unsigned int whichQueue	= req->taskPriority;
+			unsigned int parentTid 	= priorityQueues[whichQueue].tailOfQueue->tid;
+			unsigned int priority 	= req->arg0;
 
+			void (*syscall)();
+			syscall = (void *)req->arg1;
+
+			tds[freeIndex].sp = STACK_START + newTid * STACK_SIZE;		// 0x00044f88 + 0xf5178
+			tds[freeIndex].spsr = PSR_USR;								// Initialize to user mode
+			tds[freeIndex].retVal = newTid;								// Initialize return value to 0
+			tds[freeIndex].state = READY;								// Task is ready
+			tds[freeIndex].tid = newTid;								// First user task has ID 1
+			tds[freeIndex].parentTid = parentTid;						// Parent is 0 (kernel)
+			tds[freeIndex].nextTask = 0;								// No next task in priority queue
+
+			// Set lr to the location of the firstUserTask
+			*(tds[freeIndex].sp) = syscall+LOAD_LOC;
+
+			// Fill user stack with placeholder values, and
+			//	put the pc of firstUserTask into lr
+			for ( i = 12; i > 3; i-- ) {
+				tds[freeIndex].sp--;
+				*(tds[freeIndex].sp) = i;
+			} // for
+
+			if ( priorityQueues[priority].headOfQueue == 0 ) {
+				priorityQueues[priority].headOfQueue = &(tds[freeIndex]);
+				priorityQueues[priority].tailOfQueue = &(tds[freeIndex]);
+			} else {
+				priorityQueues[priority].tailOfQueue->nextTask = &(tds[freeIndex]);
+				priorityQueues[priority].tailOfQueue = &(tds[freeIndex]);
+			}
+
+			req->freeIndex++;
+			break;
+		case 2:
+
+			break;
+		case 3:
+
+			break;
+		case 4:
+
+			break;
+		case 5:
+
+			break;
+	}
 } // handle
 
 int main( int argc, char *argv[] ) {
@@ -272,10 +307,10 @@ int main( int argc, char *argv[] ) {
 	Request req;
 	initialize( tds, priorityQueues, &req );	// tds is an array of TDs
 	for ( i = 0; i < 4; i++ ) {
-		active = schedule( priorityQueues );
+		active = schedule( priorityQueues, &req );
 		if ( active == 0 ) return 0;
 		kerxit( active, &req );	// req is a pointer to a Request
-		handle( tds, &req );
+		handle( tds, priorityQueues, &req );
 	} // for
 	return 0;
 } // main
