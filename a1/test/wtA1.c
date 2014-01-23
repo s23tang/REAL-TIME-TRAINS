@@ -6,9 +6,11 @@
 #include <bwio.h>
 #include <ts7200.h>
 
-#define FOREVER 	for( ; ; )
-#define PSR_USR		0x60000010
-#define LOAD_LOC	0x00218000
+#define FOREVER 		for( ; ; )
+#define PSR_USR			0x60000010
+#define LOAD_LOC		0x00218000
+#define MAX_TASKS		33
+#define MAX_PRIORITIES	8
 
 // use 33 tasks max so 0xf5178 bytes each
 // start at 0x00044f88 - 0x01fdd000
@@ -29,10 +31,10 @@ typedef struct {
 /*
  *	A simple queue of a linked list of TD's
  */
-typedef struct Queues{
+typedef struct{
 	TD *headOfQueue;
 	TD *tailOfQueue;
-};
+} Queues;
 
 /*
  *	Request structure, initialized in main and
@@ -43,9 +45,10 @@ typedef struct {
 	int arg1;
 	int arg2;
 	int arg3;
+	unsigned int type;
 	unsigned int freeTid;
-	TD *freeList;
-	TD **priorityQueues;
+	TD *tds;
+	Queues *priorityQueues;
 } Request;
 
 void firstUserTask() {
@@ -125,6 +128,8 @@ void getNextRequest(TD *active){
 
 	// 1. push the kernel registers onto its stack
 	asm("stmfd sp!, {r0, r4-r9, sl, fp}");
+	asm("stmfd sp!, {r1}"); //req
+
 	// 2. change to system state
 	asm("mrs r1, CPSR\n\t"
 	    "bic r1, r1, #0x1F\n\t"
@@ -153,6 +158,7 @@ void getNextRequest(TD *active){
 
 kerent:
 	// 1. acquire the arguments of the request
+	asm("stmfd sp!, {r0-r3}");
 	// 1.5 get the start of the TDs out from stack
 	// 1.6 get SPSR of the active task into the SP_SVC
 	asm("mrs r1, SPSR\n\t"
@@ -166,7 +172,7 @@ kerent:
 		"orr r1, r1, #0x1F\n\t"
 		"msr CPSR, r1");
 	// 4. overwrite lr with the value from step 2
-	asm("ldmfd r2!, {lr}\n\t");
+	asm("ldmfd r2!, {lr}");
 	// 5. push the registers of the active task onto its stack
 	asm("mov ip, sp\n\t"
 		"stmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
@@ -178,13 +184,14 @@ kerent:
 		"msr CPSR, r0");
 	// 7.5 get SPSR of the active task from SP_SVC
 	asm("ldmfd sp!, {r1}");
+	// 10. fill in the request of the kernel from its stack
+	asm("ldmfd sp!, {r0,r2-r5}");
 	// 9. pop the registers from its stack
 	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
 	// 6. acquire the sp of the active task;
 	// 8. acquire the spsr of the active task 
 	asm("str ip, [r0, #0]\n\t"
 		"str r1, [r0, #4]");
-	// 10. fill in the request of the kernel from its stack
 } // getNextRequest
 
 //-----------------------------------------------------
@@ -194,7 +201,14 @@ kerent:
 //	filled with placeholder values, and the lr will be
 //	the program counter for the code of the first task
 //-----------------------------------------------------
-void initialize( TD *tds ) {
+void initialize( TD *tds, Queues *priorityQueues, Request *req ) {
+	unsigned int i;
+
+	// Initialize the queue to be all empty
+	for ( i = 0; i <MAX_PRIORITIES; i++ ) {
+		priorityQueues[i].headOfQueue = 0;
+	}
+
 	// Set stack pointer, PSR, and return value
 	tds[0].sp = (int *)0x0013A100;		// 0x00044f88 + 0xf5178
 	tds[0].spsr = PSR_USR;
@@ -207,15 +221,30 @@ void initialize( TD *tds ) {
 
 	// Fill user stack with placeholder values, and
 	//	put the pc of firstUserTask into lr
-	unsigned int i;
 	for ( i = 12; i > 3; i-- ) {
 		tds[0].sp--;
 		*(tds[0].sp) = i;
 	} // for
+
+	priorityQueues[1].headOfQueue = &(tds[0]);
+
+	req->freeTid = 1;
+	req->tds = tds;
+	req->priorityQueues = priorityQueues;
 } // initialize
 
-TD *schedule( TD *tds ) {
-	return &(tds[0]);
+TD *schedule( Queues *priorityQueues ) {
+	unsigned int i;
+	for ( i = 0; i < MAX_PRIORITIES; i++ ) {
+		if ( priorityQueues[i].headOfQueue != 0 ) {
+			return priorityQueues[i].headOfQueue;
+			//**************************
+			//	have not considered what happens at the end
+			//	where should this guy go? the tail? zombie?
+			//	or is this handle somewhere else say in
+			//	kernel primitives
+		}
+	} // for
 } // schedule
 
 void kerxit( TD *active, Request *req ) {
@@ -232,16 +261,16 @@ void handle( TD *tds, Request *req ) {
 int main( int argc, char *argv[] ) {
 	// declare kernel data structures
 	unsigned int i;
-	TD tds[1];
+	TD tds[MAX_TASKS];					// hardcode 33 tasks max
+	Queues priorityQueues[MAX_PRIORITIES];	// hardcode 8 priority queues
 
 	TD *active;
-	Request *req;
-
-	initialize( tds );	// tds is an array of TDs
+	Request req;
+	initialize( tds, priorityQueues, &req );	// tds is an array of TDs
 	for ( i = 0; i < 4; i++ ) {
-		active = schedule( tds );
-		kerxit( active, req );	// req is a pointer to a Request
-		handle( tds, req );
+		active = schedule( priorityQueues );
+		kerxit( active, &req );	// req is a pointer to a Request
+		handle( tds, &req );
 	} // for
 	return 0;
 } // main
