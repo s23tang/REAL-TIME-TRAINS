@@ -49,16 +49,10 @@ typedef struct {
 	Queues *priorityQueues;
 } Request;
 
-void testFunc( int a, int b, int c, int d ) {
-	asm("swi 1");
-}
-
 void firstUserTask() {
-	// testFunc( 33, 34, 35, 36);
 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
 	FOREVER {
-		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );
-		testFunc( 33, 34, 35, 36);	
+		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
 		asm("swi");
 		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
 	}
@@ -209,7 +203,6 @@ kerent:
 	// 8. acquire the spsr of the active task 
 	asm("str ip, [r0, #0]\n\t"
 		"str r1, [r0, #4]");
-	bwprintf( COM2, "args: %d %d %d %d %d\n\r", req->arg0, req->arg1, req->arg2,req->arg3, req->type);
 } // getNextRequest
 
 //-----------------------------------------------------
