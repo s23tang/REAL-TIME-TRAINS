@@ -51,10 +51,16 @@ typedef struct {
 	Queues *priorityQueues;
 } Request;
 
+void testFunc( int a, int b, int c, int d ) {
+	asm("swi 1");
+}
+
 void firstUserTask() {
+	// testFunc( 33, 34, 35, 36);
 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
 	FOREVER {
-		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
+		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );
+		testFunc( 33, 34, 35, 36);	
 		asm("swi");
 		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
 	}
@@ -120,16 +126,18 @@ void Exit ( ) {
 //	the user raises a software interrupt, and will
 //	switch to kernel execution
 //-----------------------------------------------------
-void getNextRequest(TD *active){
+void getNextRequest(TD *active, Request *req){
 	// Setup the jump table to branch to kerent on swi
 	void (*syscall)();
 	syscall = &&kerent;
 	*(int *)(0x28) = syscall;
 
+	// asm("mov r0, #1\n\t"
+	// 	"ldr r1, [fp, #-28]\n\t"
+	// 	"bl bwputr(PLT)");
 	// 1. push the kernel registers onto its stack
 	asm("stmfd sp!, {r0, r4-r9, sl, fp}");
 	asm("stmfd sp!, {r1}"); //req
-
 	// 2. change to system state
 	asm("mrs r1, CPSR\n\t"
 	    "bic r1, r1, #0x1F\n\t"
@@ -158,7 +166,11 @@ void getNextRequest(TD *active){
 
 kerent:
 	// 1. acquire the arguments of the request
-	asm("stmfd sp!, {r0-r3}");
+	asm("stmfd sp!, {r0-r3}\n\t"
+		"ldr r0, [lr, #-4];\n\t"
+		"bic r1, r0, #0xFF000000\n\t"
+		"stmfd sp!, {r1}");
+
 	// 1.5 get the start of the TDs out from stack
 	// 1.6 get SPSR of the active task into the SP_SVC
 	asm("mrs r1, SPSR\n\t"
@@ -185,13 +197,22 @@ kerent:
 	// 7.5 get SPSR of the active task from SP_SVC
 	asm("ldmfd sp!, {r1}");
 	// 10. fill in the request of the kernel from its stack
-	asm("ldmfd sp!, {r0,r2-r5}");
+	asm("ldmfd sp!, {r0,r2-r6}");
+		// asm("mov r0, #1\n\t"
+		// "mov r1, r6\n\t"
+		// "bl bwputr(PLT)");
+	asm("str r2, [r6, #0]\n\t"
+		"str r3, [r6, #4]\n\t"
+		"str r4, [r6, #8]\n\t"
+		"str r5, [r6, #12]\n\t"
+		"str r0, [r6, #16]");
 	// 9. pop the registers from its stack
 	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
 	// 6. acquire the sp of the active task;
 	// 8. acquire the spsr of the active task 
 	asm("str ip, [r0, #0]\n\t"
 		"str r1, [r0, #4]");
+	bwprintf( COM2, "args: %d %d %d %d %d\n\r", req->arg0, req->arg1, req->arg2,req->arg3, req->type);
 } // getNextRequest
 
 //-----------------------------------------------------
@@ -250,7 +271,7 @@ TD *schedule( Queues *priorityQueues ) {
 void kerxit( TD *active, Request *req ) {
 	bwprintf( COM2, "kerxit.c: Hello.\n\r" );
 	bwprintf( COM2, "kerxit.c: Activating.\n\r" );
-	getNextRequest(active);
+	getNextRequest(active, req);
 	bwprintf( COM2, "kerxit.c: Good-bye.\n\r" );
 } // kerxit
 
