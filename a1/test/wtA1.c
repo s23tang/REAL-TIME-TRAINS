@@ -15,54 +15,6 @@
 // use 33 tasks max so 0xf5178 bytes each
 // start at 0x00044f88 - 0x01fdd000
 
-<<<<<<< HEAD
-void firstUserTask() {
-	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
-	FOREVER {
-		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
-		asm("swi");
-		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
-	}
-} // firstUserTask
-=======
-/*
- *	Task descriptor structure
- */
-typedef struct {
-	int *sp;
-	int spsr;
-	int retVal;
-	enum { ACTIVE, READY, BLOCKED, ZOMBIE } state;
-	unsigned int tid;
-	unsigned int parentTid;
-	struct TD *nextTask;
-} TD;
-
-/*
- *	A simple queue of a linked list of TD's
- */
-typedef struct{
-	TD *headOfQueue;
-	TD *tailOfQueue;
-} Queues;
-
-/*
- *	Request structure, initialized in main and
- *	passed around
- */
-typedef struct {
-	int arg0;
-	int arg1;
-	int arg2;
-	int arg3;
-	unsigned int type;
-	unsigned int freeIndex;
-	TD *tds;
-	Queues *priorityQueues;
-} Request;
-
-
-
 // void firstUserTask() {
 // 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
 // 	FOREVER {
@@ -71,7 +23,6 @@ typedef struct {
 // 		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
 // 	}
 // } // firstUserTask
->>>>>>> 0e32f2348a6ed4248cc245b82a19977153cdb92e
 
 /*
  *	Kernel primitives (system calls) are implemented
