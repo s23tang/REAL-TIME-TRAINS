@@ -19,7 +19,7 @@ typedef struct {
 typedef struct{
 	TD *headOfQueue;
 	TD *tailOfQueue;
-} Queues;
+} Queue;
 
 /*
  *	Request structure, initialized in main and
@@ -34,5 +34,5 @@ typedef struct {
 	unsigned int freeIndex;
 	unsigned int taskPriority;
 	TD *tds;
-	Queues *priorityQueues;
+	Queue *priorityQueues;
 } Request;

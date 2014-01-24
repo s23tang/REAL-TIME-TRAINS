@@ -1,8 +1,9 @@
 /*
- * iotest.c
+ * wtA1.c
  */
 #include <bwio.h>
 #include <ts7200.h>
+#include "wtA1.h"
 
 #define FOREVER 		for( ; ; )
 #define PSR_USR			0x60000010
@@ -11,71 +12,68 @@
 #define MAX_PRIORITIES	8
 #define STACK_START		0x00044f88
 #define STACK_SIZE		0xf5178
+#define CREATE 			1
+#define MYTID 			2
+#define MYPARENTTID 	3
+#define PASS 			4
+#define EXIT 			5
 
 // use 33 tasks max so 0xf5178 bytes each
 // start at 0x00044f88 - 0x01fdd000
 
-// void firstUserTask() {
-// 	bwprintf( COM2, "firstUserTask.c: initializing\n\r" );
-// 	FOREVER {
-// 		bwprintf( COM2, "firstUserTask.c: good-bye\n\r" );	
-// 		asm("swi");
-// 		bwprintf( COM2, "firstUserTask.c: hello\n\r" );
-// 	}
-// } // firstUserTask
-
 /*
  *	Kernel primitives (system calls) are implemented
- *	in the following functions
+ *	in the following functions, basically each one
+ *	contains only a software interrupt to switch to
+ *	kernel
  */
 
-//-----------------------------------------------------
-//	Create a task for code with the given priority,
-//	returning the task id of the created task
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+//	Create a task for code with the given priority, returning the task id of the created task
+//-----------------------------------------------------------------------------------------------
 int Create( int priority, void (*code) ( ) ) {
 	asm("swi 1");
-	asm("mov pc, lr");
-	return 0;	// never reached
+	return;	// never reached
 } // Create
 
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 //	Get the task id of the calling task
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 int MyTid( ) {
 	asm("swi 2");
-	asm("mov pc, lr");
-	return 0;	// never reached
+	return;	// never reached
 } // MyTid
 
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 //	Get the task id of the parent task
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 int MyParentTid( ) {
 	asm("swi 3");
-	asm("mov pc, lr");
-	return 0;	// never reached
+	return;	// never reached
 } // MyParentTid
 
-//-----------------------------------------------------
-//	Calling task gives up its runtime, and puts itself
-//	on the end of the priority queue
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+//	Calling task gives up its runtime, and puts itself on the end of the priority queue
+//-----------------------------------------------------------------------------------------------
 void Pass ( ) {
 	asm("swi 4");
 } // Pass
 
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 //	Calling task ends its execution and becomes zombie
-//-----------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 void Exit ( ) {
 	asm("swi 5");
 } // Exit
 
 
 /*
- * User tasks
+ * User tasks for assignment 1 are below
  */
+
+//-----------------------------------------------------------------------------------------------
+//	Tasks that will be created by the first user task contains the following
+//-----------------------------------------------------------------------------------------------
 void theOtherTask(){
 	int myTid, myParentTid;
 	myTid = MyTid();
@@ -84,8 +82,12 @@ void theOtherTask(){
 	Pass();
 	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
 	Exit();
-}
+} // theOtherTask
 
+
+//-----------------------------------------------------------------------------------------------
+//	First user task that will be placed by the kernel into the priority queue
+//-----------------------------------------------------------------------------------------------
 void firstUserTask(){
 	void (*otherTask)();
 	otherTask = theOtherTask;
@@ -103,7 +105,7 @@ void firstUserTask(){
 	//exit
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
-}
+} // firstUserTask
 
 
 /*
@@ -112,23 +114,18 @@ void firstUserTask(){
  *	will be setup for bootstrapping kernel.
  */
 
-//-----------------------------------------------------
-//	Before kerent: this portion is for setting up and
-// 	switching from kernel to the user code
+//-----------------------------------------------------------------------------------------------
+//	Before kerent: this portion is for setting up and switching from kernel to the user code
 //	
-//	After kerent: this portion will be accessed after
-//	the user raises a software interrupt, and will
-//	switch to kernel execution
-//-----------------------------------------------------
+//	After kerent: this portion will be accessed after the user raises a software interrupt, and 
+//	will switch to kernel execution
+//-----------------------------------------------------------------------------------------------
 void getNextRequest(TD *active, Request *req){
 	// Setup the jump table to branch to kerent on swi
 	void (*syscall)();
 	syscall = &&kerent;
 	*(int *)(0x28) = syscall;
 
-	// asm("mov r0, #1\n\t"
-	// 	"ldr r1, [fp, #-28]\n\t"
-	// 	"bl bwputr(PLT)");
 	// 1. push the kernel registers onto its stack
 	asm("stmfd sp!, {r0, r4-r9, sl, fp}");
 	asm("stmfd sp!, {r1}"); //req
@@ -208,14 +205,12 @@ kerent:
 		"str r1, [r0, #4]");
 } // getNextRequest
 
-//-----------------------------------------------------
-//	This will boostrap the kernel by creating a first
-//	task which looks as if it has just left kernel
-//	execution; i.e. the first user stack will be
-//	filled with placeholder values, and the lr will be
-//	the program counter for the code of the first task
-//-----------------------------------------------------
-void initialize( TD *tds, Queues *priorityQueues, Request *req ) {
+//-----------------------------------------------------------------------------------------------
+//	This will boostrap the kernel by creating a first task which looks as if it has just left 
+//	kernel execution; i.e. the first user stack will be filled with placeholder values, and the 
+//	lr will be the program counter for the code of the first task
+//-----------------------------------------------------------------------------------------------
+void initialize( TD *tds, Queue *priorityQueues, Request *req ) {
 	unsigned int i;
 
 	// Initialize the queue to be all empty
@@ -237,114 +232,184 @@ void initialize( TD *tds, Queues *priorityQueues, Request *req ) {
 	syscall = firstUserTask;
 	*(tds[0].sp) = syscall+LOAD_LOC;
 
-	// Fill user stack with placeholder values, and
-	//	put the pc of firstUserTask into lr
+	// Fill user stack with placeholder values, and put the pc of firstUserTask into lr
 	for ( i = 12; i > 3; i-- ) {
 		tds[0].sp--;
 		*(tds[0].sp) = i;
 	} // for
-
+										// Setup the first user task to be
+										// both head and tail of queue,
+										// since only one in the queue
 	priorityQueues[1].headOfQueue = &(tds[0]);
 	priorityQueues[1].tailOfQueue = &(tds[0]);
 
-	req->freeIndex = 1;
-	req->tds = tds;
+	req->freeIndex = 1;					// Next index to place TD in tds array
+	req->tds = tds;						// Reference the tds array
 	req->priorityQueues = priorityQueues;
+										// Reference the priority queues array
 } // initialize
 
-TD *schedule( Queues *priorityQueues, Request *req ) {
+//-----------------------------------------------------------------------------------------------
+//	Get the task at the highest priority queue's front and return it
+//-----------------------------------------------------------------------------------------------
+TD *schedule( Queue *priorityQueues, Request *req ) {
 	unsigned int i;
 	for ( i = 0; i < MAX_PRIORITIES; i++ ) {
 		if ( priorityQueues[i].headOfQueue != 0 ) {
 			TD *scheduled = priorityQueues[i].headOfQueue;
-			if ( scheduled->nextTask != 0 ) {
-				priorityQueues[i].headOfQueue = (TD *)scheduled->nextTask;
-				priorityQueues[i].tailOfQueue->nextTask = (struct TD *)scheduled;
-				priorityQueues[i].tailOfQueue = scheduled;
-			}
 			req->taskPriority = i;
 			return scheduled;
-		}
+		} // if
 	} // for
-	return 0;
+
+	return 0;							// Nothing in priority queues to schedule
 } // schedule
 
-void kerxit( TD *active, Request *req ) {
-	bwprintf( COM2, "kerxit.c: Hello.\n\r" );
-	bwprintf( COM2, "kerxit.c: Activating.\n\r" );
-	getNextRequest(active, req);
-	bwprintf( COM2, "kerxit.c: Good-bye.\n\r" );
-} // kerxit
+//-----------------------------------------------------------------------------------------------
+//	Place the last active task at the back of the priority queue that it is in
+//-----------------------------------------------------------------------------------------------
+void rescheduleActive( Queue *priorityQueues, Request *req ) {
+	unsigned int whichQueue	= req->taskPriority;
+	Queue *currQueue = &(priorityQueues[whichQueue]);
+	TD *lastActive = currQueue->headOfQueue;
+										// Only move to the back if queue has more than 1 task
+	if ( currQueue->headOfQueue != currQueue->tailOfQueue ) {
+		currQueue->headOfQueue = (TD *)lastActive->nextTask;
+		currQueue->tailOfQueue->nextTask = (struct TD *)lastActive;
+		currQueue->tailOfQueue = lastActive;
+		lastActive->nextTask = 0;
+	} // if
+} // rescheduleActive
 
-void handle( TD *tds, Queues *priorityQueues, Request *req ) {
+//-----------------------------------------------------------------------------------------------
+//	Remove the last active task from its priority queue so it will no longer be scheduled
+//-----------------------------------------------------------------------------------------------
+void closeActive( Queue *priorityQueues, Request *req ) {
+	unsigned int whichQueue	= req->taskPriority;
+	Queue *currQueue = &(priorityQueues[whichQueue]);
+	TD *lastActive = currQueue->headOfQueue;
+
+	if ( currQueue->headOfQueue != currQueue->tailOfQueue ) {
+		currQueue->headOfQueue = (TD *)lastActive->nextTask;
+	} else {
+		currQueue->headOfQueue = 0;
+		currQueue->tailOfQueue = 0;
+	} // if
+
+	lastActive->state = ZOMBIE;			// Update the closed task to be in zombie state
+} // closeActive
+
+//-----------------------------------------------------------------------------------------------
+//	Handle each kernel primitive (Create, MyTid, MyParentTid, Pass, Exit), last active task will
+//	be the task that called the kernel primitive
+//-----------------------------------------------------------------------------------------------
+void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 	switch( req->type ) {
-		case 1:
-			unsigned int freeIndex 	= req->freeIndex;
-			unsigned int newTid		= freeIndex + 1;
-			unsigned int whichQueue	= req->taskPriority;
-			unsigned int parentTid 	= priorityQueues[whichQueue].tailOfQueue->tid;
-			unsigned int priority 	= req->arg0;
+		case CREATE:
+			{	/*	Create */
+				unsigned int freeIndex 	= req->freeIndex;			// Where to place new TD
+				unsigned int newTid		= freeIndex + 1;			// Next tid free to use
+				unsigned int whichQueue	= req->taskPriority;		// Priority of last active task
+				unsigned int parentTid 	= priorityQueues[whichQueue].headOfQueue->tid;
+																	// Tid of last active task
+				unsigned int priority 	= req->arg0;				// Priority of new task
 
-			void (*syscall)();
-			syscall = (void *)req->arg1;
+				TD *newTask	= &(tds[freeIndex]);					// The TD that will hold this
+				Queue *newQueue = &(priorityQueues[priority]);		// The queue the TD will be in
 
-			tds[freeIndex].sp = STACK_START + newTid * STACK_SIZE;		// 0x00044f88 + 0xf5178
-			tds[freeIndex].spsr = PSR_USR;								// Initialize to user mode
-			tds[freeIndex].retVal = newTid;								// Initialize return value to 0
-			tds[freeIndex].state = READY;								// Task is ready
-			tds[freeIndex].tid = newTid;								// First user task has ID 1
-			tds[freeIndex].parentTid = parentTid;						// Parent is 0 (kernel)
-			tds[freeIndex].nextTask = 0;								// No next task in priority queue
+				priorityQueues[whichQueue].headOfQueue->retVal = newTid;
+																	// Update the return value of
+																	// calling task
 
-			// Set lr to the location of the firstUserTask
-			*(tds[freeIndex].sp) = syscall+LOAD_LOC;
+				void (*syscall)();
+				syscall = (void *)req->arg1;						// The code of the created task
 
-			// Fill user stack with placeholder values, and
-			//	put the pc of firstUserTask into lr
-			for ( i = 12; i > 3; i-- ) {
-				tds[freeIndex].sp--;
-				*(tds[freeIndex].sp) = i;
-			} // for
+				// Populate the new TD
+				newTask->sp = STACK_START + newTid * STACK_SIZE;	// 0x00044f88 + 0xf5178
+				newTask->spsr = PSR_USR;							// Initialize to user mode
+				newTask->retVal = 0;								// Initialize return value to 0
+				newTask->state = READY;								// Task is ready
+				newTask->tid = newTid;								// First user task has ID 1
+				newTask->parentTid = parentTid;						// Parent is 0 (kernel)
+				newTask->nextTask = 0;								// No next task in priority queue
 
-			if ( priorityQueues[priority].headOfQueue == 0 ) {
-				priorityQueues[priority].headOfQueue = &(tds[freeIndex]);
-				priorityQueues[priority].tailOfQueue = &(tds[freeIndex]);
-			} else {
-				priorityQueues[priority].tailOfQueue->nextTask = &(tds[freeIndex]);
-				priorityQueues[priority].tailOfQueue = &(tds[freeIndex]);
+				// Set lr to the location of the firstUserTask
+				*(newTask->sp) = syscall+LOAD_LOC;
+
+				// Fill user stack with placeholder values, and put the pc of firstUserTask into lr
+				unsigned int i;
+				for ( i = 12; i > 3; i-- ) {
+					newTask->sp--;
+					*(newTask->sp) = i;
+				} // for
+
+				if ( newQueue->headOfQueue == 0 ) {
+					newQueue->headOfQueue = newTask;
+					newQueue->tailOfQueue = newTask;
+				} else {
+					newQueue->tailOfQueue->nextTask = newTask;
+					newQueue->tailOfQueue = newTask;
+				} // if
+
+				req->freeIndex++;									// Update the index for next TD
+
+				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+																	// queue behind the created task
 			}
-
-			req->freeIndex++;
 			break;
-		case 2:
-
+		case MYTID:
+			{	/*	MyTid */
+				unsigned int whichQueue	= req->taskPriority;
+				priorityQueues[whichQueue].headOfQueue->retVal = priorityQueues[whichQueue].headOfQueue->tid;
+				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+																	// queue behind the created task
+			}
 			break;
-		case 3:
-
+		case MYPARENTTID:
+			{	/*	MyParentTid */
+				unsigned int whichQueue	= req->taskPriority;
+				priorityQueues[whichQueue].headOfQueue->retVal = priorityQueues[whichQueue].headOfQueue->parentTid;
+				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+																	// queue behind the created task
+			}
 			break;
-		case 4:
-
+		case PASS:
+			{	/*	Pass */
+				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+																	// queue behind the created task
+			}
 			break;
-		case 5:
-
+		case EXIT:
+			{	/*	Exit */
+				closeActive( priorityQueues, req );					// Remove last active task from the queue
+			}
 			break;
-	}
+	} // switch
 } // handle
 
+//-----------------------------------------------------------------------------------------------
+//	Starting the kernel execution, which will initialize all memory needed and bootstrap the 
+//	first user task.
+//
+//	For A1, this will mean firstUserTask and the 4 otherTasks that it creates.
+//-----------------------------------------------------------------------------------------------
 int main( int argc, char *argv[] ) {
-	// declare kernel data structures
-	unsigned int i;
-	TD tds[MAX_TASKS];					// hardcode 33 tasks max
-	Queues priorityQueues[MAX_PRIORITIES];	// hardcode 8 priority queues
+	// Declare kernel data structures
+	TD tds[MAX_TASKS];							// hardcode 33 tasks max
+	Queue priorityQueues[MAX_PRIORITIES];		// hardcode 8 priority queues
 
-	TD *active;
-	Request req;
+	TD *active;									// The task that will run
+	Request req;								// The requests of the task along with other info
 	initialize( tds, priorityQueues, &req );	// tds is an array of TDs
-	for ( i = 0; i < 4; i++ ) {
+	
+	// Begin kernel execution
+	for ( ; ; ) {
 		active = schedule( priorityQueues, &req );
-		if ( active == 0 ) return 0;
-		kerxit( active, &req );	// req is a pointer to a Request
-		handle( tds, priorityQueues, &req );
+												// Active will be scheduled to run next
+		if ( active == 0 ) break;				// Return cleanly if all tasks exited
+		getNextRequest( active, &req );			// req is a pointer to a Request
+		handle( tds, priorityQueues, &req );	// Execute the kernel code of the kernel primitive
 	} // for
+
 	return 0;
 } // main
