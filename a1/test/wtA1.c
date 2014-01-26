@@ -5,19 +5,6 @@
 #include <ts7200.h>
 #include "wtA1.h"
 
-#define FOREVER 		for( ; ; )
-#define PSR_USR			0x60000010
-#define LOAD_LOC		0x00218000
-#define MAX_TASKS		33
-#define MAX_PRIORITIES	8
-#define STACK_START		0x00044f88
-#define STACK_SIZE		0xf5178
-#define CREATE 			1
-#define MYTID 			2
-#define MYPARENTTID 	3
-#define PASS 			4
-#define EXIT 			5
-
 // use 33 tasks max so 0xf5178 bytes each
 // start at 0x00044f88 - 0x01fdd000
 
@@ -206,6 +193,20 @@ kerent:
 } // getNextRequest
 
 //-----------------------------------------------------------------------------------------------
+//	Gets the stack size to use for each user task
+//-----------------------------------------------------------------------------------------------
+unsigned int getStackSize( ) {
+	// make sure the size is an integer
+	unsigned int size = (MEM_END - MEM_START) / MAX_TASKS;
+	// make sure the size mod 4 is zero
+	unsigned int tmp = size % 4;
+	size -= tmp;
+
+	return size;
+
+} // getStackSize
+
+//-----------------------------------------------------------------------------------------------
 //	This will boostrap the kernel by creating a first task which looks as if it has just left 
 //	kernel execution; i.e. the first user stack will be filled with placeholder values, and the 
 //	lr will be the program counter for the code of the first task
@@ -219,7 +220,8 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req ) {
 	}
 
 	// Set stack pointer, PSR, and return value
-	tds[0].sp = (int *)0x0013A100;		// 0x00044f88 + 0xf5178
+	tds[0].sp = MEM_END - getStackSize();
+										// First user stack starts below kernel stack
 	tds[0].spsr = PSR_USR;				// Initialize to user mode
 	tds[0].retVal = 0;					// Initialize return value to 0
 	tds[0].state = READY;				// Task is ready
@@ -325,7 +327,8 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 				syscall = (void *)req->arg1;						// The code of the created task
 
 				// Populate the new TD
-				newTask->sp = STACK_START + newTid * STACK_SIZE;	// 0x00044f88 + 0xf5178
+				newTask->sp = MEM_END - newTid * getStackSize();
+																	// Position of new stack in memory
 				newTask->spsr = PSR_USR;							// Initialize to user mode
 				newTask->retVal = 0;								// Initialize return value to 0
 				newTask->state = READY;								// Task is ready

@@ -1,3 +1,16 @@
+#define FOREVER 		for( ; ; )
+#define PSR_USR			0x60000010
+#define LOAD_LOC		0x00218000
+//#define MEM_END			0x01FDCFE0 sub 32
+#define MEM_END			0x01fdd000
+//#define MEM_END			 0x1FDCE70
+#define MEM_START		0x00044f88
+#define CREATE 			1
+#define MYTID 			2
+#define MYPARENTTID 	3
+#define PASS 			4
+#define EXIT 			5
+
 struct TD;
 
 /*
