@@ -1,0 +1,37 @@
+   _____  _____ _  _   _____ ___     _  ________ _____  _   _ ______ _        __  
+  / ____|/ ____| || | | ____|__ \   | |/ /  ____|  __ \| \ | |  ____| |      /_ | 
+ | |    | (___ | || |_| |__    ) |  | ' /| |__  | |__) |  \| | |__  | |       | | 
+ | |     \___ \|__   _|___ \  / /   |  < |  __| |  _  /| . ` |  __| | |       | | 
+ | |____ ____) |  | |  ___) |/ /_   | . \| |____| | \ \| |\  | |____| |____   | | 
+  \_____|_____/   |_| |____/|____|  |_|\_\______|_|  \_\_| \_|______|______|  |_| 
+                                                                                  
+
+						     Guangyu Wang & Shisong Tang
+
+OPERATION
+---------
+
+The program should be operated by loading the elf file and executing, namely
+
+	1. load -b 0x00218000 -h 10.15.167.4 "ARM/wt/wtA1.elf"
+
+	2. go
+
+COMPILATION
+-----------
+
+The max number of tasks (mt) and number of priority queues (mp) will be
+determined at compile time. Then the makefile will be executed by
+
+	make mt=<max number of tasks> mp=<number of priority queues>
+
+providing the appropriate numbers. The generated elf file can be copied over
+to the tftp server to execute.
+
+
+***NOTE
+-------
+
+At the time of creation, we did not have a UNIX group created, therefore we
+could not create a group readable/writable folder on the tftp server. Please
+notify in the case that one does not have permissions to run the file.
