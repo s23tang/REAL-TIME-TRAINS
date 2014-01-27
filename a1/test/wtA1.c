@@ -406,7 +406,7 @@ int main( int argc, char *argv[] ) {
 	initialize( tds, priorityQueues, &req );	// tds is an array of TDs
 	
 	// Begin kernel execution
-	for ( ; ; ) {
+	FOREVER {
 		active = schedule( priorityQueues, &req );
 												// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
