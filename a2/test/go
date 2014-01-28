@@ -1,3 +1,5 @@
+make clean
+make mt=30 mp=10
 rm /u/cs452/tftp/ARM/wt/wtA2.elf
 cp wtA2.elf /u/cs452/tftp/ARM/wt/wtA2.elf
 chmod a+rw /u/cs452/tftp/ARM/wt/wtA2.elf

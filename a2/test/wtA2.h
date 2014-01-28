@@ -8,6 +8,9 @@
 #define MYPARENTTID 	3
 #define PASS 			4
 #define EXIT 			5
+#define SEND            6
+#define RECEIVE         7
+#define REPLY           8
 
 struct TD;
 
@@ -18,9 +21,17 @@ typedef struct {
 	int *sp;
 	int spsr;
 	int retVal;
-	enum { ACTIVE, READY, BLOCKED, ZOMBIE } state;
+	int priority;
+	enum { ACTIVE, READY, SND_BLOCKED, RCV_BLOCKED, RPL_BLOCKED, ZOMBIE } state;
 	unsigned int tid;
 	unsigned int parentTid;
+	void *rcvAddr;
+	int rcvLen;
+	char *msgToSend;
+	int msgLen;
+	int *senderTid;
+	struct TD *nextSender;
+	struct TD *lastSender;
 	struct TD *nextTask;
 } TD;
 
@@ -41,9 +52,11 @@ typedef struct {
 	int arg1;
 	int arg2;
 	int arg3;
+	int arg4;
 	unsigned int type;
 	unsigned int freeIndex;
 	unsigned int taskPriority;
 	TD *tds;
 	Queue *priorityQueues;
 } Request;
+
