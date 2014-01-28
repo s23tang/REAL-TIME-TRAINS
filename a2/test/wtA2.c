@@ -511,7 +511,9 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 					rescheduleBlock(priorityQueues, receiver->priority, receiver);
 					unsigned int copyLen = (sender->msgLen + 1 < receiver->rcvLen) ? sender->msgLen : (receiver->rcvLen - 1); // send the bottle neck len
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
+					sender->retVal = copyLen;
 					*(receiver->senderTid) = senderTid;        // Indicate who the sender is
+
 				}
 				else { 
 					sender->state = RCV_BLOCKED;
@@ -547,6 +549,8 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 					TD *sender = (TD *)receiver->nextSender;
 					unsigned int copyLen = (sender->msgLen + 1 < receiver->rcvLen) ? sender->msgLen : (receiver->rcvLen - 1); // send the bottle neck len
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
+					receiver->retVal = copyLen;
+					sender->retVal   = copyLen;
 					*(receiver->senderTid) = sender->tid;        // Indicate who the sender is
 					rescheduleActive(priorityQueues, req);
 					// Remove sender from sendQ
@@ -557,12 +561,14 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 		    break;
 		case REPLY:
 		    {
+		    	unsigned int whichQueue	= req->taskPriority;
 				TD *sender   = &(tds[req->arg0 - 1]);
 				char *reply  = (char *) req->arg1;
 				int replyLen = req->arg2;
 
 				unsigned int copyLen = (replyLen + 1 < sender->rcvLen) ? replyLen : (sender->rcvLen - 1); // send the bottle neck len
 				copyMsg(sender->rcvAddr, reply, copyLen);
+				priorityQueues[whichQueue].headOfQueue->retVal = copyLen;
 
 				// Put both tasks back to ready queue
 				sender->state = READY;

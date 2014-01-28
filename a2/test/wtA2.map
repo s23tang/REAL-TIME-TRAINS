@@ -28,56 +28,63 @@ bss             0x0000000000000000        0x0
  *(.bss)
                 0x0000000000000000                _BssEnd = .
 
-text            0x0000000000000000     0x18f4
+text            0x0000000000000000     0x217c
  *(.text)
- .text          0x0000000000000000      0xa68 wtA2.o
+ .text          0x0000000000000000     0x12d8 wtA2.o
+                0x0000000000000074                Send
+                0x0000000000000230                theOtherTask2
                 0x0000000000000038                MyParentTid
                 0x000000000000004c                Pass
                 0x0000000000000000                Create
-                0x0000000000000074                theOtherTask
-                0x0000000000000624                closeActive
-                0x0000000000000308                getStackSize
-                0x00000000000004d8                schedule
-                0x00000000000001f8                getNextRequest
+                0x0000000000000108                theOtherTask
+                0x000000000000098c                closeActive
+                0x0000000000000574                getStackSize
+                0x0000000000000750                schedule
+                0x00000000000000a8                Receive
+                0x00000000000000d8                Reply
+                0x00000000000003cc                getNextRequest
                 0x0000000000000024                MyTid
+                0x00000000000004e8                copyMsg
                 0x0000000000000060                Exit
-                0x00000000000006c8                handle
-                0x00000000000000f4                firstUserTask
-                0x00000000000009cc                main
-                0x0000000000000350                initialize
-                0x0000000000000580                rescheduleActive
- .text          0x0000000000000a68      0xc54 ../lib/libbwio.a(bwio.o)
-                0x0000000000000de0                bwputr
-                0x000000000000134c                bwi2a
-                0x0000000000000a68                bwsetfifo
-                0x0000000000000c3c                bwputc
-                0x000000000000109c                bwa2d
-                0x0000000000000b30                bwsetspeed
-                0x0000000000000d00                c2x
-                0x0000000000001144                bwa2i
-                0x0000000000000fe4                bwgetc
-                0x0000000000001208                bwui2a
-                0x00000000000013b0                bwformat
-                0x0000000000000edc                bwputw
-                0x0000000000001684                bwprintf
-                0x0000000000000d60                bwputx
-                0x0000000000000e60                bwputstr
- .text          0x00000000000016bc      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
-                0x00000000000016bc                __udivsi3
-                0x00000000000017b4                __aeabi_uidivmod
- .text          0x00000000000017cc       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
-                0x00000000000017cc                __umodsi3
- .text          0x0000000000001898        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
-                0x0000000000001898                __aeabi_ldiv0
-                0x0000000000001898                __div0
-                0x0000000000001898                __aeabi_idiv0
+                0x0000000000000a30                handle
+                0x0000000000000934                blockActive
+                0x00000000000002e4                firstUserTask
+                0x000000000000089c                rescheduleBlock
+                0x00000000000011f0                main
+                0x00000000000005bc                initialize
+                0x00000000000007f8                rescheduleActive
+ .text          0x00000000000012d8      0xc54 ../lib/libbwio.a(bwio.o)
+                0x0000000000001650                bwputr
+                0x0000000000001bbc                bwi2a
+                0x00000000000012d8                bwsetfifo
+                0x00000000000014ac                bwputc
+                0x000000000000190c                bwa2d
+                0x00000000000013a0                bwsetspeed
+                0x0000000000001570                c2x
+                0x00000000000019b4                bwa2i
+                0x0000000000001854                bwgetc
+                0x0000000000001a78                bwui2a
+                0x0000000000001c20                bwformat
+                0x000000000000174c                bwputw
+                0x0000000000001ef4                bwprintf
+                0x00000000000015d0                bwputx
+                0x00000000000016d0                bwputstr
+ .text          0x0000000000001f2c      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
+                0x0000000000001f2c                __udivsi3
+                0x0000000000002024                __aeabi_uidivmod
+ .text          0x000000000000203c       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
+                0x000000000000203c                __umodsi3
+ .text          0x0000000000002108        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
+                0x0000000000002108                __aeabi_ldiv0
+                0x0000000000002108                __div0
+                0x0000000000002108                __aeabi_idiv0
  *(.got)
- .got           0x000000000000189c        0x8 wtA2.o
+ .got           0x000000000000210c        0xc wtA2.o
  *(.got.plt)
- .got.plt       0x00000000000018a4        0xc wtA2.o
-                0x00000000000018a4                _GLOBAL_OFFSET_TABLE_
+ .got.plt       0x0000000000002118        0xc wtA2.o
+                0x0000000000002118                _GLOBAL_OFFSET_TABLE_
  *(.rodata)
- .rodata        0x00000000000018b0       0x44 wtA2.o
+ .rodata        0x0000000000002124       0x58 wtA2.o
  *(.glue_7)
  *(.glue_7t)
 
