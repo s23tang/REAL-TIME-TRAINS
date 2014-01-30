@@ -287,6 +287,9 @@ void rpsServer() {
 					Player *currPlayer = &(players[senderTid]);
 					Player *partnerPlayer = &(players[currPlayer->againstTid]);
 					if ( currPlayer->move != NONE ) {
+						bwprintf( COM2, "rpsServer: about to announce results, press any key\n\r");
+						char temp;
+						bwgetc( COM2, &temp );
 						if ( currPlayer->move == LEFT ) {
 							currPlayer->againstTid = 0;
 							reply.type = LEAVER;
