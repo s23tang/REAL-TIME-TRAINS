@@ -12,6 +12,30 @@
 #define RECEIVE         7
 #define REPLY           8
 
+// Server macros
+#define REGISTERAS		1
+#define WHOIS			2
+#define NAME_SERVER		2
+#define NUM_SERVERS		1
+#define REQUEST_OK		0
+#define REQUEST_BAD		-1
+#define RPS_INDEX		0
+#define RPS_SIZE		4		// rps server
+
+// RPS server macros
+#define SIGN_UP			1
+#define PLAY			2
+#define QUIT			3
+#define WIN				1
+#define LOSE			2
+#define TIE 			3
+#define LEAVER			4
+#define ROCK 			0
+#define PAPER			1
+#define SCISSORS		2
+#define NONE			3
+#define LEFT			4
+
 struct TD;
 
 /*
@@ -60,3 +84,25 @@ typedef struct {
 	Queue *priorityQueues;
 } Request;
 
+typedef struct {
+	int type;
+	int move;
+} RPSstruct;
+
+typedef struct {
+	int againstTid;
+	int move;
+} Player;
+
+typedef struct {
+	int type;
+	char *name;
+					// \000 terminated, currently accepts:
+					// <rps> only (no brackets)
+	unsigned int tid;
+} NSstruct;
+
+typedef struct {
+	char *name;
+	unsigned int tid;
+} ServerEntry;
