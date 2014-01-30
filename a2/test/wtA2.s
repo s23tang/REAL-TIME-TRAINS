@@ -141,8 +141,6 @@ Send:
 	str	r2, [fp, #-24]
 	str	r3, [fp, #-28]
 	swi 6
-	mov	r3, #0
-	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
 	.size	Send, .-Send
@@ -160,8 +158,6 @@ Receive:
 	str	r1, [fp, #-20]
 	str	r2, [fp, #-24]
 	swi 7
-	mov	r3, #0
-	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
 	.size	Receive, .-Receive
@@ -179,8 +175,6 @@ Reply:
 	str	r1, [fp, #-20]
 	str	r2, [fp, #-24]
 	swi 8
-	mov	r3, #0
-	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
 	.size	Reply, .-Reply
@@ -2388,7 +2382,7 @@ handle:
 	sub	r3, r3, #1
 	cmp	r3, #7
 	addls	pc, pc, r3, asl #2
-	b	.L291
+	b	.L294
 	.p2align 2
 .L267:
 	b	.L259
@@ -2456,7 +2450,7 @@ handle:
 	ldr	r2, [fp, #-104]
 	str	r3, [r2, #0]
 	ldr	r2, [fp, #-104]
-	ldr	r3, .L292
+	ldr	r3, .L295
 	str	r3, [r2, #4]
 	ldr	r2, [fp, #-104]
 	mov	r3, #0
@@ -2532,7 +2526,7 @@ handle:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	rescheduleActive(PLT)
-	b	.L291
+	b	.L294
 .L260:
 	ldr	r3, [fp, #-136]
 	ldr	r3, [r3, #28]
@@ -2554,7 +2548,7 @@ handle:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	rescheduleActive(PLT)
-	b	.L291
+	b	.L294
 .L261:
 	ldr	r3, [fp, #-136]
 	ldr	r3, [r3, #28]
@@ -2576,17 +2570,17 @@ handle:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	rescheduleActive(PLT)
-	b	.L291
+	b	.L294
 .L262:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	rescheduleActive(PLT)
-	b	.L291
+	b	.L294
 .L263:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	closeActive(PLT)
-	b	.L291
+	b	.L294
 .L264:
 	ldr	r3, [fp, #-136]
 	ldr	r3, [r3, #28]
@@ -2640,6 +2634,18 @@ handle:
 	add	r3, r2, r3
 	sub	r3, r3, #60
 	str	r3, [fp, #-64]
+	ldr	r3, [fp, #-68]
+	cmp	r3, #0
+	ble	.L274
+	ldr	r3, [fp, #-68]
+	cmp	r3, #30
+	ble	.L276
+.L274:
+	ldr	r2, [fp, #-72]
+	mvn	r3, #0
+	str	r3, [r2, #8]
+	b	.L294
+.L276:
 	ldr	r3, [fp, #-80]
 	mov	r0, r3
 	ldr	r1, [fp, #-132]
@@ -2647,7 +2653,7 @@ handle:
 	ldr	r3, [fp, #-64]
 	ldr	r3, [r3, #16]
 	cmp	r3, #2
-	bne	.L274
+	bne	.L277
 	ldr	r2, [fp, #-72]
 	mov	r3, #4
 	str	r3, [r2, #16]
@@ -2666,17 +2672,17 @@ handle:
 	ldr	r3, [fp, #-64]
 	ldr	r3, [r3, #32]
 	cmp	r2, r3
-	bge	.L276
+	bge	.L279
 	ldr	r3, [fp, #-72]
 	ldr	r3, [r3, #40]
 	str	r3, [fp, #-148]
-	b	.L278
-.L276:
+	b	.L281
+.L279:
 	ldr	r3, [fp, #-64]
 	ldr	r3, [r3, #32]
 	sub	r3, r3, #1
 	str	r3, [fp, #-148]
-.L278:
+.L281:
 	ldr	r3, [fp, #-148]
 	str	r3, [fp, #-60]
 	ldr	r3, [fp, #-64]
@@ -2695,8 +2701,8 @@ handle:
 	ldr	r2, [r3, #44]
 	ldr	r3, [fp, #-76]
 	str	r3, [r2, #0]
-	b	.L291
-.L274:
+	b	.L294
+.L277:
 	ldr	r2, [fp, #-72]
 	mov	r3, #3
 	str	r3, [r2, #16]
@@ -2706,7 +2712,7 @@ handle:
 	ldr	r3, [fp, #-64]
 	ldr	r3, [r3, #48]
 	cmp	r3, #0
-	beq	.L280
+	beq	.L283
 	ldr	r3, [fp, #-64]
 	ldr	r3, [r3, #52]
 	str	r3, [fp, #-56]
@@ -2716,15 +2722,15 @@ handle:
 	ldr	r2, [fp, #-72]
 	ldr	r3, [fp, #-64]
 	str	r2, [r3, #52]
-	b	.L291
-.L280:
+	b	.L294
+.L283:
 	ldr	r2, [fp, #-72]
 	ldr	r3, [fp, #-64]
 	str	r2, [r3, #48]
 	ldr	r2, [fp, #-72]
 	ldr	r3, [fp, #-64]
 	str	r2, [r3, #52]
-	b	.L291
+	b	.L294
 .L265:
 	ldr	r3, [fp, #-136]
 	ldr	r3, [r3, #28]
@@ -2764,7 +2770,7 @@ handle:
 	ldr	r3, [fp, #-44]
 	ldr	r3, [r3, #48]
 	cmp	r3, #0
-	bne	.L282
+	bne	.L285
 	ldr	r3, [fp, #-44]
 	mov	r2, #2
 	str	r2, [r3, #16]
@@ -2772,8 +2778,8 @@ handle:
 	mov	r0, r3
 	ldr	r1, [fp, #-132]
 	bl	blockActive(PLT)
-	b	.L291
-.L282:
+	b	.L294
+.L285:
 	ldr	r3, [fp, #-44]
 	ldr	r3, [r3, #48]
 	str	r3, [fp, #-40]
@@ -2783,17 +2789,17 @@ handle:
 	ldr	r3, [fp, #-44]
 	ldr	r3, [r3, #32]
 	cmp	r2, r3
-	bge	.L285
+	bge	.L288
 	ldr	r3, [fp, #-40]
 	ldr	r3, [r3, #40]
 	str	r3, [fp, #-144]
-	b	.L287
-.L285:
+	b	.L290
+.L288:
 	ldr	r3, [fp, #-44]
 	ldr	r3, [r3, #32]
 	sub	r3, r3, #1
 	str	r3, [fp, #-144]
-.L287:
+.L290:
 	ldr	r3, [fp, #-144]
 	str	r3, [fp, #-36]
 	ldr	r3, [fp, #-44]
@@ -2826,7 +2832,7 @@ handle:
 	ldr	r2, [r3, #48]
 	ldr	r3, [fp, #-44]
 	str	r2, [r3, #48]
-	b	.L291
+	b	.L294
 .L266:
 	ldr	r3, [fp, #-136]
 	ldr	r3, [r3, #28]
@@ -2854,16 +2860,16 @@ handle:
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #32]
 	cmp	r2, r3
-	blt	.L288
+	blt	.L291
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #32]
 	sub	r3, r3, #1
 	str	r3, [fp, #-140]
-	b	.L290
-.L288:
+	b	.L293
+.L291:
 	ldr	r3, [fp, #-20]
 	str	r3, [fp, #-140]
-.L290:
+.L293:
 	ldr	r3, [fp, #-140]
 	str	r3, [fp, #-16]
 	ldr	r3, [fp, #-28]
@@ -2892,12 +2898,12 @@ handle:
 	ldr	r0, [fp, #-132]
 	ldr	r1, [fp, #-136]
 	bl	rescheduleActive(PLT)
-.L291:
+.L294:
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
-.L293:
+.L296:
 	.align	2
-.L292:
+.L295:
 	.word	1610612752
 	.size	handle, .-handle
 	.align	2
@@ -2926,7 +2932,7 @@ main:
 	mov	r1, r2
 	mov	r2, r3
 	bl	initialize(PLT)
-.L295:
+.L298:
 	sub	r2, fp, #1872
 	sub	r2, r2, #12
 	sub	r2, r2, #12
@@ -2940,7 +2946,7 @@ main:
 	str	r3, [fp, #-16]
 	ldr	r3, [fp, #-16]
 	cmp	r3, #0
-	beq	.L296
+	beq	.L299
 	sub	r3, fp, #1920
 	sub	r3, r3, #12
 	sub	r3, r3, #4
@@ -2960,8 +2966,8 @@ main:
 	mov	r1, r2
 	mov	r2, r3
 	bl	handle(PLT)
-	b	.L295
-.L296:
+	b	.L298
+.L299:
 	mov	r3, #0
 	mov	r0, r3
 	sub	sp, fp, #12

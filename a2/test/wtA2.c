@@ -100,7 +100,7 @@ int Send ( int tid, char *message, int mslen, char *reply, int rplen ) {
 
 	 bwprintf( COM2, "clock cycles: %d", diff ); */
 
-	return 0;
+	return;
 } // Send
 
 //-----------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ int Send ( int tid, char *message, int mslen, char *reply, int rplen ) {
 int Receive ( int *tid, char *message, int mslen ) {
 	asm("swi 7");
 
-	return 0;
+	return;
 } // Receive
 
 //-----------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ int Receive ( int *tid, char *message, int mslen ) {
 int Reply ( int tid, char *reply, int rplen ) {
 	asm("swi 8");
 
-	return 0;
+	return;
 } // Reply
 
 //-----------------------------------------------------------------------------------------------
@@ -975,9 +975,15 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 				sender->rcvAddr   = (char *)req->arg3;
 				sender->rcvLen    = req->arg4;
 				TD *receiver      = &(tds[receiverTid - 1]);
-					
-				blockActive(whichQueue, priorityQueues);     //block the current send task 
+				
+				// Checking if the target Tid is valid.
+				if (receiverTid < 1 || receiverTid > MAX_TASKS)
+				{
+					sender->retVal = -1;
+					break;
+				}
 
+				blockActive(whichQueue, priorityQueues);     //block the current send task 
 				// Check if Receive() is called before Send()
 				if (receiver->state == SND_BLOCKED)
 				{   /* Receive() before Send(). Copy the msg to receiver directly */
@@ -989,7 +995,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
 					sender->retVal = copyLen;
 					*(receiver->senderTid) = senderTid;        // Indicate who the sender is
-
 				}
 				else { 
 					sender->state = RCV_BLOCKED;
@@ -1044,6 +1049,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 
 				unsigned int copyLen = (replyLen + 1 < sender->rcvLen) ? replyLen : (sender->rcvLen - 1); // send the bottle neck len
 				copyMsg(sender->rcvAddr, reply, copyLen);
+
 				priorityQueues[whichQueue].headOfQueue->retVal = copyLen;
 
 				// Put both tasks back to ready queue
