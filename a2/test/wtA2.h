@@ -36,6 +36,12 @@
 #define NONE			3
 #define LEFT			4
 
+// Timer Macros
+// #define TIME_VAL     0x80810084
+// #define TIME_CTRL    0x80810088
+// #define FREQ_BIT     0x8
+// #define ENABLE_BIT   0x80
+
 struct TD;
 
 /*
@@ -84,24 +90,36 @@ typedef struct {
 	Queue *priorityQueues;
 } Request;
 
+/*
+ *	Structure used to communicate with rock paper scissors server
+ */
 typedef struct {
 	int type;
 	int move;
 } RPSstruct;
 
+/*
+ *	RPS server maintains array of this to track matching of players
+ */
 typedef struct {
 	int againstTid;
 	int move;
 } Player;
 
+/*
+ *	Structure used to communicate with name server
+ */
 typedef struct {
 	int type;
 	char *name;
 					// \000 terminated, currently accepts:
-					// <rps> only (no brackets)
+					// <rps> only (no brackets) as legal server name
 	unsigned int tid;
 } NSstruct;
 
+/*
+ *	Name server maintains array of this to track registered servers
+ */
 typedef struct {
 	char *name;
 	unsigned int tid;

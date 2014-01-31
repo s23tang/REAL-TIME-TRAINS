@@ -5,22 +5,9 @@
 #include <ts7200.h>
 #include "wtA2.h"
 
- #define TIME_VAL     0x80810084
-#define TIME_CTRL    0x80810088
-#define FREQ_BIT     0x8
-#define ENABLE_BIT   0x80
-
-// use 33 tasks max so 0xf5178 bytes each
-// start at 0x00044f88 - 0x01fdd000
-
-/*
- *	Kernel primitives (system calls) are implemented
- *	in the following functions, basically each one
- *	contains only a software interrupt to switch to
- *	kernel
- */
-
-
+//-----------------------------------------------------------------------------------------------
+//	Wait until able to read a character from the given UART
+//-----------------------------------------------------------------------------------------------
 int getc( int channel ) {
 	int *flags, *data;
 	unsigned char c;
@@ -38,11 +25,17 @@ int getc( int channel ) {
 		return -1;
 		break;
 	}
-	while ( ( *flags & RXFE_MASK ) ) ;
+	while ( ( *flags & RXFE_MASK ) );		// modified to spin on empty
 	c = *data;
 	return c;
-}
+} // getc
 
+/*
+ *	Kernel primitives (system calls) are implemented
+ *	in the following functions, basically each one
+ *	contains only a software interrupt to switch to
+ *	kernel
+ */
 
 //-----------------------------------------------------------------------------------------------
 //	Create a task for code with the given priority, returning the task id of the created task
@@ -153,7 +146,11 @@ int WhoIs( char *name ) {
  * User tasks for assignment 2 are below
  */
 
- void player4() {
+/*
+ *	player(*) functions all have different strategies of playing rock paper scissors( random )
+ */
+
+void player4() {
 	int rpsS = WhoIs( "rps\000" );
 	int mt = MyTid();
 	if ( rpsS == -1 ) {
@@ -186,7 +183,7 @@ int WhoIs( char *name ) {
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	Exit();
-}
+} // player4
 
 void player1() {
 	int rpsS = WhoIs( "rps\000" );
@@ -247,7 +244,7 @@ void player1() {
 	}
 
 	Exit();
-}
+} // player1
 
 void player2() {
 	int rpsS = WhoIs( "rps\000" );
@@ -307,7 +304,7 @@ void player2() {
 	request.type = QUIT;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	Exit();
-}
+} // player2
 
 void player3() {
 	int rpsS = WhoIs( "rps\000" );
@@ -343,10 +340,11 @@ void player3() {
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	Exit();
-}
+} // player3
 
-
-
+//-----------------------------------------------------------------------------------------------
+//	Server that fascilitates the playing of rock paper scissors, and handles printing
+//-----------------------------------------------------------------------------------------------
 void rpsServer() {
 	char *rock = "ROCK\000";
 	char *paper = "PAPER\000";
@@ -732,7 +730,7 @@ void copyMsg( char *destBuf, char *srcBuf, int len){
                 destBuf[i] = srcBuf[i];
         }
         destBuf[i] = 0;   //Indicate the end of message
-}
+} // copyMsg
 
 //-----------------------------------------------------------------------------------------------
 //	Gets the stack size to use for each user task
@@ -856,7 +854,7 @@ void blockActive(int priority, Queue *priorityQueues){
 	}
 	currQueue->headOfQueue = (TD *)lastActive->nextTask;
 	lastActive->nextTask = 0;
-} 
+} // blockActive
 
 //-----------------------------------------------------------------------------------------------
 //	Remove the last active task from its priority queue so it will no longer be scheduled
