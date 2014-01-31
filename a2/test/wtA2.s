@@ -1174,7 +1174,13 @@ rpsServer:
 	ldr	r3, [fp, #-32]
 	ldr	ip, [r3, #0]
 	ldr	r3, [fp, #-32]
-	ldr	lr, [r3, #4]
+	ldr	r3, [r3, #4]
+	mvn	r2, #59
+	mov	r3, r3, asl #2
+	sub	r1, fp, #16
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	lr, [r3, #0]
 	ldr	r1, [fp, #-328]
 	ldr	r3, [fp, #-332]
 	mvn	r2, #59

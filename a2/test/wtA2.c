@@ -416,7 +416,7 @@ void rpsServer() {
 							|| ( request.move == PAPER && currPlayer->move == ROCK ) 
 							|| ( request.move == SCISSORS && currPlayer->move == PAPER ) ) {
 							
-							bwprintf(COM2, "Task %d played %s, task %d played %s\n\r", currPlayer->againstTid, currPlayer->move,senderTid, moveArray[request.move]);
+							bwprintf(COM2, "Task %d played %s, task %d played %s\n\r", currPlayer->againstTid, moveArray[currPlayer->move],senderTid, moveArray[request.move]);
 							bwprintf(COM2, "Task %d won!\n\r", senderTid);
 							bwprintf(COM2, "Press any key to continue--------------\n\r");
 							getc(COM2);
