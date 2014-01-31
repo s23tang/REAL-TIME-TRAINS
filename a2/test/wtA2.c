@@ -170,25 +170,18 @@ int WhoIs( char *name ) {
 		Exit();
 	}
 
-	bwprintf( COM2, "player %d: going to play rock\n\r", mt);
 	request.type = PLAY;
 	request.move = ROCK;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	}else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
 	
-	bwprintf( COM2, "player %d: going to quit\n\r", mt);
-
 	request.type = QUIT;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
@@ -212,51 +205,46 @@ void player1() {
 		Exit();
 	}
 
-	bwprintf( COM2, "player %d: going to play rock\n\r", mt);
 	request.type = PLAY;
 	request.move = ROCK;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	}else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
-	bwprintf( COM2, "player %d: going to quit\n\r", mt);
 	request.type = QUIT;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	
-	bwprintf( COM2, "player %d: quited and will sign up again\n\r", mt);
-
 	request.type = SIGN_UP;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
-	bwprintf( COM2, "player %d: going to play scissors\n\r", mt);
 	request.type = PLAY;
-	request.move = SCISSORS;
+	request.move = PAPER;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	} else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
 
-	bwprintf( COM2, "player %d: going to quit\n\r", mt);
-	request.type = QUIT;
+	request.type = PLAY;
+	request.move = PAPER;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
+
+	if ( reply.type == WIN ) {
+	} else if ( reply.type == LOSE ) {
+	} else if ( reply.type == TIE ) {
+	} else if ( reply.type == LEAVER ) {
+		request.type = QUIT;
+		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
+	}
 
 	Exit();
 }
@@ -278,61 +266,44 @@ void player2() {
 		Exit();
 	}
 
-	bwprintf( COM2, "player %d: going to play paper\n\r", mt);
 	request.type = PLAY;
 	request.move = PAPER;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	} else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
 
-	bwprintf( COM2, "player %d: going to play scissors\n\r", mt);
 	request.type = PLAY;
 	request.move = SCISSORS;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	} else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again. Also creating another player\n\r", mt);
 		// Create another player to play with
 		void (*ns)();
 		ns = player4;
-		int tid = Create(3, ns);
-		bwprintf(COM2, "Player %d: created player tid %d\n\r", mt, tid);
+		Create(3, ns);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
-	bwprintf( COM2, "player %d: going to play rock\n\r", mt);
 	request.type = PLAY;
 	request.move = ROCK;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	} else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
 
-	bwprintf( COM2, "player %d: going to quit\n\r", mt);
 	request.type = QUIT;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	Exit();
@@ -355,24 +326,18 @@ void player3() {
 		Exit();
 	}
 
-	bwprintf( COM2, "player %d: going to play rock\n\r", mt);
 	request.type = PLAY;
 	request.move = ROCK;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 
 	if ( reply.type == WIN ) {
-		bwprintf( COM2, "player %d: I WON\n\r", mt);
 	} else if ( reply.type == LOSE ) {
-		bwprintf( COM2, "player %d: I LOST\n\r", mt);
 	} else if ( reply.type == TIE ) {
-		bwprintf( COM2, "player %d: I TIED\n\r", mt);
 	}
 	else if ( reply.type == LEAVER ) {
-		bwprintf( COM2, "player %d: my opponent left, signing up again\n\r", mt);
 		request.type = SIGN_UP;
 		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
 	}
-	bwprintf( COM2, "player %d: going to quit\n\r", mt);
 
 	request.type = QUIT;
 	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
@@ -383,6 +348,14 @@ void player3() {
 
 
 void rpsServer() {
+	char *rock = "ROCK\000";
+	char *paper = "PAPER\000";
+	char *scissors = "SCISSORS\000";
+	char * moveArray[3];
+	moveArray[0] = rock;
+	moveArray[1] = paper;
+	moveArray[2] = scissors;
+
 	int check = RegisterAs( "rps\000" );
 	if ( check == -1 ) {
 		bwprintf( COM2, "rpsServer: register failed\n\r" );
@@ -407,12 +380,18 @@ void rpsServer() {
 		switch( request.type ) {
 			case SIGN_UP:
 				{
+					bwprintf(COM2, "Task %d signed up.\n\r", senderTid);
 					if ( unMatchedTid ) {
 						Player *newPlayer = &(players[senderTid]);
 						Player *waitingPlayer = &(players[unMatchedTid]);
 						newPlayer->againstTid = unMatchedTid;
 						waitingPlayer->againstTid = senderTid;
 						reply.type = REQUEST_OK;
+
+						bwprintf(COM2, "Task %d matched up with task %d\n\r", senderTid, unMatchedTid);
+						bwprintf(COM2, "Press any key to continue--------------\n\r");
+						getc(COM2);
+
 						Reply( unMatchedTid, (char *)&reply, sizeof(RPSstruct) );
 						Reply( senderTid, (char *)&reply, sizeof(RPSstruct) );
 						unMatchedTid = 0;
@@ -427,10 +406,11 @@ void rpsServer() {
 					Player *partnerPlayer = &(players[currPlayer->againstTid]);
 
 					if ( currPlayer->move != NONE ) {
-						bwprintf(COM2, "Press any key for result--------------\n\r");
-						getc(COM2);
-
 						if ( currPlayer->move == LEFT ) {
+							bwprintf(COM2, "Task %d left, task %d tried to play %s\n\r", currPlayer->againstTid, senderTid, moveArray[request.move]);
+							bwprintf(COM2, "Press any key to continue--------------\n\r");
+							getc(COM2);
+
 							currPlayer->againstTid = 0;
 							reply.type = LEAVER;
 							Reply( senderTid, (char *)&reply, sizeof(RPSstruct) );
@@ -438,6 +418,11 @@ void rpsServer() {
 							|| ( request.move == PAPER && currPlayer->move == ROCK ) 
 							|| ( request.move == SCISSORS && currPlayer->move == PAPER ) ) {
 							
+							bwprintf(COM2, "Task %d played %s, task %d played %s\n\r", currPlayer->againstTid, currPlayer->move,senderTid, moveArray[request.move]);
+							bwprintf(COM2, "Task %d won!\n\r", senderTid);
+							bwprintf(COM2, "Press any key to continue--------------\n\r");
+							getc(COM2);
+
 							reply.type = LOSE;
 							Reply( currPlayer->againstTid, (char *)&reply, sizeof(RPSstruct) );
 							reply.type = WIN;
@@ -447,12 +432,22 @@ void rpsServer() {
 							|| ( currPlayer->move == PAPER && request.move == ROCK ) 
 							|| ( currPlayer->move == SCISSORS && request.move == PAPER ) ) {
 
+							bwprintf(COM2, "Task %d played %s, task %d played %s\n\r", currPlayer->againstTid, moveArray[currPlayer->move],senderTid, moveArray[request.move]);
+							bwprintf(COM2, "Task %d won!\n\r", currPlayer->againstTid);
+							bwprintf(COM2, "Press any key to continue--------------\n\r");
+							getc(COM2);
+
 							reply.type = WIN;
 							Reply( currPlayer->againstTid, (char *)&reply, sizeof(RPSstruct) );
 							reply.type = LOSE;
 							Reply( senderTid, (char *)&reply, sizeof(RPSstruct) );
 
 						} else {
+							bwprintf(COM2, "Task %d played %s, task %d played %s\n\r", currPlayer->againstTid, moveArray[currPlayer->move],senderTid, moveArray[request.move]);
+							bwprintf(COM2, "TIEEEEEEE!\n\r");
+							bwprintf(COM2, "Press any key to continue--------------\n\r");
+							getc(COM2);
+
 							reply.type = TIE;
 							Reply( currPlayer->againstTid, (char *)&reply, sizeof(RPSstruct) );
 							Reply( senderTid, (char *)&reply, sizeof(RPSstruct) );
@@ -468,10 +463,16 @@ void rpsServer() {
 					Player *currPlayer = &(players[senderTid]);
 					Player *partnerPlayer = &(players[currPlayer->againstTid]);
 					if ( currPlayer->move == LEFT ) {
+						bwprintf( COM2, "Task %d and task %d quit!\n\r", senderTid, currPlayer->againstTid );
+						bwprintf(COM2, "Press any key to continue--------------\n\r");
+						getc(COM2);
 						currPlayer->move = NONE;
 					} else if ( currPlayer->move != NONE ) {
 						currPlayer->move = NONE;
 						reply.type = LEAVER;
+						bwprintf( COM2, "Task %d quit and notifying task %d to sign up again\n\r", senderTid, currPlayer->againstTid );
+						bwprintf(COM2, "Press any key to continue--------------\n\r");
+						getc(COM2);
 						Reply( currPlayer->againstTid, (char *)&reply, sizeof(RPSstruct) );
 						partnerPlayer->againstTid = 0;
 					} else {
@@ -1071,11 +1072,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 int main( int argc, char *argv[] ) {
 
 	/* COMMENT TURNS INSTRUCTION/DATA CACHING ON */
-	/*asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
+	asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
 		 "ldr r1, =4100\n\t"
 		 "bic r0, r0, r1\n\t"
 		 "ORR r0, r0, r1\n\t"
-		 "MCR p15, 0, r0, c1, c0, 0" );*/
+		 "MCR p15, 0, r0, c1, c0, 0" );
 
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
