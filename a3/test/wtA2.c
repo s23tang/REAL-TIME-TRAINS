@@ -249,7 +249,6 @@ void player1() {
 void player2() {
 	int rpsS = WhoIs( "rps\000" );
 	int mt = MyTid();
-	bwprintf(COM2, "WTF %d\n\r", mt);
 	if ( rpsS == -1 ) {
 		bwprintf( COM2, "player %d: failed to get rps server\n\r", mt );
 		Exit();
@@ -595,82 +594,30 @@ void joker() {
 //-----------------------------------------------------------------------------------------------
 //	First user task that will be placed by the kernel into the priority queue
 //-----------------------------------------------------------------------------------------------
-// void firstUserTask(){
-	
-// 	void (*ns)();
-// 	ns = nameServer;
-// 	unsigned int tid;
-// 	tid = Create(0, ns);
-// 	bwprintf(COM2, "First: created name server\n\r");
-
-// 	ns = rpsServer;
-// 	tid = Create(2, ns);
-// 	bwprintf(COM2, "First: created rps server with tid %d\n\r", tid);
-
-// 	// ns = player1;
-// 	// tid = Create(4, ns);
-// 	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
-
-// 	ns = player2;
-// 	tid = Create(3, ns);
-// 	bwprintf(COM2, "First: created player tid %d\n\r", tid);
-
-// 	// ns = player3;
-// 	// tid = Create(4, ns);
-// 	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
-// 	unsigned int tid;
-// 	tid = MyTid();
-
-// 	bwprintf( COM2, "tid\n\r");
-
-// 	bwprintf(COM2, "First: exiting\n\r");
-// 	Exit();
-// } // firstUserTask
-
-void other() {
-	bwprintf(COM2, "other: pls\n\r");
-	Exit();
-}
-
-//-----------------------------------------------------------------------------------------------
-//	Tasks that will be created by the first user task contains the following
-//-----------------------------------------------------------------------------------------------
-void theOtherTask(){
-	// int myTid, myParentTid;
-	// myTid = MyTid();
-	// myParentTid = MyParentTid();
-	// bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
-	// Pass();
-	// bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
-	// Exit();
-	void (*otherTask)();
-	otherTask = other;
-	//Create four instances 
-	unsigned int retVal;
-	retVal = Create(3, otherTask);	  //instances with lower priority
-	bwprintf(COM2, "OtherTask created: %d\n\r", retVal);
-	Exit();
-} // theOtherTask
-
-
-//-----------------------------------------------------------------------------------------------
-//	First user task that will be placed by the kernel into the priority queue
-//-----------------------------------------------------------------------------------------------
 void firstUserTask(){
-	void (*otherTask)();
-	otherTask = theOtherTask;
-	//Create four instances 
-	unsigned int retVal;
-	retVal = Create(2, otherTask);	  //instances with lower priority
-	bwprintf(COM2, "Created: %d\n\r", retVal);
-	retVal = Create(2, otherTask);
-	bwprintf(COM2, "Created: %d\n\r", retVal);
-	retVal = Create(0, otherTask);     //instances with higher priority
-	bwprintf(COM2, "Created: %d\n\r", retVal);
-	retVal = Create(0, otherTask);
-	bwprintf(COM2, "Created: %d\n\r", retVal);
+	
+	void (*ns)();
+	ns = nameServer;
+	unsigned int tid;
+	tid = Create(0, ns);
+	bwprintf(COM2, "First: created name server\n\r");
 
-	//exit
+	ns = rpsServer;
+	tid = Create(2, ns);
+	bwprintf(COM2, "First: created rps server with tid %d\n\r", tid);
+
+	ns = player1;
+	tid = Create(4, ns);
+	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+
+	ns = player2;
+	tid = Create(3, ns);
+	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+
+	ns = player3;
+	tid = Create(4, ns);
+	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
 } // firstUserTask
@@ -707,7 +654,7 @@ void getNextRequest(TD *active, Request *req){
 	asm("mov sp, r1\n\t"
 		"ldmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
 		"mov r2, sp\n\t"
-		"add sp, sp, #16");
+		"add sp, sp, #12");
 	// 5. put the retVal in r0
 	asm("mov r3, lr"); // above puts return value but no inverse
 	// 6. return to SVC state
@@ -1001,7 +948,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 		case MYTID:
 			{	/*	MyTid */
 				unsigned int whichQueue	= req->taskPriority;
-				bwprintf(COM2, "%d\n\r", priorityQueues[whichQueue].headOfQueue->retVal);
 				priorityQueues[whichQueue].headOfQueue->retVal = priorityQueues[whichQueue].headOfQueue->tid;
 				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
 																	// queue behind the created task
