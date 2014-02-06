@@ -586,8 +586,8 @@ void recvr() { // Or 64
 }
 */
 
-void joker() {
-	bwprintf(COM2, "joker: joker style\n\r");
+void test() {
+	
 	Exit();
 }
 
@@ -597,26 +597,50 @@ void joker() {
 void firstUserTask(){
 	
 	void (*ns)();
-	ns = nameServer;
-	unsigned int tid;
-	tid = Create(0, ns);
-	bwprintf(COM2, "First: created name server\n\r");
+	// ns = nameServer;
+	// unsigned int tid;
+	// tid = Create(0, ns);
+	// bwprintf(COM2, "First: created name server\n\r");
 
-	ns = rpsServer;
-	tid = Create(2, ns);
-	bwprintf(COM2, "First: created rps server with tid %d\n\r", tid);
+	// ns = rpsServer;
+	// tid = Create(2, ns);
+	// bwprintf(COM2, "First: created rps server with tid %d\n\r", tid);
 
-	ns = player1;
-	tid = Create(4, ns);
-	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+	// ns = player1;
+	// tid = Create(4, ns);
+	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
 
-	ns = player2;
-	tid = Create(3, ns);
-	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+	// ns = player2;
+	// tid = Create(3, ns);
+	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
 
-	ns = player3;
-	tid = Create(4, ns);
-	bwprintf(COM2, "First: created player tid %d\n\r", tid);
+	// ns = player3;
+	// tid = Create(4, ns);
+	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
+
+	bwprintf( COM2, "First: start timer");
+	unsigned int *time = (unsigned int *)TIME_VAL;
+	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+	*timeLoad = 500000;
+	 unsigned int *control = (unsigned int *)TIME_CTRL;
+	 *control = *control | 0x40;
+	 *control = *control | FREQ_BIT;
+	 *control = *control | ENABLE_BIT;
+	unsigned int oldTime = *time;
+
+	bwprintf(COM2, "First: trying something\n\r");
+
+
+	int *vicEnable2 = VIC2 + 0x10;
+	*(vicEnable2) = 0x00080000;
+
+	bwprintf(COM2, "First: enabled\n\r");
+
+	for ( ; ; ) {
+		unsigned int oldTime = *time;
+
+	 	bwprintf( COM2, "time: %d\n\r", oldTime );
+	}
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();

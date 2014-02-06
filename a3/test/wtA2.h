@@ -3,6 +3,8 @@
 #define LOAD_LOC		0x00218000
 #define MEM_END			0x01fdd000
 #define MEM_START		0x00044f88
+#define VIC1			0x800B0000
+#define VIC2			0x800C0000
 #define CREATE 			1
 #define MYTID 			2
 #define MYPARENTTID 	3
@@ -37,10 +39,11 @@
 #define LEFT			4
 
 // Timer Macros
-// #define TIME_VAL     0x80810084
-// #define TIME_CTRL    0x80810088
-// #define FREQ_BIT     0x8
-// #define ENABLE_BIT   0x80
+#define TIME_LOAD     0x80810080
+#define TIME_VAL     0x80810084
+#define TIME_CTRL    0x80810088
+#define FREQ_BIT     0x8
+#define ENABLE_BIT   0x80
 
 struct TD;
 
