@@ -14,18 +14,18 @@ CFLAGS  = -D MAX_TASKS=$(mt) -D MAX_PRIORITIES=$(mp) -c -fPIC -Wall -Wno-return-
 ASFLAGS	= -mcpu=arm920t -mapcs-32
 # -mapcs: always generate a complete stack frame
 
-LDFLAGS = -init main -Map wtA2.map -N  -T orex.ld -L/u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2 -L../lib
+LDFLAGS = -init main -Map wtA3.map -N  -T orex.ld -L/u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2 -L../lib
 
-all:  wtA2.s wtA2.elf
+all:  wtA3.s wtA3.elf
 
-wtA2.s: wtA2.c wtA2.h
-	$(XCC) -S $(CFLAGS) wtA2.c
+wtA3.s: wtA3.c wtA3.h
+	$(XCC) -S $(CFLAGS) wtA3.c
 
-wtA2.o: wtA2.s
-	$(AS) $(ASFLAGS) -o wtA2.o wtA2.s
+wtA3.o: wtA3.s
+	$(AS) $(ASFLAGS) -o wtA3.o wtA3.s
 
-wtA2.elf: wtA2.o
-	$(LD) $(LDFLAGS) -o $@ wtA2.o -lbwio -lgcc
+wtA3.elf: wtA3.o
+	$(LD) $(LDFLAGS) -o $@ wtA3.o -lbwio -lgcc
 
 clean:
-	-rm -f wtA2.elf *.s *.o wtA2.map
+	-rm -f wtA3.elf *.s *.o wtA3.map
