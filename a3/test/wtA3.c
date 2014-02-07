@@ -146,203 +146,6 @@ int WhoIs( char *name ) {
  * User tasks for assignment 2 are below
  */
 
-/*
- *	player(*) functions all have different strategies of playing rock paper scissors( random )
- */
-
-void player4() {
-	int rpsS = WhoIs( "rps\000" );
-	int mt = MyTid();
-	if ( rpsS == -1 ) {
-		bwprintf( COM2, "player %d: failed to get rps server\n\r", mt );
-		Exit();
-	}
-	RPSstruct request;
-	RPSstruct reply;
-	request.type = SIGN_UP;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	
-	if ( reply.type != REQUEST_OK ) {
-		bwprintf( COM2, "player %d: failed to sign up\n\r", mt );
-		Exit();
-	}
-
-	request.type = PLAY;
-	request.move = ROCK;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	}else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-	
-	request.type = QUIT;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	Exit();
-} // player4
-
-void player1() {
-	int rpsS = WhoIs( "rps\000" );
-	int mt = MyTid();
-	if ( rpsS == -1 ) {
-		bwprintf( COM2, "player %d: failed to get rps server\n\r", mt );
-		Exit();
-	}
-	RPSstruct request;
-	RPSstruct reply;
-	request.type = SIGN_UP;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	
-	if ( reply.type != REQUEST_OK ) {
-		bwprintf( COM2, "player %d: failed to sign up\n\r", mt );
-		Exit();
-	}
-
-	request.type = PLAY;
-	request.move = ROCK;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	}else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-	request.type = QUIT;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	
-	request.type = SIGN_UP;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	request.type = PLAY;
-	request.move = PAPER;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	} else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-
-	request.type = PLAY;
-	request.move = PAPER;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	} else if ( reply.type == LEAVER ) {
-		request.type = QUIT;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-
-	Exit();
-} // player1
-
-void player2() {
-	int rpsS = WhoIs( "rps\000" );
-	int mt = MyTid();
-	if ( rpsS == -1 ) {
-		bwprintf( COM2, "player %d: failed to get rps server\n\r", mt );
-		Exit();
-	}
-	RPSstruct request;
-	RPSstruct reply;
-	request.type = SIGN_UP;
-
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	
-	if ( reply.type != REQUEST_OK ) {
-		bwprintf( COM2, "player %d: failed to sign up\n\r", mt );
-		Exit();
-	}
-
-	request.type = PLAY;
-	request.move = PAPER;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	} else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-
-	request.type = PLAY;
-	request.move = SCISSORS;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	} else if ( reply.type == LEAVER ) {
-		// Create another player to play with
-		void (*ns)();
-		ns = player4;
-		Create(3, ns);
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-	request.type = PLAY;
-	request.move = ROCK;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	} else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-
-	request.type = QUIT;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	Exit();
-} // player2
-
-void player3() {
-	int rpsS = WhoIs( "rps\000" );
-	int mt = MyTid();
-	if ( rpsS == -1 ) {
-		bwprintf( COM2, "player %d: failed to get rps server\n\r", mt );
-		Exit();
-	}
-	RPSstruct request;
-	RPSstruct reply;
-	request.type = SIGN_UP;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	
-	if ( reply.type != REQUEST_OK ) {
-		bwprintf( COM2, "player %d: failed to sign up\n\r", mt );
-		Exit();
-	}
-
-	request.type = PLAY;
-	request.move = ROCK;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	if ( reply.type == WIN ) {
-	} else if ( reply.type == LOSE ) {
-	} else if ( reply.type == TIE ) {
-	}
-	else if ( reply.type == LEAVER ) {
-		request.type = SIGN_UP;
-		Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-	}
-
-	request.type = QUIT;
-	Send( rpsS, (char *)&request, sizeof(RPSstruct), (char *)&reply, sizeof(RPSstruct) );
-
-	Exit();
-} // player3
-
 //-----------------------------------------------------------------------------------------------
 //	Server that fascilitates the playing of rock paper scissors, and handles printing
 //-----------------------------------------------------------------------------------------------
@@ -568,27 +371,16 @@ void nameServer() {
 	} // FOREVER
 } // nameServer
 
-/* FUNCTIONS to test timing for sending
-void sender() { // Or 64
-	char send[4];
-	char reply[4];
-	Send( 3, (char *)send, 4, (char *)reply, 4 );
-	Exit();
+void t1() {
+	for (;;) {
+		bwprintf( COM2, "IN TASK 1 ATM++++++++++++++++++++++\n\r");
+	}
 }
 
-void recvr() { // Or 64
-	int tid;
-	char recv[4];
-	char reply[4];
-	Receive( &tid, (char *)recv, 4 );
-	Reply( tid, (char *)reply, 4 );
-	Exit();
-}
-*/
-
-void test() {
-	
-	Exit();
+void t2() {
+	for (;;) {
+		bwprintf( COM2, "IN TASK 2 ATM**********************\n\r");
+	}
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -597,28 +389,8 @@ void test() {
 void firstUserTask(){
 	
 	void (*ns)();
-	// ns = nameServer;
-	// unsigned int tid;
-	// tid = Create(0, ns);
-	// bwprintf(COM2, "First: created name server\n\r");
 
-	// ns = rpsServer;
-	// tid = Create(2, ns);
-	// bwprintf(COM2, "First: created rps server with tid %d\n\r", tid);
-
-	// ns = player1;
-	// tid = Create(4, ns);
-	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
-
-	// ns = player2;
-	// tid = Create(3, ns);
-	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
-
-	// ns = player3;
-	// tid = Create(4, ns);
-	// bwprintf(COM2, "First: created player tid %d\n\r", tid);
-
-	bwprintf( COM2, "First: start timer");
+	bwprintf( COM2, "\033[2J\033[HFirst: start timer\n\r");
 	unsigned int *time = (unsigned int *)TIME_VAL;
 	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
 	*timeLoad = 500000;
@@ -636,11 +408,10 @@ void firstUserTask(){
 
 	bwprintf(COM2, "First: enabled\n\r");
 
-	for ( ; ; ) {
-		unsigned int oldTime = *time;
-
-	 	bwprintf( COM2, "time: %d\n\r", oldTime );
-	}
+	ns = t1;
+	Create( 2, ns );
+	ns = t2;
+	Create( 2, ns );
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
@@ -660,9 +431,11 @@ void firstUserTask(){
 //-----------------------------------------------------------------------------------------------
 void getNextRequest(TD *active, Request *req){
 	// Setup the jump table to branch to kerent on swi
-	void (*syscall)();
-	syscall = &&kerent;
-	*(int *)(0x28) = (int)syscall;
+	void (*labelAddr)();
+	labelAddr = &&kerent;
+	*(int *)(0x28) = (int)labelAddr;
+	labelAddr = &&HWint;
+	*(int *)(0x38) = (int)labelAddr;
 
 	// 1. push the kernel registers onto its stack
 	asm("stmfd sp!, {r0, r4-r9, sl, fp}");
@@ -694,6 +467,24 @@ void getNextRequest(TD *active, Request *req){
 		"ldmfd r2, {r1-r3}\n\t"
 		"ldr r0, [r0, #8]\n\t"
 		"movs pc, lr");
+HWint:
+	asm("stmfd sp!, {r0, r1, lr}\n\t"
+		"mov r1, sp\n\t"
+		"add sp, sp, #12");
+
+	// Switch to kernel
+	asm("mrs r0, CPSR\n\t"
+		"bic r0, r0, #0x1F\n\t"
+		"orr r0, r0, #0x13\n\t"
+		"msr CPSR, r0");
+	
+	asm("ldmfd r1, {r0, r1, lr}\n\t"
+		"sub lr, lr, #8\n\t"
+		"stmfd sp!, {r0-r4}\n\t"
+		"mov r1, #0\n\t"
+		"stmfd sp!, {r1}");
+
+	asm("b HWres");
 
 kerent:
 	// 1. acquire the arguments of the request
@@ -703,9 +494,9 @@ kerent:
 		"bic r1, r0, #0xFF000000\n\t"
 		"stmfd sp!, {r1}");
 	// Used to determine if there are 5 arguments. Otherwise arg4 will be garbage.
-	 asm("ldr r1, [fp, #4]\n\t"
+	 asm("HWres:\n\t"
+	 	 "ldr r1, [fp, #4]\n\t"
 	 	 "str r1, [sp, #20]");
-
 	// 1.5 get the start of the TDs out from stack
 	// 1.6 get SPSR of the active task into the SP_SVC
 	asm("mrs r1, SPSR\n\t"
@@ -721,8 +512,7 @@ kerent:
 	// 4. overwrite lr with the value from step 2
 	asm("ldmfd r2!, {lr}");
 	// 5. push the registers of the active task onto its stack
-	asm("Store:\n\t"
-		"add r2, r2, #8\n\t"
+	asm("add r2, r2, #8\n\t"
 		"ldmfd r2, {r0-r3}\n\t"
 		"stmfd sp!, {r1-r3}\n\t"
 		"stmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
@@ -914,6 +704,13 @@ void closeActive( Queue *priorityQueues, Request *req ) {
 //-----------------------------------------------------------------------------------------------
 void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 	switch( req->type ) {
+		case 0:
+			{
+				int *clr = TIME_CLR;
+				*clr = 1;
+				rescheduleActive( priorityQueues, req );
+			}
+		break;
 		case CREATE:
 			{	/*	Create */
 				unsigned int freeIndex 	= req->freeIndex;			// Where to place new TD
@@ -1124,7 +921,7 @@ int main( int argc, char *argv[] ) {
 												// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
 		getNextRequest( active, &req );			// req is a pointer to a Request
-		handle( tds, priorityQueues, &req);	// Execute the kernel code of the kernel primitive
+		handle( tds, priorityQueues, &req);	// Execute the kernel code of the kernel primitive-h
 	} // for
 
 	return 0;
