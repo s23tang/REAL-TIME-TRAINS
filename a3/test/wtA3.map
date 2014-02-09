@@ -28,73 +28,73 @@ bss             0x0000000000000000        0x0
  *(.bss)
                 0x0000000000000000                _BssEnd = .
 
-text            0x0000000000000000     0x3714
+text            0x0000000000000000     0x36a4
  *(.text)
- .text          0x0000000000000000     0x26cc wtA3.o
+ .text          0x0000000000000000     0x2680 wtA3.o
                 0x0000000000000130                Send
                 0x00000000000000f4                MyParentTid
                 0x0000000000000108                Pass
                 0x0000000000000000                getc
-                0x0000000000000d24                clockServer
+                0x0000000000000d2c                clockServer
                 0x0000000000000240                WhoIs
                 0x00000000000000bc                Create
-                0x0000000000001b4c                closeActive
-                0x00000000000016f0                getStackSize
+                0x0000000000001b18                closeActive
+                0x00000000000016bc                getStackSize
                 0x00000000000001ac                AwaitEvent
-                0x00000000000018f4                schedule
+                0x00000000000018c0                schedule
                 0x000000000000015c                Receive
                 0x0000000000000184                Reply
-                0x00000000000014e4                getNextRequest
+                0x00000000000014c8                getNextRequest
                 0x00000000000000e0                MyTid
-                0x0000000000001664                copyMsg
+                0x0000000000001648                copyMsg
                 0x000000000000011c                Exit
-                0x0000000000001bf0                handle
-                0x0000000000001078                nameServer
-                0x0000000000001acc                blockActive
+                0x0000000000001bbc                handle
+                0x0000000000001080                nameServer
+                0x0000000000001a98                blockActive
                 0x0000000000000384                DelayUntil
-                0x0000000000001428                firstUserTask
-                0x0000000000001a40                rescheduleBlock
-                0x00000000000013b4                t1
-                0x00000000000025c4                main
-                0x00000000000004ec                rpsServer
+                0x000000000000140c                firstUserTask
+                0x0000000000001a0c                rescheduleBlock
+                0x00000000000013bc                t1
+                0x0000000000002590                main
+                0x00000000000004f4                rpsServer
                 0x00000000000001c8                RegisterAs
                 0x00000000000003dc                notifier
                 0x0000000000000308                Delay
                 0x00000000000002b8                Time
-                0x0000000000001738                initialize
-                0x000000000000199c                rescheduleActive
- .text          0x00000000000026cc      0xc54 ../lib/libbwio.a(bwio.o)
-                0x0000000000002a44                bwputr
-                0x0000000000002fb0                bwi2a
-                0x00000000000026cc                bwsetfifo
-                0x00000000000028a0                bwputc
-                0x0000000000002d00                bwa2d
-                0x0000000000002794                bwsetspeed
-                0x0000000000002964                c2x
-                0x0000000000002da8                bwa2i
-                0x0000000000002c48                bwgetc
-                0x0000000000002e6c                bwui2a
-                0x0000000000003014                bwformat
-                0x0000000000002b40                bwputw
-                0x00000000000032e8                bwprintf
-                0x00000000000029c4                bwputx
-                0x0000000000002ac4                bwputstr
- .text          0x0000000000003320      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
-                0x0000000000003320                __udivsi3
-                0x0000000000003418                __aeabi_uidivmod
- .text          0x0000000000003430       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
-                0x0000000000003430                __umodsi3
- .text          0x00000000000034fc        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
-                0x00000000000034fc                __aeabi_ldiv0
-                0x00000000000034fc                __div0
-                0x00000000000034fc                __aeabi_idiv0
+                0x0000000000001704                initialize
+                0x0000000000001968                rescheduleActive
+ .text          0x0000000000002680      0xc54 ../lib/libbwio.a(bwio.o)
+                0x00000000000029f8                bwputr
+                0x0000000000002f64                bwi2a
+                0x0000000000002680                bwsetfifo
+                0x0000000000002854                bwputc
+                0x0000000000002cb4                bwa2d
+                0x0000000000002748                bwsetspeed
+                0x0000000000002918                c2x
+                0x0000000000002d5c                bwa2i
+                0x0000000000002bfc                bwgetc
+                0x0000000000002e20                bwui2a
+                0x0000000000002fc8                bwformat
+                0x0000000000002af4                bwputw
+                0x000000000000329c                bwprintf
+                0x0000000000002978                bwputx
+                0x0000000000002a78                bwputstr
+ .text          0x00000000000032d4      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
+                0x00000000000032d4                __udivsi3
+                0x00000000000033cc                __aeabi_uidivmod
+ .text          0x00000000000033e4       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
+                0x00000000000033e4                __umodsi3
+ .text          0x00000000000034b0        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
+                0x00000000000034b0                __aeabi_ldiv0
+                0x00000000000034b0                __div0
+                0x00000000000034b0                __aeabi_idiv0
  *(.got)
- .got           0x0000000000003500       0x14 wtA3.o
+ .got           0x00000000000034b4       0x14 wtA3.o
  *(.got.plt)
- .got.plt       0x0000000000003514        0xc wtA3.o
-                0x0000000000003514                _GLOBAL_OFFSET_TABLE_
+ .got.plt       0x00000000000034c8        0xc wtA3.o
+                0x00000000000034c8                _GLOBAL_OFFSET_TABLE_
  *(.rodata)
- .rodata        0x0000000000003520      0x1f4 wtA3.o
+ .rodata        0x00000000000034d4      0x1d0 wtA3.o
  *(.glue_7)
  *(.glue_7t)
 

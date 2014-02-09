@@ -220,6 +220,7 @@ void notifier( ){
 	// tell the server: successfully created
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
 	FOREVER {
+		send.type = NOTI_REQ;
 		send.data1 = AwaitEvent(reply.type);
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 	}
@@ -410,9 +411,11 @@ void clockServer( ) {
 				break;
 
 			case TIME_REQ:
-				send.type = REQUEST_OK;
-				send.data1 = currTime;
-				Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+				{
+					send.type = REQUEST_OK;
+					send.data1 = currTime;
+					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+				}
 				break;
 
 			case DELAY_REQ:
@@ -559,8 +562,12 @@ void nameServer() {
 
 void t1( ) {
 	int clkServer = WhoIs( "clock\000" );
-	int currTime = Time( clkServer );
-	bwprintf( COM2, "Got time from clock server: %d\n\r", currTime );
+	int currTime;
+	for (;;) {
+		currTime = Time( clkServer );
+		//bwprintf( COM2, "%d\n\r", currTime );
+	}
+
 	Exit();
 }
 
@@ -568,7 +575,6 @@ void t1( ) {
 //	First user task that will be placed by the kernel into the priority queue
 //-----------------------------------------------------------------------------------------------
 void firstUserTask(){
-	
 	void (*func)();
 	func = nameServer;
 	unsigned int tid;
@@ -579,7 +585,7 @@ void firstUserTask(){
 	tid = Create( 1, func );
 
 	func = t1;
-	Create( 2, func );
+	Create( 3, func );
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
@@ -721,7 +727,7 @@ void copyMsg( char *destBuf, char *srcBuf, int len){
         {
                 destBuf[i] = srcBuf[i];
         }
-        destBuf[i] = 0;   //Indicate the end of message
+        //destBuf[i] = 0;   //Indicate the end of message
 } // copyMsg
 
 //-----------------------------------------------------------------------------------------------
@@ -760,7 +766,7 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	tds[0].tid = 1;						// First user task has ID 1
 	tds[0].parentTid = 0;				// Parent is 0 (kernel)
 	tds[0].nextTask = 0;				// No next task in priority queue
-	tds[0].priority = 1;
+	tds[0].priority = 2;
 
 	// Set lr to the location of the firstUserTask
 	void (*syscall)();
@@ -775,8 +781,8 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 										// Setup the first user task to be
 										// both head and tail of queue,
 										// since only one in the queue
-	priorityQueues[1].headOfQueue = &(tds[0]);
-	priorityQueues[1].tailOfQueue = &(tds[0]);
+	priorityQueues[2].headOfQueue = &(tds[0]);
+	priorityQueues[2].tailOfQueue = &(tds[0]);
 
 	req->freeIndex = 1;					// Next index to place TD in tds array
 	req->tds = tds;						// Reference the tds array
@@ -895,7 +901,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					rescheduleBlock(priorityQueues, notifier->priority, notifier);
 				}
 			}
-		break;
+			break;
 		case CREATE:
 			{	/*	Create */
 				unsigned int freeIndex 	= req->freeIndex;			// Where to place new TD
@@ -1105,11 +1111,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 int main( int argc, char *argv[] ) {
 
 	/* COMMENT TURNS INSTRUCTION/DATA CACHING ON */
-	asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
-		 "ldr r1, =4100\n\t"
-		 "bic r0, r0, r1\n\t"
-		 "ORR r0, r0, r1\n\t"
-		 "MCR p15, 0, r0, c1, c0, 0" );
+	// asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
+	// 	 "ldr r1, =4100\n\t"
+	// 	 "bic r0, r0, r1\n\t"
+	// 	 "ORR r0, r0, r1\n\t"
+	// 	 "MCR p15, 0, r0, c1, c0, 0" );
 
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
