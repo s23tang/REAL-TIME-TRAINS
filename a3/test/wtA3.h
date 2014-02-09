@@ -1,3 +1,4 @@
+// Kernel Primitive Macros
 #define FOREVER 		for( ; ; )
 #define PSR_USR			0x60000010
 #define LOAD_LOC		0x00218000
@@ -5,6 +6,7 @@
 #define MEM_START		0x00044f88
 #define VIC1			0x800B0000
 #define VIC2			0x800C0000
+#define HWINTERRUPT		0
 #define CREATE 			1
 #define MYTID 			2
 #define MYPARENTTID 	3
@@ -13,6 +15,7 @@
 #define SEND            6
 #define RECEIVE         7
 #define REPLY           8
+#define AWAIT_EVENT     9
 
 // Name Server macros
 #define REGISTERAS		1
@@ -51,11 +54,16 @@
 #define ENABLE_BIT   	0x80
 
 // Clock Server Macros
-#define CLOCK_EVT		0
 #define NOTI_REQ		1
 #define TIME_REQ		2
 #define DELAY_REQ		3
 #define ONE_TICK 		5080
+
+// Event type
+#define CLOCK           0
+
+// Notifiers
+#define NUM_NOTIFIERS	1
 
 struct TD;
 struct DelayedTask;
@@ -68,7 +76,7 @@ typedef struct {
 	int spsr;
 	int retVal;
 	int priority;
-	enum { ACTIVE, READY, SND_BLOCKED, RCV_BLOCKED, RPL_BLOCKED, ZOMBIE } state;
+	enum { ACTIVE, READY, SND_BLOCKED, RCV_BLOCKED, RPL_BLOCKED, AWAIT_BLOCKED, ZOMBIE } state;
 	unsigned int tid;
 	unsigned int parentTid;
 	void *rcvAddr;
@@ -142,12 +150,12 @@ typedef struct {
 } ServerEntry;
 
 /*
- *	Request structure to communicate with Clock Server
+ *	Common request structure to communicate between notifier, server, and clients
  */
 typedef struct {
 	int type;
-	int ticks;
-} CLKstruct;
+	int data1;
+} ComReqStruct;
 
 /*
  *	Clock server's suspended task structures, to be used in a linked list (sorted)
@@ -157,3 +165,12 @@ typedef struct {
 	unsigned int tid;
 	struct DelayedTask *next;
 } DelayedTask;
+
+/*
+ * A structure that stores the data for a notifier
+ */
+typedef struct {
+	TD *task;
+	int data;            // the volitile data from last event
+	int eventWaiting;    // indicate if there is an event is waiting
+} Notifier;

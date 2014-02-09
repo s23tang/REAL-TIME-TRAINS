@@ -115,6 +115,15 @@ int Reply ( int tid, char *reply, int rplen ) {
 } // Reply
 
 //-----------------------------------------------------------------------------------------------
+//	Calling task blocks and wait for a specific event
+//-----------------------------------------------------------------------------------------------
+int AwaitEvent ( int EventType ) {
+	asm("swi 9");
+
+	return;
+} // AwaitEvent
+
+//-----------------------------------------------------------------------------------------------
 //	Calling task will try to register itself as a server
 //-----------------------------------------------------------------------------------------------
 int RegisterAs( char *name ) {
@@ -146,12 +155,12 @@ int WhoIs( char *name ) {
 //	Calling task will get the current time in ticks from the clock server
 //-----------------------------------------------------------------------------------------------
 int Time( unsigned int clkServer ) {
-	CLKstruct request, reply;
+	ComReqStruct request, reply;
 	request.type = TIME_REQ;
 
-	Send( clkServer, (char *)&request, sizeof(CLKstruct), (char *)&reply, sizeof(CLKstruct) );
+	Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
-	return reply.ticks;
+	return reply.data1;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -160,11 +169,11 @@ int Time( unsigned int clkServer ) {
 int Delay( unsigned int clkServer, int ticks ) {
 	if ( ticks < 0 ) return -1;
 
-	CLKstruct request, reply;
+	ComReqStruct request, reply;
 	request.type = DELAY_REQ;
-	request.ticks = ticks;
+	request.data1 = ticks;
 
-	Send( clkServer, (char *)&request, sizeof(CLKstruct), (char *)&reply, sizeof(CLKstruct) );
+	Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	return 0;
 }
@@ -180,8 +189,41 @@ int DelayUntil( unsigned int clkServer, int ticks ) {
 }
 
 /*
- * User tasks for assignment 2 are below
+ * User tasks for assignment 3 are below
  */
+
+//-----------------------------------------------------------------------------------------------
+// Notifier for a specific event. Will be created by server
+//-----------------------------------------------------------------------------------------------
+void notifier( ){
+	int server;
+	ComReqStruct send, reply;
+	
+	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
+
+	switch ( reply.type ) {
+		case CLOCK:
+			{
+				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+				*timeLoad = ONE_TICK;
+				unsigned int *control = (unsigned int *)TIME_CTRL;
+				*control = *control | 0x40;
+				*control = *control | FREQ_BIT;
+				*control = *control | ENABLE_BIT;
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = 0x00080000;
+			}
+			break;
+	}
+	send.type = REQUEST_OK;
+	// tell the server: successfully created
+	Reply(server, (char *)&send, sizeof(ComReqStruct));
+	FOREVER {
+		send.data1 = AwaitEvent(reply.type);
+		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
+	}
+}
 
 //-----------------------------------------------------------------------------------------------
 //	Server that fascilitates the playing of rock paper scissors, and handles printing
@@ -338,11 +380,11 @@ void clockServer( ) {
 	}
 
 	// Create notifier
-	/*unsigned int notiTid;
+	unsigned int notiTid;
 	void (*noti)();
 
 	noti = notifier;
-	notiTid = Create( 0, noti );*/
+	notiTid = Create( 0, noti );
 
 	// Initializing
 	int reqTid;
@@ -352,30 +394,30 @@ void clockServer( ) {
 	DelayedTask *delayedList = 0;
 
 	// Let notifier know that its done
-	CLKstruct send, reply;
-	send.type = CLOCK_EVT;
-	//Send( notiTid, (char *)&send, sizeof(CLKstruct), (char *)&reply, sizeof(&CLKstruct) );
+	ComReqStruct send, reply;
+	send.type = CLOCK;
+	Send( notiTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	// Start server
 	FOREVER {
-		Receive( &reqTid, (char *)&reply, sizeof(CLKstruct) );
+		Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
 		switch( reply.type ) {
 
 			case NOTI_REQ:
 				send.type = REQUEST_OK;
-				//Reply( notiTid, (char *)&send, sizeof(CLKstruct) );
+				Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
 				currTime += 1;
 				break;
 
 			case TIME_REQ:
 				send.type = REQUEST_OK;
-				send.ticks = currTime;
-				Reply( reqTid, (char *)&send, sizeof(CLKstruct) );
+				send.data1 = currTime;
+				Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
 				break;
 
 			case DELAY_REQ:
 				{
-					unsigned int waitTill = reply.ticks + currTime;
+					unsigned int waitTill = reply.data1 + currTime;
 					DelayedTask **ptr;
 					currIndex = reqTid - 1;
 					delayedTasks[currIndex].ticks = waitTill;
@@ -400,7 +442,7 @@ void clockServer( ) {
 		for ( ptr = delayedList; ptr != 0; ptr = (DelayedTask *)ptr->next ) {
 			if ( ptr->ticks == currTime ) {
 				send.type = REQUEST_OK;
-				Reply( ptr->tid, (char *)&send, sizeof(CLKstruct) );
+				Reply( ptr->tid, (char *)&send, sizeof(ComReqStruct) );
 			} else {
 				break;	// Minimum wait time not reached yet
 			}
@@ -515,36 +557,29 @@ void nameServer() {
 	} // FOREVER
 } // nameServer
 
+void t1( ) {
+	int clkServer = WhoIs( "clock\000" );
+	int currTime = Time( clkServer );
+	bwprintf( COM2, "Got time from clock server: %d\n\r", currTime );
+	Exit();
+}
 
 //-----------------------------------------------------------------------------------------------
 //	First user task that will be placed by the kernel into the priority queue
 //-----------------------------------------------------------------------------------------------
 void firstUserTask(){
 	
-	/*void (*ns)();
+	void (*func)();
+	func = nameServer;
+	unsigned int tid;
+	tid = Create( 0, func );
+	bwprintf(COM2, "First: created Name Server\n\r");
 
-	bwprintf( COM2, "\033[2J\033[HFirst: start timer\n\r");
-	unsigned int *time = (unsigned int *)TIME_VAL;
-	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
-	*timeLoad = 500000;
-	 unsigned int *control = (unsigned int *)TIME_CTRL;
-	 *control = *control | 0x40;
-	 *control = *control | FREQ_BIT;
-	 *control = *control | ENABLE_BIT;
-	unsigned int oldTime = *time;
+	func = clockServer;
+	tid = Create( 1, func );
 
-	bwprintf(COM2, "First: trying something\n\r");
-
-
-	int *vicEnable2 = VIC2 + 0x10;
-	*(vicEnable2) = 0x00080000;
-
-	bwprintf(COM2, "First: enabled\n\r");
-
-	ns = t1;
-	Create( 2, ns );
-	ns = t2;
-	Create( 2, ns );*/
+	func = t1;
+	Create( 2, func );
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
@@ -708,7 +743,7 @@ unsigned int getStackSize( ) {
 //	kernel execution; i.e. the first user stack will be filled with placeholder values, and the 
 //	lr will be the program counter for the code of the first task
 //-----------------------------------------------------------------------------------------------
-void initialize( TD *tds, Queue *priorityQueues, Request *req ) {
+void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers ) {
 	unsigned int i;
 
 	// Initialize the queue to be all empty
@@ -747,6 +782,11 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req ) {
 	req->tds = tds;						// Reference the tds array
 	req->priorityQueues = priorityQueues;
 										// Reference the priority queues array
+
+	// Fill Notifier array
+	notifiers[CLOCK].task = 0;
+	notifiers[CLOCK].data = 0;
+	notifiers[CLOCK].eventWaiting = 0;
 } // initialize
 
 //-----------------------------------------------------------------------------------------------
@@ -835,13 +875,25 @@ void closeActive( Queue *priorityQueues, Request *req ) {
 //	Handle each kernel primitive (Create, MyTid, MyParentTid, Pass, Exit), last active task will
 //	be the task that called the kernel primitive
 //-----------------------------------------------------------------------------------------------
-void handle( TD *tds, Queue *priorityQueues, Request *req ) {
+void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers ) {
 	switch( req->type ) {
-		case 0:
+		case HWINTERRUPT:
 			{
-				int *clr = TIME_CLR;
+				int *clr = (int *)TIME_CLR;
 				*clr = 1;
 				rescheduleActive( priorityQueues, req );
+
+				// Currently not checking the IRQ state register for which interrupt type occured
+				if (notifiers[CLOCK].task == 0)  // No body is waiting
+				{
+					notifiers[CLOCK].data = 0;
+					notifiers[CLOCK].eventWaiting = 1;
+				} 
+				else {    // Notifier is waiting, reschedule the task and put in the retVal
+					TD *notifier = notifiers[CLOCK].task;
+					notifier->retVal = 0;
+					rescheduleBlock(priorityQueues, notifier->priority, notifier);
+				}
 			}
 		break;
 		case CREATE:
@@ -1022,14 +1074,33 @@ void handle( TD *tds, Queue *priorityQueues, Request *req ) {
 				rescheduleActive(priorityQueues, req);
 		    }
 		    break;
+		case AWAIT_EVENT:
+		    {
+		    	unsigned int whichQueue	 = req->taskPriority;		// Priority of last active task
+				unsigned int notifierTid = priorityQueues[whichQueue].headOfQueue->tid;
+				TD *notifier             = &(tds[notifierTid - 1]);
+				int eventType = req->arg0;
+				// Check if there's already an event in the queue
+				if ( notifiers[eventType].eventWaiting > 0 )   // has event waiting
+				{
+					notifiers[eventType].task = 0;
+					notifier->retVal = notifiers[eventType].data;
+					rescheduleActive(priorityQueues, req);
+					notifiers[eventType].eventWaiting = 0;
+				} else{
+					//Just block the notifier and wait for event
+					notifier->state = AWAIT_BLOCKED;
+					notifiers[eventType].task = notifier;             // put the task descriptor into the event array
+					blockActive(whichQueue, priorityQueues);
+				}
+		    }
+		    break;
 	} // switch
 } // handle
 
 //-----------------------------------------------------------------------------------------------
 //	Starting the kernel execution, which will initialize all memory needed and bootstrap the 
 //	first user task.
-//
-//	For A1, this will mean firstUserTask and the 4 otherTasks that it creates.
 //-----------------------------------------------------------------------------------------------
 int main( int argc, char *argv[] ) {
 
@@ -1043,10 +1114,12 @@ int main( int argc, char *argv[] ) {
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
 	Queue priorityQueues[MAX_PRIORITIES];
+	Notifier notifiers[NUM_NOTIFIERS];    		//for now, only one notifiers
 
 	TD *active;									// The task that will run
 	Request req;								// The requests of the task along with other info
-	initialize( tds, priorityQueues, &req );	// tds is an array of TDs
+	initialize( tds, priorityQueues, &req, notifiers );	
+												// tds is an array of TDs
 	
 	// Begin kernel execution
 	FOREVER {
@@ -1054,7 +1127,8 @@ int main( int argc, char *argv[] ) {
 												// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
 		getNextRequest( active, &req );			// req is a pointer to a Request
-		handle( tds, priorityQueues, &req);	// Execute the kernel code of the kernel primitive-h
+		handle( tds, priorityQueues, &req, notifiers );	
+												// Execute the kernel code of the kernel primitive-h
 	} // for
 
 	return 0;
