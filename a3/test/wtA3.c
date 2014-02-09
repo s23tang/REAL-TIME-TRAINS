@@ -142,6 +142,43 @@ int WhoIs( char *name ) {
 	return reply.tid;
 } // WhoIs
 
+//-----------------------------------------------------------------------------------------------
+//	Calling task will get the current time in ticks from the clock server
+//-----------------------------------------------------------------------------------------------
+int Time( unsigned int clkServer ) {
+	CLKstruct request, reply;
+	request.type = TIME_REQ;
+
+	Send( clkServer, (char *)&request, sizeof(CLKstruct), (char *)&reply, sizeof(CLKstruct) );
+
+	return reply.ticks;
+}
+
+//-----------------------------------------------------------------------------------------------
+//	Calling task will delay the amount of time specified in ticks
+//-----------------------------------------------------------------------------------------------
+int Delay( unsigned int clkServer, int ticks ) {
+	if ( ticks < 0 ) return -1;
+
+	CLKstruct request, reply;
+	request.type = DELAY_REQ;
+	request.ticks = ticks;
+
+	Send( clkServer, (char *)&request, sizeof(CLKstruct), (char *)&reply, sizeof(CLKstruct) );
+
+	return 0;
+}
+
+//-----------------------------------------------------------------------------------------------
+//	Calling task will delay until the specified time
+//-----------------------------------------------------------------------------------------------
+int DelayUntil( unsigned int clkServer, int ticks ) {
+	int currTime = Time( clkServer );
+	int ret = Delay( clkServer, ticks - currTime );
+
+	return ret;	// could return -1
+}
+
 /*
  * User tasks for assignment 2 are below
  */
@@ -292,12 +329,93 @@ void rpsServer() {
 } // rpsServer
 
 //-----------------------------------------------------------------------------------------------
+//	Clock server
+//-----------------------------------------------------------------------------------------------
+void clockServer( ) {
+	if ( RegisterAs( "clock\000" ) == -1 ) {
+		bwprintf( COM2, "clockServer: register failed\n\r" );
+		Exit();
+	}
+
+	// Create notifier
+	/*unsigned int notiTid;
+	void (*noti)();
+
+	noti = notifier;
+	notiTid = Create( 0, noti );*/
+
+	// Initializing
+	int reqTid;
+	unsigned int currIndex;
+	int currTime = 0;
+	DelayedTask delayedTasks[MAX_TASKS];
+	DelayedTask *delayedList = 0;
+
+	// Let notifier know that its done
+	CLKstruct send, reply;
+	send.type = CLOCK_EVT;
+	//Send( notiTid, (char *)&send, sizeof(CLKstruct), (char *)&reply, sizeof(&CLKstruct) );
+
+	// Start server
+	FOREVER {
+		Receive( &reqTid, (char *)&reply, sizeof(CLKstruct) );
+		switch( reply.type ) {
+
+			case NOTI_REQ:
+				send.type = REQUEST_OK;
+				//Reply( notiTid, (char *)&send, sizeof(CLKstruct) );
+				currTime += 1;
+				break;
+
+			case TIME_REQ:
+				send.type = REQUEST_OK;
+				send.ticks = currTime;
+				Reply( reqTid, (char *)&send, sizeof(CLKstruct) );
+				break;
+
+			case DELAY_REQ:
+				{
+					unsigned int waitTill = reply.ticks + currTime;
+					DelayedTask **ptr;
+					currIndex = reqTid - 1;
+					delayedTasks[currIndex].ticks = waitTill;
+					delayedTasks[currIndex].tid = reqTid;
+
+					for ( ptr = &delayedList; (*ptr) != 0; (*ptr) = (DelayedTask *)(*ptr)->next ) {
+						if ( (*ptr)->ticks >= waitTill ) {
+							delayedTasks[currIndex].next = (struct DelayedTask *)*ptr;
+							(*ptr) = &(delayedTasks[currIndex]);
+							break;
+						} // if
+					} // for
+					if ( (*ptr) == 0 ) {
+						delayedTasks[currIndex].next = 0;
+						(*ptr) = &(delayedTasks[currIndex]);
+					} // if
+				} // DELAY_REQ
+				break;
+		}
+		// Reply to timed-out tasks
+		DelayedTask *ptr;
+		for ( ptr = delayedList; ptr != 0; ptr = (DelayedTask *)ptr->next ) {
+			if ( ptr->ticks == currTime ) {
+				send.type = REQUEST_OK;
+				Reply( ptr->tid, (char *)&send, sizeof(CLKstruct) );
+			} else {
+				break;	// Minimum wait time not reached yet
+			}
+		} // for
+	} // FOREVER
+} // clock
+
+//-----------------------------------------------------------------------------------------------
 //	Name server which will always have task ID 2, and manages names for servers
 //-----------------------------------------------------------------------------------------------
 void nameServer() {
 	// Table for all servers able to be registered
-	ServerEntry serverTable[NUM_SERVERS];	// Only has rps server for now
+	ServerEntry serverTable[NUM_SERVERS];	// Rock paper scissors and clock server
 	serverTable[RPS_INDEX].name = "rps\000";
+	serverTable[CLK_INDEX].name = "clock\000";
 
 	int senderTid;
 	NSstruct request;
@@ -331,7 +449,20 @@ void nameServer() {
 							reply.type = REQUEST_OK;
 							serverTable[RPS_INDEX].tid = senderTid;
 						} // if
-					} // if
+					} else if ( reqName[0] == 'c' ) {
+						serverName = serverTable[CLK_INDEX].name;
+						for ( i = 1; i < CLK_SIZE; i++ ) {
+							if ( reqName[i] != serverName[i] ) {
+								break;
+							} // if
+						} // for
+
+						if ( i == CLK_SIZE ) {
+							legalName = 1;
+							reply.type = REQUEST_OK;
+							serverTable[CLK_INDEX].tid = senderTid;
+						} // if
+					}
 
 					if ( !legalName ) reply.type = REQUEST_BAD;
 
@@ -358,7 +489,20 @@ void nameServer() {
 							reply.type = REQUEST_OK;
 							reply.tid = serverTable[RPS_INDEX].tid;
 						} // if
-					} // if
+					} else if ( reqName[0] == 'c' ) {
+						serverName = serverTable[CLK_INDEX].name;
+						for ( i = 1; i < CLK_SIZE; i++ ) {
+							if ( reqName[i] != serverName[i] ) {
+								break;
+							} // if
+						} // for
+
+						if ( i == CLK_SIZE ) {
+							legalName = 1;
+							reply.type = REQUEST_OK;
+							reply.tid = serverTable[CLK_INDEX].tid;
+						} // if
+					}
 
 					if ( !legalName ) reply.type = REQUEST_BAD;
 
@@ -371,24 +515,13 @@ void nameServer() {
 	} // FOREVER
 } // nameServer
 
-void t1() {
-	for (;;) {
-		bwprintf( COM2, "IN TASK 1 ATM++++++++++++++++++++++\n\r");
-	}
-}
-
-void t2() {
-	for (;;) {
-		bwprintf( COM2, "IN TASK 2 ATM**********************\n\r");
-	}
-}
 
 //-----------------------------------------------------------------------------------------------
 //	First user task that will be placed by the kernel into the priority queue
 //-----------------------------------------------------------------------------------------------
 void firstUserTask(){
 	
-	void (*ns)();
+	/*void (*ns)();
 
 	bwprintf( COM2, "\033[2J\033[HFirst: start timer\n\r");
 	unsigned int *time = (unsigned int *)TIME_VAL;
@@ -411,7 +544,7 @@ void firstUserTask(){
 	ns = t1;
 	Create( 2, ns );
 	ns = t2;
-	Create( 2, ns );
+	Create( 2, ns );*/
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();

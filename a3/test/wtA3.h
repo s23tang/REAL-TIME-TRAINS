@@ -14,15 +14,19 @@
 #define RECEIVE         7
 #define REPLY           8
 
-// Server macros
+// Name Server macros
 #define REGISTERAS		1
 #define WHOIS			2
 #define NAME_SERVER		2
-#define NUM_SERVERS		1
+#define NUM_SERVERS		2		// rps server, clock server
 #define REQUEST_OK		0
 #define REQUEST_BAD		-1
-#define RPS_INDEX		0
+#define RPS_INDEX		0 		// rps server index
+#define CLK_INDEX		1 		// clock server index
+
+// Name Server database entry size
 #define RPS_SIZE		4		// rps server
+#define CLK_SIZE		6		// clock server
 
 // RPS server macros
 #define SIGN_UP			1
@@ -46,7 +50,15 @@
 #define FREQ_BIT     	0x8
 #define ENABLE_BIT   	0x80
 
+// Clock Server Macros
+#define CLOCK_EVT		0
+#define NOTI_REQ		1
+#define TIME_REQ		2
+#define DELAY_REQ		3
+#define ONE_TICK 		5080
+
 struct TD;
+struct DelayedTask;
 
 /*
  *	Task descriptor structure
@@ -128,3 +140,20 @@ typedef struct {
 	char *name;
 	unsigned int tid;
 } ServerEntry;
+
+/*
+ *	Request structure to communicate with Clock Server
+ */
+typedef struct {
+	int type;
+	int ticks;
+} CLKstruct;
+
+/*
+ *	Clock server's suspended task structures, to be used in a linked list (sorted)
+ */
+typedef struct {
+	unsigned int ticks;
+	unsigned int tid;
+	struct DelayedTask *next;
+} DelayedTask;
