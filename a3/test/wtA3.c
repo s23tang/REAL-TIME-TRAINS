@@ -154,12 +154,11 @@ int WhoIs( char *name ) {
 //-----------------------------------------------------------------------------------------------
 //	Calling task will get the current time in ticks from the clock server
 //-----------------------------------------------------------------------------------------------
-int Time( unsigned int clkServer ) {
+int Time( int clkServer ) {
 	ComReqStruct request, reply;
 	request.type = TIME_REQ;
-
 	int temp = Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-	bwprintf( COM2, "Sent %d\n\r", temp );
+	// bwprintf(COM2, "got time: %d\n\r", reply.data);
 	return reply.data1;
 }
 
@@ -200,7 +199,8 @@ void notifier( ){
 	ComReqStruct send, reply;
 	
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
-
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = 0x00080000;
 	// switch ( reply.type ) {
 	// 	case CLOCK:
 	// 		{
@@ -215,15 +215,19 @@ void notifier( ){
 	// 			*(vicEnable2) = 0x00080000;
 	// 		}
 	// 		break;
+	// 	default:
+	// 	    {
+	// 	    	bwprintf(COM2, "SHOULD NOT HAPPEN!\n\r");
+	// 	    }
 	// }
 	send.type = REQUEST_OK;
 	// tell the server: successfully created
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
-	// FOREVER {
-	// 	send.type = NOTI_REQ;
-	// 	send.data1 = AwaitEvent(reply.type);
-	// 	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
-	// }
+	FOREVER {
+		send.type = NOTI_REQ;
+		send.data1 = AwaitEvent(reply.type);
+		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
+	}
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -402,7 +406,6 @@ void clockServer( ) {
 	// Start server
 	FOREVER {
 		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
-		bwprintf( COM2, "Received %d\n\r", temp );
 		switch( reply.type ) {
 
 			case NOTI_REQ:
@@ -413,10 +416,11 @@ void clockServer( ) {
 
 			case TIME_REQ:
 				{
+							// bwprintf(COM2, "CURTIME:%d\n\r", currTime);
+
 					send.type = REQUEST_OK;
 					send.data1 = currTime;
 					temp = Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
-					bwprintf( COM2, "Replied %d\n\r", temp );
 				}
 				break;
 
@@ -565,9 +569,26 @@ void nameServer() {
 void t1( ) {
 	int clkServer = WhoIs( "clock\000" );
 	int currTime;
+	int j;
 	for (;;) {
-		currTime = Time( clkServer );
-		//bwprintf( COM2, "%d\n\r", currTime );
+			bwprintf(COM2, "server0: %d\n\r", clkServer);
+
+		// currTime = Time( clkServer );
+	// bwprintf(COM2, "server1: %d\n\r", clkServer);
+		int i;
+		for (i = 0; i < 508000; ++i)
+		{
+
+		}
+		// asm("swi 0");
+		// asm("mov r0, #1\n\t"
+		// 	"mov r1, sp\n\t"
+		// 	"bl bwputr(PLT)");
+		int *softInt = 0x800C0018;
+		*softInt = 0x00080000;
+		// 		asm("mov r0, #1\n\t"
+		// 	"mov r1, sp\n\t"
+		// 	"bl bwputr(PLT)");
 	}
 
 	Exit();
@@ -651,7 +672,7 @@ HWint:
 	// Switch to kernel
 	asm("mrs r0, CPSR\n\t"
 		"bic r0, r0, #0x1F\n\t"
-		"orr r0, r0, #0x13\n\t"
+		"orr r0, r0, #0xd3\n\t"
 		"msr CPSR, r0");
 	
 	asm("ldmfd r1, {r0, r1, lr}\n\t"
@@ -702,9 +723,6 @@ kerent:
 	asm("ldmfd sp!, {r1}");
 	// 10. fill in the request of the kernel from its stack
 	asm("ldmfd sp!, {r0,r2-r7}");
-	// asm("mov r0, #1\n\t"
-	// 	"mov r1, r6\n\t"
-	// 	"bl bwputr(PLT)");
 	asm("str r2, [r7, #0]\n\t"
 		"str r3, [r7, #4]\n\t"
 		"str r4, [r7, #8]\n\t"
@@ -715,6 +733,16 @@ kerent:
 	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
 	// 6. acquire the sp of the active task;
 	// 8. acquire the spsr of the active task 
+
+	// asm("stmfd sp!, {r0-r3, ip, lr}\n\t"
+	// 	"ldr r1, [r0, #20]\n\t"
+	// 	"mov r0, #1\n\t"
+	// 	"bl bwputr(PLT)\n\t"
+	// 	"mov r0, #1\n\t"
+	// 	"mov r1, ip\n\t"
+	// 	"bl bwputr(PLT)\n\t"
+	// 	"ldmfd sp!, {r0-r3, ip, lr}");
+
 	asm("str ip, [r0, #0]\n\t"
 		"str r1, [r0, #4]\n\t"
 		"str r2, [r0, #8]");
@@ -795,6 +823,19 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	notifiers[CLOCK].task = 0;
 	notifiers[CLOCK].data = 0;
 	notifiers[CLOCK].eventWaiting = 0;
+
+	asm("mrs r0, CPSR\n\t"
+		"bic r0, r0, #0x1F\n\t"
+		"orr r0, r0, #0x12\n\t"
+		"msr CPSR, r0");
+
+	asm("ldr r0, =0x44FA4\n\t"
+		"mov sp,r0");
+
+	asm("mrs r0, CPSR\n\r"
+		"bic r0, r0, #0x1F\n\t"
+		"orr r0, r0, #0x13\n\t"
+		"msr CPSR, r0");
 } // initialize
 
 //-----------------------------------------------------------------------------------------------
@@ -806,6 +847,7 @@ TD *schedule( Queue *priorityQueues, Request *req ) {
 		if ( priorityQueues[i].headOfQueue != 0 ) {
 			TD *scheduled = priorityQueues[i].headOfQueue;
 			req->taskPriority = i;
+			bwprintf(COM2, "tid: %d, sp: %x\n\r", scheduled->tid, scheduled->sp);
 			return scheduled;
 		} // if
 	} // for
@@ -887,8 +929,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
-				int *clr = (int *)TIME_CLR;
-				*clr = 1;
+				int *clear = 0x800C001C;
+				*clear = 0x00080000;
+
+				// int *clr = (int *)TIME_CLR;
+				// *clr = 1;
 				rescheduleActive( priorityQueues, req );
 
 				// Currently not checking the IRQ state register for which interrupt type occured
@@ -1133,12 +1178,12 @@ int main( int argc, char *argv[] ) {
 	// Begin kernel execution
 	FOREVER {
 		active = schedule( priorityQueues, &req );
-												// Active will be scheduled to run next
+		// bwprintf(COM2, "next task: %d\n\r", active->tid);
+        										// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
 		getNextRequest( active, &req );			// req is a pointer to a Request
 		handle( tds, priorityQueues, &req, notifiers );	
 												// Execute the kernel code of the kernel primitive-h
 	} // for
-
 	return 0;
 } // main
