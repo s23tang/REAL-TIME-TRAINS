@@ -158,8 +158,8 @@ int Time( unsigned int clkServer ) {
 	ComReqStruct request, reply;
 	request.type = TIME_REQ;
 
-	Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
+	int temp = Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	bwprintf( COM2, "Sent %d\n\r", temp );
 	return reply.data1;
 }
 
@@ -201,29 +201,29 @@ void notifier( ){
 	
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
 
-	switch ( reply.type ) {
-		case CLOCK:
-			{
-				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
-				*timeLoad = ONE_TICK;
-				unsigned int *control = (unsigned int *)TIME_CTRL;
-				*control = *control | 0x40;
-				*control = *control | FREQ_BIT;
-				*control = *control | ENABLE_BIT;
+	// switch ( reply.type ) {
+	// 	case CLOCK:
+	// 		{
+	// 			unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+	// 			*timeLoad = ONE_TICK;
+	// 			unsigned int *control = (unsigned int *)TIME_CTRL;
+	// 			*control = *control | 0x40;
+	// 			*control = *control | FREQ_BIT;
+	// 			*control = *control | ENABLE_BIT;
 
-				int *vicEnable2 = (int *)(VIC2 + 0x10);
-				*(vicEnable2) = 0x00080000;
-			}
-			break;
-	}
+	// 			int *vicEnable2 = (int *)(VIC2 + 0x10);
+	// 			*(vicEnable2) = 0x00080000;
+	// 		}
+	// 		break;
+	// }
 	send.type = REQUEST_OK;
 	// tell the server: successfully created
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
-	FOREVER {
-		send.type = NOTI_REQ;
-		send.data1 = AwaitEvent(reply.type);
-		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
-	}
+	// FOREVER {
+	// 	send.type = NOTI_REQ;
+	// 	send.data1 = AwaitEvent(reply.type);
+	// 	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
+	// }
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -401,7 +401,8 @@ void clockServer( ) {
 
 	// Start server
 	FOREVER {
-		Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
+		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
+		bwprintf( COM2, "Received %d\n\r", temp );
 		switch( reply.type ) {
 
 			case NOTI_REQ:
@@ -414,7 +415,8 @@ void clockServer( ) {
 				{
 					send.type = REQUEST_OK;
 					send.data1 = currTime;
-					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+					temp = Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+					bwprintf( COM2, "Replied %d\n\r", temp );
 				}
 				break;
 
@@ -1012,9 +1014,10 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					receiver->state = READY;
 
 					rescheduleBlock(priorityQueues, receiver->priority, receiver);
-					unsigned int copyLen = (sender->msgLen + 1 < receiver->rcvLen) ? sender->msgLen : (receiver->rcvLen - 1); // send the bottle neck len
+					unsigned int copyLen = (sender->msgLen <= receiver->rcvLen) ? sender->msgLen : receiver->rcvLen; // send the bottle neck len
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
 					sender->retVal = copyLen;
+					receiver->retVal = copyLen;
 					*(receiver->senderTid) = senderTid;        // Indicate who the sender is
 				}
 				else { 
@@ -1049,7 +1052,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				}
 				else {   // Not empty, copy the msg
 					TD *sender = (TD *)receiver->nextSender;
-					unsigned int copyLen = (sender->msgLen + 1 < receiver->rcvLen) ? sender->msgLen : (receiver->rcvLen - 1); // send the bottle neck len
+					unsigned int copyLen = (sender->msgLen <= receiver->rcvLen) ? sender->msgLen : receiver->rcvLen; // send the bottle neck len
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
 					receiver->retVal = copyLen;
 					sender->retVal   = copyLen;
@@ -1068,7 +1071,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				char *reply  = (char *) req->arg1;
 				int replyLen = req->arg2;
 
-				unsigned int copyLen = (replyLen + 1 < sender->rcvLen) ? replyLen : (sender->rcvLen - 1); // send the bottle neck len
+				unsigned int copyLen = (replyLen <= sender->rcvLen) ? replyLen : sender->rcvLen; // send the bottle neck len
 				copyMsg(sender->rcvAddr, reply, copyLen);
 
 				priorityQueues[whichQueue].headOfQueue->retVal = copyLen;
