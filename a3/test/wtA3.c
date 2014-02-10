@@ -585,14 +585,28 @@ void t1( ) {
 	Exit();
 }
 
-
-
-
 void t2(){
+	int clkServer = WhoIs( "clock\000" );
+
 	FOREVER{
+		int time = Time(clkServer);
+		if (time > 250)
+		{
+			// Disable the clock 
+			int *vicDisable = (int *)(0x800C0014);
+			*(vicDisable) = 0x00080000;
 
+			unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+			*timeLoad = 0;
+			// Disable the clock
+			unsigned int *control = (unsigned int *)TIME_CTRL;
+			*control = *control & (~0x40);
+			*control = *control & (~FREQ_BIT);
+			*control = *control & (~ENABLE_BIT);
+
+			Exit();
+		}
 	}
-
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -686,16 +700,6 @@ void getNextRequest(TD *active, Request *req){
 		"ldmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
 		"mov r2, sp\n\t"
 		"add sp, sp, #16");
-
-	// asm("sub sp, sp, #16\n\t"
-	// 	"stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
-	// 	"mov r0, #1\n\t"
-	// 	"mov r1, sp\n\t"
-	// 	"add r1, r1, #72\n\t"
-	// 	"bl bwputr(PLT)\n\t"
-	// 	"ldmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
-	// 	"add sp, sp, #16");
-
 	// 5. put the retVal in r0
 	// 6. return to SVC state
 	asm("mrs r1, CPSR\n\t"
@@ -969,11 +973,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
-				// int *clear = (int *)0x800C001C;
-				// *clear = 0x00080000;
-
-				// bwprintf(COM2, "tid: %d, sp: %x\n\r",priorityQueues[req->taskPriority].headOfQueue->tid, tds[(priorityQueues[req->taskPriority].headOfQueue->tid) - 1].sp);
-
 				int *clr = (int *)TIME_CLR;
 				*clr = 1;
 				rescheduleActive( priorityQueues, req );

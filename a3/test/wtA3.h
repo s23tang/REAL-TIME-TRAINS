@@ -164,8 +164,11 @@ typedef struct {
 	unsigned int ticks;
 	unsigned int tid;
 	struct DelayedTask *next;
-	struct DelayedTask *before;
 } DelayedTask;
+
+/*
+ *	Communication between First User Task and other tasks for A3
+ */
 
 typedef struct {
 	int interval;
