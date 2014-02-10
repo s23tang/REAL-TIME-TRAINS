@@ -580,12 +580,18 @@ void t1( ) {
 		{
 
 		}
-		// asm("swi 0");
+		//asm("swi 0");
 		// asm("mov r0, #1\n\t"
 		// 	"mov r1, sp\n\t"
 		// 	"bl bwputr(PLT)");
-		int *softInt = 0x800C0018;
-		*softInt = 0x00080000;
+		 int *softInt = 0x800C0018;
+		//  asm("stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
+		// "mov r0, #1\n\t"
+		// "mov r1, sp\n\t"
+		// "add r1, r1, #56\n\t"
+		// "bl bwputr(PLT)\n\t"
+		// "ldmfd sp!, {r0-r9, sl, fp, ip, lr}");
+		 *softInt = 0x00080000;
 		// 		asm("mov r0, #1\n\t"
 		// 	"mov r1, sp\n\t"
 		// 	"bl bwputr(PLT)");
@@ -648,9 +654,18 @@ void getNextRequest(TD *active, Request *req){
 	asm("mov sp, r1\n\t"
 		"ldmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
 		"mov r2, sp\n\t"
-		"add sp, sp, #12");
+		"add sp, sp, #16");
+
+	// asm("sub sp, sp, #16\n\t"
+	// 	"stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
+	// 	"mov r0, #1\n\t"
+	// 	"mov r1, sp\n\t"
+	// 	"add r1, r1, #72\n\t"
+	// 	"bl bwputr(PLT)\n\t"
+	// 	"ldmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
+	// 	"add sp, sp, #16");
+
 	// 5. put the retVal in r0
-	asm("mov r3, lr"); // above puts return value but no inverse
 	// 6. return to SVC state
 	asm("mrs r1, CPSR\n\t"
 		"bic r1, r1, #0x1F\n\t"
@@ -660,7 +675,7 @@ void getNextRequest(TD *active, Request *req){
 	asm("ldr r1, [r0, #4]\n\t"
 		"msr SPSR, r1");
 	// 8. install the pc of the active task
-	asm("mov lr, r3\n\t"
+	asm("ldr lr, [r2, #12]\n\t"
 		"ldmfd r2, {r1-r3}\n\t"
 		"ldr r0, [r0, #8]\n\t"
 		"movs pc, lr");
@@ -707,7 +722,8 @@ kerent:
 		"orr r1, r1, #0x1F\n\t"
 		"msr CPSR, r1");
 	// 4. overwrite lr with the value from step 2
-	asm("ldmfd r2!, {lr}");
+	asm("ldmfd r2!, {r3}\n\t"
+		"stmfd sp!, {r3}");
 	// 5. push the registers of the active task onto its stack
 	asm("add r2, r2, #8\n\t"
 		"ldmfd r2, {r0-r3}\n\t"
@@ -733,16 +749,6 @@ kerent:
 	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
 	// 6. acquire the sp of the active task;
 	// 8. acquire the spsr of the active task 
-
-	// asm("stmfd sp!, {r0-r3, ip, lr}\n\t"
-	// 	"ldr r1, [r0, #20]\n\t"
-	// 	"mov r0, #1\n\t"
-	// 	"bl bwputr(PLT)\n\t"
-	// 	"mov r0, #1\n\t"
-	// 	"mov r1, ip\n\t"
-	// 	"bl bwputr(PLT)\n\t"
-	// 	"ldmfd sp!, {r0-r3, ip, lr}");
-
 	asm("str ip, [r0, #0]\n\t"
 		"str r1, [r0, #4]\n\t"
 		"str r2, [r0, #8]");
@@ -804,7 +810,12 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	*(tds[0].sp) = (int)syscall+LOAD_LOC;
 
 	// Fill user stack with placeholder values, and put the pc of firstUserTask into lr
-	for ( i = 12; i > 3; i-- ) {
+	for ( i = 3; i > 0; i-- ) {
+		tds[0].sp--;
+		*(tds[0].sp) = i;
+	} // for
+	for ( i = 14; i > 3; i-- ) {
+		if ( i == 13 ) continue;
 		tds[0].sp--;
 		*(tds[0].sp) = i;
 	} // for
@@ -847,7 +858,7 @@ TD *schedule( Queue *priorityQueues, Request *req ) {
 		if ( priorityQueues[i].headOfQueue != 0 ) {
 			TD *scheduled = priorityQueues[i].headOfQueue;
 			req->taskPriority = i;
-			bwprintf(COM2, "tid: %d, sp: %x\n\r", scheduled->tid, scheduled->sp);
+			// bwprintf(COM2, "tid: %d, sp: %x\n\r", scheduled->tid, scheduled->sp);
 			return scheduled;
 		} // if
 	} // for
@@ -985,7 +996,12 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 
 				// Fill user stack with placeholder values, and put the pc of firstUserTask into lr
 				unsigned int i;
-				for ( i = 12; i > 3; i-- ) {
+				for ( i = 3; i > 0; i-- ) {
+					newTask->sp--;
+					*(newTask->sp) = i;
+				} // for
+				for ( i = 14; i > 3; i-- ) {
+					if ( i == 13 ) continue;
 					newTask->sp--;
 					*(newTask->sp) = i;
 				} // for
