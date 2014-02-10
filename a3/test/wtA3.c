@@ -589,10 +589,10 @@ void t1( ) {
 
 
 void t2(){
-	// FOREVER{
+	FOREVER{
 
-	// }
-	
+	}
+
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -726,54 +726,7 @@ HWint:
 		"stmfd sp!, {r0-r4}\n\t"
 		"mov r1, #0\n\t"
 		"stmfd sp!, {r1}");
-
-	 asm("ldr r1, [fp, #4]\n\t"
-	 	 "str r1, [sp, #20]");
-	// 1.5 get the start of the TDs out from stack
-	// 1.6 get SPSR of the active task into the SP_SVC
-	asm("mrs r1, SPSR\n\t"
-		"stmfd sp!, {r1}");
-	// 2. acquire the lr, which is the pc of the active task
-	asm("mov r2, sp\n\t"
-		"stmfd r2!, {lr}");
-	// 3. change to system state
-	asm("mrs r1, CPSR\n\t"
-		"bic r1, r1, #0x1F\n\t"
-		"orr r1, r1, #0x1F\n\t"
-		"msr CPSR, r1");
-	// 4. overwrite lr with the value from step 2
-	asm("ldmfd r2!, {r3}\n\t"
-		"stmfd sp!, {r3}");
-	// 5. push the registers of the active task onto its stack
-	asm("add r2, r2, #8\n\t"
-		"ldmfd r2, {r0-r3}\n\t"
-		"stmfd sp!, {r1-r3}\n\t"
-		"stmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
-		"mov ip, sp");
-	// 7. return to SVC state;
-	asm("mrs r0, CPSR\n\t"
-		"bic r0, r0, #0x1F\n\t"
-		"orr r0, r0, #0x13\n\t"
-		"msr CPSR, r0");
-	// 7.5 get SPSR of the active task from SP_SVC
-	asm("ldmfd sp!, {r1}");
-	// 10. fill in the request of the kernel from its stack
-	asm("ldmfd sp!, {r0,r2-r7}");
-	asm("str r2, [r7, #0]\n\t"
-		"str r3, [r7, #4]\n\t"
-		"str r4, [r7, #8]\n\t"
-		"str r5, [r7, #12]\n\t"
-		"str r6, [r7, #16]\n\t"
-		"str r0, [r7, #20]");
-	// 9. pop the registers from its stack
-	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
-	// 6. acquire the sp of the active task;
-	// 8. acquire the spsr of the active task 
-	asm("str ip, [r0, #0]\n\t"
-		"str r1, [r0, #4]\n\t"
-		"str r2, [r0, #8]");
-	asm( "sub	sp, fp, #16\n\t"
-		 "ldmfd	sp, {sl, fp, sp, pc}");
+	asm("b HWres");
 
 kerent:
 	// 1. acquire the arguments of the request
@@ -880,7 +833,6 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	tds[0].nextTask = 0;				// No next task in priority queue
 	tds[0].priority = 2;
 	tds[0].nextSender = 0;
-bwprintf(COM2, "TASK 1 SP: %x\n\r", tds[0].sp);
 	// Set lr to the location of the firstUserTask
 	void (*syscall)();
 	syscall = firstUserTask;
