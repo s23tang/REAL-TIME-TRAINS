@@ -164,7 +164,13 @@ typedef struct {
 	unsigned int ticks;
 	unsigned int tid;
 	struct DelayedTask *next;
+	struct DelayedTask *before;
 } DelayedTask;
+
+typedef struct {
+	int interval;
+	int iteration;
+} DelayInfo;
 
 /*
  * A structure that stores the data for a notifier

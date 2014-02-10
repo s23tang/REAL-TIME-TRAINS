@@ -157,7 +157,7 @@ int WhoIs( char *name ) {
 int Time( int clkServer ) {
 	ComReqStruct request, reply;
 	request.type = TIME_REQ;
-	int temp = Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	Send( clkServer, (char *)&request, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 	// bwprintf(COM2, "got time: %d\n\r", reply.data);
 	return reply.data1;
 }
@@ -201,25 +201,25 @@ void notifier( ){
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = 0x00080000;
-	// switch ( reply.type ) {
-	// 	case CLOCK:
-	// 		{
-	// 			unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
-	// 			*timeLoad = ONE_TICK;
-	// 			unsigned int *control = (unsigned int *)TIME_CTRL;
-	// 			*control = *control | 0x40;
-	// 			*control = *control | FREQ_BIT;
-	// 			*control = *control | ENABLE_BIT;
+	switch ( reply.type ) {
+		case CLOCK:
+			{
+				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+				*timeLoad = ONE_TICK;
+				unsigned int *control = (unsigned int *)TIME_CTRL;
+				*control = *control | 0x40;
+				*control = *control | FREQ_BIT;
+				*control = *control | ENABLE_BIT;
 
-	// 			int *vicEnable2 = (int *)(VIC2 + 0x10);
-	// 			*(vicEnable2) = 0x00080000;
-	// 		}
-	// 		break;
-	// 	default:
-	// 	    {
-	// 	    	bwprintf(COM2, "SHOULD NOT HAPPEN!\n\r");
-	// 	    }
-	// }
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = 0x00080000;
+			}
+			break;
+		default:
+		    {
+		    	bwprintf(COM2, "SHOULD NOT HAPPEN!\n\r");
+		    }
+	}
 	send.type = REQUEST_OK;
 	// tell the server: successfully created
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
@@ -432,7 +432,7 @@ void clockServer( ) {
 					delayedTasks[currIndex].ticks = waitTill;
 					delayedTasks[currIndex].tid = reqTid;
 
-					for ( ptr = &delayedList; (*ptr) != 0; (*ptr) = (DelayedTask *)(*ptr)->next ) {
+					for ( ptr = &delayedList; (*ptr) != 0; ptr = (DelayedTask **)&((*ptr)->next )) {
 						if ( (*ptr)->ticks >= waitTill ) {
 							delayedTasks[currIndex].next = (struct DelayedTask *)*ptr;
 							(*ptr) = &(delayedTasks[currIndex]);
@@ -452,6 +452,7 @@ void clockServer( ) {
 			if ( ptr->ticks == currTime ) {
 				send.type = REQUEST_OK;
 				Reply( ptr->tid, (char *)&send, sizeof(ComReqStruct) );
+				delayedList = (DelayedTask *)ptr->next;
 			} else {
 				break;	// Minimum wait time not reached yet
 			}
@@ -567,37 +568,31 @@ void nameServer() {
 } // nameServer
 
 void t1( ) {
+	int parentTid = MyParentTid();
+	int myTid = MyTid();
+	DelayInfo delayInfo;
+	int created = 0;
+	Send(parentTid, (char *)&created, sizeof(int), (char*) &delayInfo, sizeof(DelayInfo));
 	int clkServer = WhoIs( "clock\000" );
-	int currTime;
-	int j;
-	for (;;) {
-			bwprintf(COM2, "server0: %d\n\r", clkServer);
-
-		// currTime = Time( clkServer );
-	// bwprintf(COM2, "server1: %d\n\r", clkServer);
-		int i;
-		for (i = 0; i < 508000; ++i)
-		{
-
-		}
-		//asm("swi 0");
-		// asm("mov r0, #1\n\t"
-		// 	"mov r1, sp\n\t"
-		// 	"bl bwputr(PLT)");
-		 int *softInt = 0x800C0018;
-		//  asm("stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
-		// "mov r0, #1\n\t"
-		// "mov r1, sp\n\t"
-		// "add r1, r1, #56\n\t"
-		// "bl bwputr(PLT)\n\t"
-		// "ldmfd sp!, {r0-r9, sl, fp, ip, lr}");
-		 *softInt = 0x00080000;
-		// 		asm("mov r0, #1\n\t"
-		// 	"mov r1, sp\n\t"
-		// 	"bl bwputr(PLT)");
+	int iteration = delayInfo.iteration;
+	int interval = delayInfo.interval;
+	int i;
+	for (i = 0; i < iteration; i++)
+	{
+		Delay(clkServer, interval);
+		bwprintf(COM2, "Tid: %d, Delay Interval: %d, completed %d delays\n\r", myTid, interval, i+1);
 	}
-
 	Exit();
+}
+
+
+
+
+void t2(){
+	// FOREVER{
+
+	// }
+	
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -613,8 +608,44 @@ void firstUserTask(){
 	func = clockServer;
 	tid = Create( 1, func );
 
+
+
 	func = t1;
-	Create( 3, func );
+	tid = Create( 3, func );
+	// func = t1;
+	tid = Create( 4, func );
+	// func = t1;
+	tid = Create( 5, func );
+	// func = t1;
+	tid = Create( 6, func );
+
+	func = t2;
+	tid = Create(8, func);
+	int childTid;
+	int created;
+	DelayInfo delayInfo;
+
+
+	delayInfo.interval = 10;
+	delayInfo.iteration = 20;
+	Receive(&childTid, (char*)&created, sizeof(int));
+	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+
+	delayInfo.interval = 23;
+	delayInfo.iteration = 9;
+	Receive(&childTid, (char*)&created, sizeof(int));
+	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+
+	delayInfo.interval = 33;
+	delayInfo.iteration = 6;
+	Receive(&childTid, (char*)&created, sizeof(int));
+	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+
+	delayInfo.interval = 71;
+	delayInfo.iteration = 3;
+	Receive(&childTid, (char*)&created, sizeof(int));
+	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+
 
 	bwprintf(COM2, "First: exiting\n\r");
 	Exit();
@@ -691,12 +722,58 @@ HWint:
 		"msr CPSR, r0");
 	
 	asm("ldmfd r1, {r0, r1, lr}\n\t"
-		"sub lr, lr, #8\n\t"
+		"sub lr, lr, #4\n\t"
 		"stmfd sp!, {r0-r4}\n\t"
 		"mov r1, #0\n\t"
 		"stmfd sp!, {r1}");
 
-	asm("b HWres");
+	 asm("ldr r1, [fp, #4]\n\t"
+	 	 "str r1, [sp, #20]");
+	// 1.5 get the start of the TDs out from stack
+	// 1.6 get SPSR of the active task into the SP_SVC
+	asm("mrs r1, SPSR\n\t"
+		"stmfd sp!, {r1}");
+	// 2. acquire the lr, which is the pc of the active task
+	asm("mov r2, sp\n\t"
+		"stmfd r2!, {lr}");
+	// 3. change to system state
+	asm("mrs r1, CPSR\n\t"
+		"bic r1, r1, #0x1F\n\t"
+		"orr r1, r1, #0x1F\n\t"
+		"msr CPSR, r1");
+	// 4. overwrite lr with the value from step 2
+	asm("ldmfd r2!, {r3}\n\t"
+		"stmfd sp!, {r3}");
+	// 5. push the registers of the active task onto its stack
+	asm("add r2, r2, #8\n\t"
+		"ldmfd r2, {r0-r3}\n\t"
+		"stmfd sp!, {r1-r3}\n\t"
+		"stmfd sp!, {r4-r9, sl, fp, ip, lr}\n\t"
+		"mov ip, sp");
+	// 7. return to SVC state;
+	asm("mrs r0, CPSR\n\t"
+		"bic r0, r0, #0x1F\n\t"
+		"orr r0, r0, #0x13\n\t"
+		"msr CPSR, r0");
+	// 7.5 get SPSR of the active task from SP_SVC
+	asm("ldmfd sp!, {r1}");
+	// 10. fill in the request of the kernel from its stack
+	asm("ldmfd sp!, {r0,r2-r7}");
+	asm("str r2, [r7, #0]\n\t"
+		"str r3, [r7, #4]\n\t"
+		"str r4, [r7, #8]\n\t"
+		"str r5, [r7, #12]\n\t"
+		"str r6, [r7, #16]\n\t"
+		"str r0, [r7, #20]");
+	// 9. pop the registers from its stack
+	asm("ldmfd sp!, {r0, r4-r9, sl, fp}");
+	// 6. acquire the sp of the active task;
+	// 8. acquire the spsr of the active task 
+	asm("str ip, [r0, #0]\n\t"
+		"str r1, [r0, #4]\n\t"
+		"str r2, [r0, #8]");
+	asm( "sub	sp, fp, #16\n\t"
+		 "ldmfd	sp, {sl, fp, sp, pc}");
 
 kerent:
 	// 1. acquire the arguments of the request
@@ -775,7 +852,6 @@ unsigned int getStackSize( ) {
 	// make sure the size mod 4 is zero
 	unsigned int tmp = size % 4;
 	size -= tmp;
-
 	return size;
 
 } // getStackSize
@@ -794,7 +870,7 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	}
 
 	// Set stack pointer, PSR, and return value
-	tds[0].sp = (int *)MEM_END - getStackSize();
+	tds[0].sp = (int *)(MEM_END - getStackSize());
 										// First user stack starts below kernel stack
 	tds[0].spsr = PSR_USR;				// Initialize to user mode
 	tds[0].retVal = 0;					// Initialize return value to 0
@@ -803,7 +879,8 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	tds[0].parentTid = 0;				// Parent is 0 (kernel)
 	tds[0].nextTask = 0;				// No next task in priority queue
 	tds[0].priority = 2;
-
+	tds[0].nextSender = 0;
+bwprintf(COM2, "TASK 1 SP: %x\n\r", tds[0].sp);
 	// Set lr to the location of the firstUserTask
 	void (*syscall)();
 	syscall = firstUserTask;
@@ -940,11 +1017,13 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
-				int *clear = 0x800C001C;
-				*clear = 0x00080000;
+				// int *clear = (int *)0x800C001C;
+				// *clear = 0x00080000;
 
-				// int *clr = (int *)TIME_CLR;
-				// *clr = 1;
+				// bwprintf(COM2, "tid: %d, sp: %x\n\r",priorityQueues[req->taskPriority].headOfQueue->tid, tds[(priorityQueues[req->taskPriority].headOfQueue->tid) - 1].sp);
+
+				int *clr = (int *)TIME_CLR;
+				*clr = 1;
 				rescheduleActive( priorityQueues, req );
 
 				// Currently not checking the IRQ state register for which interrupt type occured
@@ -975,12 +1054,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				priorityQueues[whichQueue].headOfQueue->retVal = newTid;
 																	// Update the return value of
 																	// calling task
-
 				void (*syscall)();
 				syscall = (void *)req->arg1;						// The code of the created task
 
 				// Populate the new TD
-				newTask->sp = (int *)MEM_END - newTid * getStackSize();
+				newTask->sp = (int *)(MEM_END - newTid * getStackSize());
 																	// Position of new stack in memory
 				newTask->spsr = PSR_USR;							// Initialize to user mode
 				newTask->retVal = 0;								// Initialize return value to 0
@@ -993,7 +1071,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 
 				// Set lr to the location of the firstUserTask
 				*(newTask->sp) = (int)syscall+LOAD_LOC;
-
 				// Fill user stack with placeholder values, and put the pc of firstUserTask into lr
 				unsigned int i;
 				for ( i = 3; i > 0; i-- ) {
@@ -1175,11 +1252,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 int main( int argc, char *argv[] ) {
 
 	/* COMMENT TURNS INSTRUCTION/DATA CACHING ON */
-	// asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
-	// 	 "ldr r1, =4100\n\t"
-	// 	 "bic r0, r0, r1\n\t"
-	// 	 "ORR r0, r0, r1\n\t"
-	// 	 "MCR p15, 0, r0, c1, c0, 0" );
+	asm( "MRC p15, 0, r0, c1, c0, 0\n\t"
+		 "ldr r1, =4100\n\t"
+		 "bic r0, r0, r1\n\t"
+		 "ORR r0, r0, r1\n\t"
+		 "MCR p15, 0, r0, c1, c0, 0" );
 
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
