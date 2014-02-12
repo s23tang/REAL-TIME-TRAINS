@@ -1,0 +1,2 @@
+
+int getc( int channel );

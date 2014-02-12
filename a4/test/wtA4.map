@@ -1,6 +1,7 @@
 Archive member included because of file (symbol)
 
 ../lib/libbwio.a(bwio.o)      wtA4.o (bwprintf)
+./libio.a(io.o)               wtA4.o (getc)
 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
                               ../lib/libbwio.a(bwio.o) (__udivsi3)
 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
@@ -30,56 +31,57 @@ bss             0x0000000000000000        0x0
 
 text            0x0000000000000000     0x3ac4
  *(.text)
- .text          0x0000000000000000     0x2a50 wtA4.o
-                0x0000000000000130                Send
-                0x00000000000000f4                MyParentTid
-                0x0000000000000108                Pass
-                0x0000000000000000                getc
-                0x0000000000000d6c                clockServer
-                0x0000000000000240                WhoIs
-                0x00000000000000bc                Create
-                0x0000000000001ee0                closeActive
-                0x000000000000150c                t2
-                0x00000000000019fc                getStackSize
-                0x00000000000001ac                AwaitEvent
-                0x0000000000001c88                schedule
-                0x000000000000015c                Receive
-                0x0000000000000184                Reply
-                0x0000000000001808                getNextRequest
-                0x00000000000000e0                MyTid
-                0x0000000000001988                copyMsg
-                0x000000000000011c                Exit
-                0x0000000000001f84                handle
-                0x00000000000010d4                nameServer
-                0x0000000000001e60                blockActive
-                0x0000000000000384                DelayUntil
-                0x00000000000015e4                firstUserTask
-                0x0000000000001dd4                rescheduleBlock
-                0x0000000000001410                t1
-                0x0000000000002944                main
-                0x0000000000000534                rpsServer
-                0x00000000000001c8                RegisterAs
-                0x00000000000003e0                notifier
-                0x0000000000000308                Delay
-                0x00000000000002b8                Time
-                0x0000000000001a44                initialize
-                0x0000000000001d30                rescheduleActive
- .text          0x0000000000002a50      0xc54 ../lib/libbwio.a(bwio.o)
-                0x0000000000002dc8                bwputr
-                0x0000000000003334                bwi2a
-                0x0000000000002a50                bwsetfifo
-                0x0000000000002c24                bwputc
-                0x0000000000003084                bwa2d
-                0x0000000000002b18                bwsetspeed
-                0x0000000000002ce8                c2x
-                0x000000000000312c                bwa2i
-                0x0000000000002fcc                bwgetc
-                0x00000000000031f0                bwui2a
-                0x0000000000003398                bwformat
-                0x0000000000002ec4                bwputw
-                0x000000000000366c                bwprintf
-                0x0000000000002d48                bwputx
-                0x0000000000002e48                bwputstr
+ .text          0x0000000000000000     0x2994 wtA4.o
+                0x0000000000000074                Send
+                0x0000000000000038                MyParentTid
+                0x000000000000004c                Pass
+                0x0000000000000cb0                clockServer
+                0x0000000000000184                WhoIs
+                0x0000000000000000                Create
+                0x0000000000001e24                closeActive
+                0x0000000000001450                t2
+                0x0000000000001940                getStackSize
+                0x00000000000000f0                AwaitEvent
+                0x0000000000001bcc                schedule
+                0x00000000000000a0                Receive
+                0x00000000000000c8                Reply
+                0x000000000000174c                getNextRequest
+                0x0000000000000024                MyTid
+                0x00000000000018cc                copyMsg
+                0x0000000000000060                Exit
+                0x0000000000001ec8                handle
+                0x0000000000001018                nameServer
+                0x0000000000001da4                blockActive
+                0x00000000000002c8                DelayUntil
+                0x0000000000001528                firstUserTask
+                0x0000000000001d18                rescheduleBlock
+                0x0000000000001354                t1
+                0x0000000000002888                main
+                0x0000000000000478                rpsServer
+                0x000000000000010c                RegisterAs
+                0x0000000000000324                notifier
+                0x000000000000024c                Delay
+                0x00000000000001fc                Time
+                0x0000000000001988                initialize
+                0x0000000000001c74                rescheduleActive
+ .text          0x0000000000002994      0xc54 ../lib/libbwio.a(bwio.o)
+                0x0000000000002d0c                bwputr
+                0x0000000000003278                bwi2a
+                0x0000000000002994                bwsetfifo
+                0x0000000000002b68                bwputc
+                0x0000000000002fc8                bwa2d
+                0x0000000000002a5c                bwsetspeed
+                0x0000000000002c2c                c2x
+                0x0000000000003070                bwa2i
+                0x0000000000002f10                bwgetc
+                0x0000000000003134                bwui2a
+                0x00000000000032dc                bwformat
+                0x0000000000002e08                bwputw
+                0x00000000000035b0                bwprintf
+                0x0000000000002c8c                bwputx
+                0x0000000000002d8c                bwputstr
+ .text          0x00000000000035e8       0xbc ./libio.a(io.o)
+                0x00000000000035e8                getc
  .text          0x00000000000036a4      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
                 0x00000000000036a4                __udivsi3
                 0x000000000000379c                __aeabi_uidivmod
@@ -102,12 +104,14 @@ text            0x0000000000000000     0x3ac4
 .rel.dyn
 LOAD wtA4.o
 LOAD ../lib/libbwio.a
+LOAD ./libio.a
 LOAD /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a
 OUTPUT(wtA4.elf elf32-littlearm)
 
-.comment        0x0000000000000000       0x24
+.comment        0x0000000000000000       0x36
  .comment       0x0000000000000000       0x12 wtA4.o
  .comment       0x0000000000000012       0x12 ../lib/libbwio.a(bwio.o)
+ .comment       0x0000000000000024       0x12 ./libio.a(io.o)
 
 .debug_line     0x0000000000000000      0x14f
  .debug_line    0x0000000000000000       0x86 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
