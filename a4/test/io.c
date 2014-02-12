@@ -1,6 +1,5 @@
-#include <bwio.h>
-#include <ts7200.h>
 #include "io.h"
+#include "wtA4.h"
 
 //-----------------------------------------------------------------------------------------------
 //	Wait until able to read a character from the given UART
