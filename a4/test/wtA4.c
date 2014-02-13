@@ -37,17 +37,6 @@ void t2(){
 		int time = Time(clkServer);
 		if (time > 250)
 		{
-			unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
-			*timeLoad = 0;
-			// Disable the clock
-			unsigned int *control = (unsigned int *)TIME_CTRL;
-			*control = *control & (~0x40);
-			*control = *control & (~FREQ_BIT);
-			*control = *control & (~ENABLE_BIT);
-
-			// Disable the clock 
-			int *vicDisable = (int *)(0x800C0014);
-			*(vicDisable) = 0x00080000;
 
 			Exit();
 		}
@@ -674,5 +663,20 @@ int main( int argc, char *argv[] ) {
 		handle( tds, priorityQueues, &req, notifiers );	
 												// Execute the kernel code of the kernel primitive-h
 	} // for
+
+
+
+	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+	*timeLoad = 0;
+	// Disable the clock
+	unsigned int *control = (unsigned int *)TIME_CTRL;
+	*control = *control & (~0x40);
+	*control = *control & (~FREQ_BIT);
+	*control = *control & (~ENABLE_BIT);
+
+	// Disable the clock 
+	int *vicDisable = (int *)(0x800C0014);
+	*(vicDisable) = 0x00080000;
+
 	return 0;
 } // main
