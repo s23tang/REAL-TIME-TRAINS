@@ -10,8 +10,6 @@ void notifier( ){
 	ComReqStruct send, reply;
 	
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
-				int *vicEnable2 = (int *)(VIC2 + 0x10);
-				*(vicEnable2) = 0x00080000;
 	switch ( reply.type ) {
 		case CLOCK:
 			{

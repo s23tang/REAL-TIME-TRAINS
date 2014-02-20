@@ -35,6 +35,7 @@ void t2(){
 
 	FOREVER{
 		int time = Time(clkServer);
+		// bwprintf(COM2, "9 get reply from 3\n\r");
 		if (time > 250)
 		{
 
@@ -56,19 +57,21 @@ void firstUserTask(){
 	func = clockServer;
 	tid = Create( 1, func );
 
-
-
 	func = t1;
 	tid = Create( 3, func );
+
 	// func = t1;
 	tid = Create( 4, func );
+
 	// func = t1;
 	tid = Create( 5, func );
+
 	// func = t1;
 	tid = Create( 6, func );
 
 	func = t2;
-	tid = Create(8, func);
+	tid = Create(7, func);
+
 	int childTid;
 	int created;
 	DelayInfo delayInfo;
@@ -271,6 +274,7 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 	tds[0].nextTask = 0;				// No next task in priority queue
 	tds[0].priority = 2;
 	tds[0].nextSender = 0;
+	tds[0].lastSender = 0;
 	// Set lr to the location of the firstUserTask
 	void (*syscall)();
 	syscall = firstUserTask;
@@ -422,6 +426,16 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					notifier->retVal = 0;
 					rescheduleBlock(priorityQueues, notifier->priority, notifier);
 				}
+
+				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+				*timeLoad = ONE_TICK;
+				unsigned int *control = (unsigned int *)TIME_CTRL;
+				*control = *control | 0x40;
+				*control = *control | FREQ_BIT;
+				*control = *control | ENABLE_BIT;
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = 0x00080000;
 			}
 			break;
 		case CREATE:
@@ -453,6 +467,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				newTask->nextTask = 0;								// No next task in priority queue
 				newTask->priority = priority;
 				newTask->nextSender = 0;							// This task has no next sender
+				newTask->lastSender = 0;
 
 				// Set lr to the location of the firstUserTask
 				*(newTask->sp) = (int)syscall+LOAD_LOC;
@@ -521,6 +536,8 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				sender->rcvAddr   = (char *)req->arg3;
 				sender->rcvLen    = req->arg4;
 				TD *receiver      = &(tds[receiverTid - 1]);
+
+		// bwprintf(COM2, "%d send to %d \n\r", senderTid, receiverTid);
 				
 				// Checking if the target Tid is valid.
 				if (receiverTid < 1 || receiverTid > MAX_TASKS)
@@ -584,6 +601,8 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					// Remove sender from sendQ
 					sender->state = RPL_BLOCKED;
 					receiver->nextSender = sender->nextSender;
+
+					// bwprintf(COM2, "%d receive from %d \n\r", receiverTid, sender->tid);
 				}
 		    }
 		    break;
@@ -597,6 +616,9 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				unsigned int copyLen = (replyLen <= sender->rcvLen) ? replyLen : sender->rcvLen; // send the bottle neck len
 				copyMsg(sender->rcvAddr, reply, copyLen);
 
+				// bwprintf(COM2, "%d reply to %d \n\r", priorityQueues[req->taskPriority].headOfQueue->tid, sender->tid);
+
+				// bwprintf(COM2, "reply to %d\n\r", sender->tid);
 				priorityQueues[whichQueue].headOfQueue->retVal = copyLen;
 
 				// Put both tasks back to ready queue
@@ -664,7 +686,11 @@ int main( int argc, char *argv[] ) {
 												// Execute the kernel code of the kernel primitive-h
 	} // for
 
-
+// int i;
+// for (i = 0; i < 9; i++)
+// {
+// 	bwprintf(COM2, "tid: %d, state: %d\n\r", tds[i].tid, tds[i].state);
+// }
 
 	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
 	*timeLoad = 0;

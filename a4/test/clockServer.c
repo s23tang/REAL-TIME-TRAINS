@@ -70,8 +70,12 @@ void clockServer( ) {
 	// Start server
 	FOREVER {
 		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
+		int i;
+		for (i = 0; i < 6000; ++i)
+		{
+			
+		}
 		switch( reply.type ) {
-
 			case NOTI_REQ:
 				send.type = REQUEST_OK;
 				Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
@@ -82,6 +86,7 @@ void clockServer( ) {
 				{
 					send.type = REQUEST_OK;
 					send.data1 = currTime;
+					// bwprintf(COM2, "3 reply to %d\n\r", reqTid);
 					temp = Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
 				}
 				break;
