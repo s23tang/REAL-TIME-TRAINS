@@ -72,3 +72,4 @@ int Send ( int tid, char *message, int mslen, char *reply, int rplen );
 int Receive ( int *tid, char *message, int mslen );
 int Reply ( int tid, char *reply, int rplen );
 int AwaitEvent ( int EventType );
+int Getc( int channel );

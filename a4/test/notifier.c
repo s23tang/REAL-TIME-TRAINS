@@ -21,12 +21,11 @@ void notifier( ){
 			break;
 		case UART2XMIT:
 			{
-				int *ctrl = (int *)UART2CTRL;
-				*ctrl = *ctrl | 0x00000020;
-
+				flag = 3;
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = *(vicEnable2) | 0x00400000;
 			}
+			break;
 		case UART2GET:
 			{
 				flag = 1;
@@ -59,5 +58,10 @@ void notifier( ){
 		send.type = NOTI_REQ;
 		send.data1 = AwaitEvent(type);
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
-	}
-}
+		
+		if ( flag == 3 ) {
+			int *data = (int *)(UART2_BASE + UART_DATA_OFFSET);
+			*data = (char)reply.data1;
+		} // if
+	} // FOREVER
+} // notifier

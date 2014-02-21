@@ -2,14 +2,16 @@
 #define REGISTERAS		1
 #define WHOIS			2
 #define NAME_SERVER		2
-#define NUM_SERVERS		2		// rps server, clock server
-#define CLK_INDEX		0 		// clock server index
+#define NUM_SERVERS		5		// Clock Server, UART[1,2] Get/Xmit (4 servers) 
+
+// Server index in database
+#define CLK_INDEX		0 		// Clock Server
+#define UART1GET_S		1		// UART 1 Get Server
+#define UART1XMIT_S		2		// UART 1 Xmit Server
+#define UART2GET_S		3		// UART 2 Get Server
+#define UART2XMIT_S		4		// UART 2 Xmit Server
 
 //#define RPS_INDEX		1 		// rps server index, for testing
-
-// Name Server database entry size
-#define RPS_SIZE		4		// rps server
-#define CLK_SIZE		6		// clock server
 
 /*
  *	Structure used to communicate with name server

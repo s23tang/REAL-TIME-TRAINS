@@ -8,30 +8,85 @@
 #include "notifier.h"
 #include "io.h"
 
+//-----------------------------------------------------------------------------------------------
+//	Same functionality as memcpy().
+//-----------------------------------------------------------------------------------------------
+void memcpy( char *destBuf, char *srcBuf, int len){
+        int i;
+        for (i = 0; i < len; i++)
+        {
+                destBuf[i] = srcBuf[i];
+        }
+        //destBuf[i] = 0;   //Indicate the end of message
+} // copyMsg
+
+void print( char*arr, int len ) {
+	unsigned int i;
+	for ( i = 0; i < len; i++ ) {
+		unsigned int j;
+		for ( j=0; j < 10; j++ );
+		Putc( COM2, arr[i] );
+	}
+}
+
 /*
  * User tasks are below
  */
 
 void t1( ) {
-	int parentTid = MyParentTid();
-	int myTid = MyTid();
-	DelayInfo delayInfo;
-	int created = 0;
-	Send(parentTid, (char *)&created, sizeof(int), (char*) &delayInfo, sizeof(DelayInfo));
-	int clkServer = WhoIs( "clock\000" );
-	int iteration = delayInfo.iteration;
-	int interval = delayInfo.interval;
-	int i;
-	for (i = 0; i < iteration; i++)
-	{
-		Delay(clkServer, interval);
-		bwprintf(COM2, "Tid: %d, Delay Interval: %d, completed %d delays\n\r", myTid, interval, i+1);
-	}
+		char nimabi[4] = "\033[2J";
+		char title[53] = "\033[9;1HSensors:  1 = train passing, 0 = nothing\033[33;4H";
+		char r1[77] = "\033[10;1H---------------------------------------------------------------\033[33;4H";
+		char r2[77] = "\033[11;1HA1 |A2 |A3 |A4 |A5 |A6 |A7 |A8 |A9 |A10|A11|A12|A13|A14|A15|A16\033[33;4H";
+		char r3[77] = "\033[12;1H---------------------------------------------------------------\033[33;4H";
+		char r4[77] = "\033[13;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H";
+		char r5[77] = "\033[14;1H---------------------------------------------------------------\033[33;4H";
+		char r6[77] = "\033[15;1HB1 |B2 |B3 |B4 |B5 |B6 |B7 |B8 |B9 |B10|B11|B12|B13|B14|B15|B16\033[33;4H";
+		char r7[77] = "\033[16;1H---------------------------------------------------------------\033[33;4H";
+		char r8[77] = "\033[17;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H";
+		char r9[77] = "\033[18;1H---------------------------------------------------------------\033[33;4H";
+		char r10[77] = "\033[19;1HC1 |C2 |C3 |C4 |C5 |C6 |C7 |C8 |C9 |C10|C11|C12|C13|C14|C15|C16\033[33;4H";
+		char r11[77] = "\033[20;1H---------------------------------------------------------------\033[33;4H";
+		char r12[77] = "\033[21;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H";
+		char r13[77] = "\033[22;1H---------------------------------------------------------------\033[33;4H";
+		char r14[77] = "\033[23;1HD1 |D2 |D3 |D4 |D5 |D6 |D7 |D8 |D9 |D10|D11|D12|D13|D14|D15|D16\033[33;4H";
+		char r15[77] = "\033[24;1H---------------------------------------------------------------\033[33;4H";
+		char r16[77] = "\033[25;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H";
+		char r17[77] = "\033[26;1H---------------------------------------------------------------\033[33;4H";
+		char r18[77] = "\033[27;1HE1 |E2 |E3 |E4 |E5 |E6 |E7 |E8 |E9 |E10|E11|E12|E13|E14|E15|E16\033[33;4H";
+		char r19[77] = "\033[28;1H---------------------------------------------------------------\033[33;4H";
+		char r20[77] = "\033[29;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H";
+		char r21[77] = "\033[30;1H---------------------------------------------------------------\033[33;4H";
+		print( nimabi, 4 );
+		print( title, 53 );
+		print( r1, 77 );
+		print( r2, 77 );
+		print( r3, 77 );
+		print( r4, 77 );
+		print( r5, 77 );
+		print( r6, 77 );
+		print( r7, 77 );
+		print( r8, 77 );
+		print( r9, 77 );
+		print( r10, 77 );
+		print( r11, 77 );
+		print( r12, 77 );
+		print( r13, 77 );
+		print( r14, 77 );
+		print( r15, 77 );
+		print( r16, 77 );
+		print( r17, 77 );
+		print( r18, 77 );
+		print( r19, 77 );
+		print( r20, 77 );
+		print( r21, 77 );
+	
+
 	Exit();
 }
 
 void t2(){
-	int clkServer = WhoIs( "clock\000" );
+	//int clkServer = WhoIs( "clock\000" );
 
 	FOREVER{
 		// int time = Time(clkServer);
@@ -52,7 +107,7 @@ void firstUserTask(){
 	func = nameServer;
 	unsigned int tid;
 	tid = Create( 0, func );
-	bwprintf(COM2, "First: created Name Server\n\r");
+	// bwprintf(COM2, "First: created Name Server\n\r");
 
 	func = clockServer;
 	tid = Create( 1, func );
@@ -60,50 +115,19 @@ void firstUserTask(){
 	func = uart2GetServer;
 	tid = Create( 1, func );
 
-	// func = t1;
-	// tid = Create( 3, func );
+	func = uart2PutServer;
+	tid = Create( 1, func );
 
-	// // func = t1;
-	// tid = Create( 4, func );
-
-	// // func = t1;
-	// tid = Create( 5, func );
-
-	// // func = t1;
-	// tid = Create( 6, func );
+	func = t1;
+	tid = Create( 2, func );
 
 
 	// Idle task
 	func = t2;
 	tid = Create(7, func);
 
-	// int childTid;
-	// int created;
-	// DelayInfo delayInfo;
 
-
-	// delayInfo.interval = 10;
-	// delayInfo.iteration = 2000;
-	// Receive(&childTid, (char*)&created, sizeof(int));
-	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
-
-	// delayInfo.interval = 23;
-	// delayInfo.iteration = 900;
-	// Receive(&childTid, (char*)&created, sizeof(int));
-	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
-
-	// delayInfo.interval = 33;
-	// delayInfo.iteration = 600;
-	// Receive(&childTid, (char*)&created, sizeof(int));
-	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
-
-	// delayInfo.interval = 71;
-	// delayInfo.iteration = 300;
-	// Receive(&childTid, (char*)&created, sizeof(int));
-	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
-
-
-	bwprintf(COM2, "First: exiting\n\r");
+	// bwprintf(COM2, "First: exiting\n\r");
 	Exit();
 } // firstUserTask
 
@@ -434,8 +458,8 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 						notifiers[CLOCK].eventWaiting = 1;
 					} 
 					else {    // Notifier is waiting, reschedule the task and put in the retVal
-						// bwprintf(COM2, "KEEP HERE\n\r");
 						TD *notifier = (TD *)notifiers[CLOCK].task;
+						notifiers[CLOCK].task = 0;
 						notifier->retVal = 0;
 						rescheduleBlock(priorityQueues, notifier->priority, notifier);
 					}
@@ -446,9 +470,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					*control = *control | 0x40;
 					*control = *control | FREQ_BIT;
 					*control = *control | ENABLE_BIT;
-
-					int *vicEnable2 = (int *)(VIC2 + 0x10);
-					*(vicEnable2) = 0x00080000;
 				} else {
 					rescheduleActive( priorityQueues, req );
 
@@ -456,8 +477,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					int UART2Int = *((int *)UART2IntDIntClr);
 					if ( UART2Int & 0x2 ) {
 						int *data = (int *)( UART2_BASE + UART_DATA_OFFSET );
-						// *((int *)UART2IntDIntClr) = *((int *)UART2IntDIntClr) & (~0x2);	// clear
-
 						// Currently not checking the IRQ state register for which interrupt type occured
 						if (notifiers[UART2GET].task == 0)  // No body is waiting
 						{
@@ -466,8 +485,26 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[UART2GET].task;
+							notifiers[UART2GET].task = 0;
 							notifier->retVal = *data;
 							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
+					} 
+					else if (UART2Int & 0x4 )
+					{
+						int *ctrl = (int *)UART2CTRL;
+						*ctrl = *ctrl & (~0x00000020);
+						// make sure the notifier is waiting
+						if (notifiers[UART2XMIT].task != 0)
+						{
+							TD *notifier = (TD *)notifiers[UART2XMIT].task;
+							notifiers[UART2XMIT].task = 0;
+							notifier->retVal = 0;       // this value is not used for uart2
+							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
+						else {
+							notifiers[UART2XMIT].data = 0;
+							notifiers[UART2XMIT].eventWaiting = 1;
 						}
 					}
 				}
@@ -661,8 +698,15 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				unsigned int notifierTid = priorityQueues[whichQueue].headOfQueue->tid;
 				TD *notifier             = &(tds[notifierTid - 1]);
 				int eventType = req->arg0;
-				// Check if there's already an event in the queue
 
+				// Turn on the transmit ready interrupt
+				if (eventType == UART2XMIT)
+				{
+					int *ctrl = (int *)UART2CTRL;
+					*ctrl = *ctrl | 0x00000020;
+				}
+
+				// Check if there's already an event in the queue
 				if ( notifiers[eventType].eventWaiting > 0 )   // has event waiting
 				{
 					notifiers[eventType].task = 0;

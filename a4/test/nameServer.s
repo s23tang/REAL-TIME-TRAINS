@@ -81,7 +81,19 @@ WhoIs:
 	.section	.rodata
 	.align	2
 .LC0:
-	.ascii	"clock\000\000"
+	.ascii	"clock\000"
+	.align	2
+.LC1:
+	.ascii	"u1g\000"
+	.align	2
+.LC2:
+	.ascii	"u1x\000"
+	.align	2
+.LC3:
+	.ascii	"u2g\000"
+	.align	2
+.LC4:
+	.ascii	"u2x\000"
 	.text
 	.align	2
 	.global	nameServer
@@ -93,15 +105,27 @@ nameServer:
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #80
-	ldr	sl, .L37
-.L36:
+	ldr	sl, .L45
+.L44:
 	add	sl, pc, sl
-	ldr	r3, .L37+4
+	ldr	r3, .L45+4
 	add	r3, sl, r3
 	str	r3, [fp, #-64]
-	b	.L35
+	ldr	r3, .L45+8
+	add	r3, sl, r3
+	str	r3, [fp, #-56]
+	ldr	r3, .L45+12
+	add	r3, sl, r3
+	str	r3, [fp, #-48]
+	ldr	r3, .L45+16
+	add	r3, sl, r3
+	str	r3, [fp, #-40]
+	ldr	r3, .L45+20
+	add	r3, sl, r3
+	str	r3, [fp, #-32]
+	b	.L43
 .L12:
-.L35:
+.L43:
 	sub	r2, fp, #80
 	sub	r3, fp, #68
 	mov	r0, r3
@@ -114,64 +138,93 @@ nameServer:
 	str	r3, [fp, #-88]
 	mov	r3, #0
 	str	r3, [fp, #-84]
-	ldr	r3, [fp, #-80]
-	str	r3, [fp, #-96]
+	ldr	r3, [fp, #-76]
+	str	r3, [fp, #-24]
+	ldr	r1, [fp, #-80]
+	str	r1, [fp, #-96]
 	ldr	r3, [fp, #-96]
 	cmp	r3, #1
 	beq	.L14
-	ldr	r3, [fp, #-96]
-	cmp	r3, #2
+	ldr	r1, [fp, #-96]
+	cmp	r1, #2
 	beq	.L15
 	b	.L12
 .L14:
-	mov	r3, #0
-	str	r3, [fp, #-44]
-	ldr	r3, [fp, #-76]
-	str	r3, [fp, #-40]
-	ldr	r3, [fp, #-40]
+	ldr	r3, [fp, #-24]
 	ldrb	r3, [r3, #0]	@ zero_extendqisi2
 	cmp	r3, #99
 	bne	.L16
-	ldr	r3, [fp, #-64]
-	str	r3, [fp, #-36]
-	mov	r3, #1
-	str	r3, [fp, #-48]
-	b	.L18
-.L19:
-	ldr	r2, [fp, #-48]
-	ldr	r3, [fp, #-40]
-	add	r3, r2, r3
-	ldrb	r1, [r3, #0]	@ zero_extendqisi2
-	ldr	r2, [fp, #-48]
-	ldr	r3, [fp, #-36]
-	add	r3, r2, r3
-	ldrb	r3, [r3, #0]	@ zero_extendqisi2
-	cmp	r1, r3
-	bne	.L20
-	ldr	r3, [fp, #-48]
-	add	r3, r3, #1
-	str	r3, [fp, #-48]
-.L18:
-	ldr	r3, [fp, #-48]
-	cmp	r3, #5
-	bls	.L19
-.L20:
-	ldr	r3, [fp, #-48]
-	cmp	r3, #6
-	bne	.L16
-	mov	r3, #1
-	str	r3, [fp, #-44]
 	mov	r3, #0
 	str	r3, [fp, #-92]
+	mov	r3, #0
+	str	r3, [fp, #-20]
+	ldr	r1, [fp, #-20]
 	ldr	r3, [fp, #-68]
-	str	r3, [fp, #-60]
+	mov	r0, r3
+	mvn	r2, #43
+	mov	r3, r1, asl #3
+	sub	r1, fp, #16
+	add	r3, r3, r1
+	add	r3, r3, r2
+	str	r0, [r3, #0]
+	b	.L18
 .L16:
-	ldr	r3, [fp, #-44]
-	cmp	r3, #0
+	ldr	r3, [fp, #-24]
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #117
+	bne	.L19
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #1
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #49
+	bne	.L21
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #2
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #103
 	bne	.L23
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #1
+	str	r3, [fp, #-20]
+	b	.L26
+.L23:
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #2
+	str	r3, [fp, #-20]
+	b	.L26
+.L21:
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #2
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #103
+	bne	.L27
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #3
+	str	r3, [fp, #-20]
+	b	.L26
+.L27:
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #4
+	str	r3, [fp, #-20]
+.L26:
+	ldr	r1, [fp, #-20]
+	ldr	r3, [fp, #-68]
+	mov	r0, r3
+	mvn	r2, #43
+	mov	r3, r1, asl #3
+	sub	r1, fp, #16
+	add	r3, r3, r1
+	add	r3, r3, r2
+	str	r0, [r3, #0]
+	b	.L18
+.L19:
 	mvn	r3, #0
 	str	r3, [fp, #-92]
-.L23:
+.L18:
 	ldr	r3, [fp, #-68]
 	sub	r2, fp, #92
 	mov	r0, r3
@@ -180,54 +233,79 @@ nameServer:
 	bl	Reply(PLT)
 	b	.L12
 .L15:
-	mov	r3, #0
-	str	r3, [fp, #-28]
-	ldr	r3, [fp, #-76]
-	str	r3, [fp, #-24]
 	ldr	r3, [fp, #-24]
 	ldrb	r3, [r3, #0]	@ zero_extendqisi2
 	cmp	r3, #99
-	bne	.L25
-	ldr	r3, [fp, #-64]
-	str	r3, [fp, #-20]
-	mov	r3, #1
-	str	r3, [fp, #-32]
-	b	.L27
-.L28:
-	ldr	r2, [fp, #-32]
-	ldr	r3, [fp, #-24]
-	add	r3, r2, r3
-	ldrb	r1, [r3, #0]	@ zero_extendqisi2
-	ldr	r2, [fp, #-32]
-	ldr	r3, [fp, #-20]
-	add	r3, r2, r3
-	ldrb	r3, [r3, #0]	@ zero_extendqisi2
-	cmp	r1, r3
 	bne	.L29
-	ldr	r3, [fp, #-32]
-	add	r3, r3, #1
-	str	r3, [fp, #-32]
-.L27:
-	ldr	r3, [fp, #-32]
-	cmp	r3, #5
-	bls	.L28
-.L29:
-	ldr	r3, [fp, #-32]
-	cmp	r3, #6
-	bne	.L25
-	mov	r3, #1
-	str	r3, [fp, #-28]
 	mov	r3, #0
 	str	r3, [fp, #-92]
-	ldr	r3, [fp, #-60]
+	mov	r3, #0
+	str	r3, [fp, #-20]
+	ldr	r3, [fp, #-20]
+	mvn	r2, #43
+	mov	r3, r3, asl #3
+	sub	r1, fp, #16
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r3, [r3, #0]
 	str	r3, [fp, #-84]
-.L25:
-	ldr	r3, [fp, #-28]
-	cmp	r3, #0
+	b	.L31
+.L29:
+	ldr	r3, [fp, #-24]
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #117
 	bne	.L32
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #1
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #49
+	bne	.L34
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #2
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #103
+	bne	.L36
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #1
+	str	r3, [fp, #-20]
+	b	.L39
+.L36:
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #2
+	str	r3, [fp, #-20]
+	b	.L39
+.L34:
+	ldr	r3, [fp, #-24]
+	add	r3, r3, #2
+	ldrb	r3, [r3, #0]	@ zero_extendqisi2
+	cmp	r3, #103
+	bne	.L40
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #3
+	str	r3, [fp, #-20]
+	b	.L39
+.L40:
+	mov	r3, #0
+	str	r3, [fp, #-92]
+	mov	r3, #4
+	str	r3, [fp, #-20]
+.L39:
+	ldr	r3, [fp, #-20]
+	mvn	r2, #43
+	mov	r3, r3, asl #3
+	sub	r1, fp, #16
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r3, [r3, #0]
+	str	r3, [fp, #-84]
+	b	.L31
+.L32:
 	mvn	r3, #0
 	str	r3, [fp, #-92]
-.L32:
+.L31:
 	ldr	r3, [fp, #-68]
 	sub	r2, fp, #92
 	mov	r0, r3
@@ -235,10 +313,14 @@ nameServer:
 	mov	r2, #12
 	bl	Reply(PLT)
 	b	.L12
-.L38:
+.L46:
 	.align	2
-.L37:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L36+8)
+.L45:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L44+8)
 	.word	.LC0(GOTOFF)
+	.word	.LC1(GOTOFF)
+	.word	.LC2(GOTOFF)
+	.word	.LC3(GOTOFF)
+	.word	.LC4(GOTOFF)
 	.size	nameServer, .-nameServer
 	.ident	"GCC: (GNU) 4.0.2"

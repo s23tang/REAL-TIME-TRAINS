@@ -43,7 +43,7 @@ int DelayUntil( unsigned int clkServer, int ticks ) {
 //	Clock server
 //-----------------------------------------------------------------------------------------------
 void clockServer( ) {
-	if ( RegisterAs( "clock\000" ) == -1 ) {
+	if ( RegisterAs( "clock" ) == -1 ) {
 		bwprintf( COM2, "clockServer: register failed\n\r" );
 		Exit();
 	}

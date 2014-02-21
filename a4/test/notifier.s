@@ -32,67 +32,63 @@ notifier:
 	b	.L6
 	b	.L7
 .L6:
-	ldr	r3, .L11
+	mov	r3, #3
+	str	r3, [fp, #-48]
+	ldr	r3, .L14
 	str	r3, [fp, #-40]
 	ldr	r3, [fp, #-40]
 	ldr	r3, [r3, #0]
-	orr	r2, r3, #32
+	orr	r2, r3, #4194304
 	ldr	r3, [fp, #-40]
 	str	r2, [r3, #0]
-	ldr	r3, .L11+4
-	str	r3, [fp, #-36]
-	ldr	r3, [fp, #-36]
-	ldr	r3, [r3, #0]
-	orr	r2, r3, #4194304
-	ldr	r3, [fp, #-36]
-	str	r2, [r3, #0]
+	b	.L2
 .L7:
 	mov	r3, #1
 	str	r3, [fp, #-48]
-	ldr	r3, .L11
+	ldr	r3, .L14+4
+	str	r3, [fp, #-36]
+	ldr	r3, [fp, #-36]
+	ldr	r3, [r3, #0]
+	orr	r2, r3, #16
+	ldr	r3, [fp, #-36]
+	str	r2, [r3, #0]
+	ldr	r3, .L14
 	str	r3, [fp, #-32]
 	ldr	r3, [fp, #-32]
 	ldr	r3, [r3, #0]
-	orr	r2, r3, #16
-	ldr	r3, [fp, #-32]
-	str	r2, [r3, #0]
-	ldr	r3, .L11+4
-	str	r3, [fp, #-28]
-	ldr	r3, [fp, #-28]
-	ldr	r3, [r3, #0]
 	orr	r2, r3, #4194304
-	ldr	r3, [fp, #-28]
+	ldr	r3, [fp, #-32]
 	str	r2, [r3, #0]
 	b	.L2
 .L3:
-	ldr	r3, .L11+8
-	str	r3, [fp, #-24]
-	ldr	r2, [fp, #-24]
-	ldr	r3, .L11+12
+	ldr	r3, .L14+8
+	str	r3, [fp, #-28]
+	ldr	r2, [fp, #-28]
+	ldr	r3, .L14+12
 	str	r3, [r2, #0]
-	ldr	r3, .L11+16
+	ldr	r3, .L14+16
+	str	r3, [fp, #-24]
+	ldr	r3, [fp, #-24]
+	ldr	r3, [r3, #0]
+	orr	r2, r3, #64
+	ldr	r3, [fp, #-24]
+	str	r2, [r3, #0]
+	ldr	r3, [fp, #-24]
+	ldr	r3, [r3, #0]
+	orr	r2, r3, #8
+	ldr	r3, [fp, #-24]
+	str	r2, [r3, #0]
+	ldr	r3, [fp, #-24]
+	ldr	r3, [r3, #0]
+	orr	r2, r3, #128
+	ldr	r3, [fp, #-24]
+	str	r2, [r3, #0]
+	ldr	r3, .L14
 	str	r3, [fp, #-20]
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
-	orr	r2, r3, #64
-	ldr	r3, [fp, #-20]
-	str	r2, [r3, #0]
-	ldr	r3, [fp, #-20]
-	ldr	r3, [r3, #0]
-	orr	r2, r3, #8
-	ldr	r3, [fp, #-20]
-	str	r2, [r3, #0]
-	ldr	r3, [fp, #-20]
-	ldr	r3, [r3, #0]
-	orr	r2, r3, #128
-	ldr	r3, [fp, #-20]
-	str	r2, [r3, #0]
-	ldr	r3, .L11+4
-	str	r3, [fp, #-16]
-	ldr	r3, [fp, #-16]
-	ldr	r3, [r3, #0]
 	orr	r2, r3, #524288
-	ldr	r3, [fp, #-16]
+	ldr	r3, [fp, #-20]
 	str	r2, [r3, #0]
 .L2:
 	mov	r3, #0
@@ -103,7 +99,9 @@ notifier:
 	mov	r1, r2
 	mov	r2, #8
 	bl	Reply(PLT)
+	b	.L13
 .L9:
+.L13:
 	mov	r3, #1
 	str	r3, [fp, #-60]
 	ldr	r0, [fp, #-44]
@@ -119,14 +117,25 @@ notifier:
 	mov	r2, #8
 	mov	r3, ip
 	bl	Send(PLT)
+	ldr	r3, [fp, #-48]
+	cmp	r3, #3
+	bne	.L9
+	ldr	r3, .L14+20
+	str	r3, [fp, #-16]
+	ldr	r3, [fp, #-64]
+	and	r3, r3, #255
+	mov	r2, r3
+	ldr	r3, [fp, #-16]
+	str	r2, [r3, #0]
 	b	.L9
-.L12:
+.L15:
 	.align	2
-.L11:
-	.word	-2138243052
+.L14:
 	.word	-2146697200
+	.word	-2138243052
 	.word	-2139029376
 	.word	5080
 	.word	-2139029368
+	.word	-2138243072
 	.size	notifier, .-notifier
 	.ident	"GCC: (GNU) 4.0.2"

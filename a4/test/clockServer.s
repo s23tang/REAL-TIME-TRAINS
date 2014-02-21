@@ -100,7 +100,7 @@ DelayUntil:
 	.section	.rodata
 	.align	2
 .LC0:
-	.ascii	"clock\000\000"
+	.ascii	"clock\000"
 	.align	2
 .LC1:
 	.ascii	"clockServer: register failed\012\015\000"
