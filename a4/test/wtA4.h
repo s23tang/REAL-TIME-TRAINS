@@ -9,6 +9,16 @@
 #define NOTI_REQ		1
 #define TIME_REQ		2
 #define DELAY_REQ		3
+// Uart Server Macros
+#define UART1XMIT_REQ		4
+#define UART1GET_REQ		5
+#define UART2XMIT_REQ		6
+#define UART2GET_REQ		7
+
+// UART Macros
+#define UART1IntDIntClr 0x808C001C
+#define UART2IntDIntClr	0x808D001C
+
 
 struct TD;
 

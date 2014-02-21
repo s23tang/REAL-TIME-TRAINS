@@ -34,13 +34,13 @@ void t2(){
 	int clkServer = WhoIs( "clock\000" );
 
 	FOREVER{
-		int time = Time(clkServer);
-		// bwprintf(COM2, "9 get reply from 3\n\r");
-		if (time > 250)
-		{
+		// int time = Time(clkServer);
+		// // bwprintf(COM2, "9 get reply from 3\n\r");
+		// if (time > 250)
+		// {
 
-			Exit();
-		}
+		// 	Exit();
+		// }
 	}
 }
 
@@ -57,45 +57,50 @@ void firstUserTask(){
 	func = clockServer;
 	tid = Create( 1, func );
 
-	func = t1;
-	tid = Create( 3, func );
+	func = uart2GetServer;
+	tid = Create( 1, func );
 
 	// func = t1;
-	tid = Create( 4, func );
+	// tid = Create( 3, func );
 
-	// func = t1;
-	tid = Create( 5, func );
+	// // func = t1;
+	// tid = Create( 4, func );
 
-	// func = t1;
-	tid = Create( 6, func );
+	// // func = t1;
+	// tid = Create( 5, func );
 
+	// // func = t1;
+	// tid = Create( 6, func );
+
+
+	// Idle task
 	func = t2;
 	tid = Create(7, func);
 
-	int childTid;
-	int created;
-	DelayInfo delayInfo;
+	// int childTid;
+	// int created;
+	// DelayInfo delayInfo;
 
 
-	delayInfo.interval = 10;
-	delayInfo.iteration = 20;
-	Receive(&childTid, (char*)&created, sizeof(int));
-	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+	// delayInfo.interval = 10;
+	// delayInfo.iteration = 2000;
+	// Receive(&childTid, (char*)&created, sizeof(int));
+	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
 
-	delayInfo.interval = 23;
-	delayInfo.iteration = 9;
-	Receive(&childTid, (char*)&created, sizeof(int));
-	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+	// delayInfo.interval = 23;
+	// delayInfo.iteration = 900;
+	// Receive(&childTid, (char*)&created, sizeof(int));
+	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
 
-	delayInfo.interval = 33;
-	delayInfo.iteration = 6;
-	Receive(&childTid, (char*)&created, sizeof(int));
-	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+	// delayInfo.interval = 33;
+	// delayInfo.iteration = 600;
+	// Receive(&childTid, (char*)&created, sizeof(int));
+	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
 
-	delayInfo.interval = 71;
-	delayInfo.iteration = 3;
-	Receive(&childTid, (char*)&created, sizeof(int));
-	Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
+	// delayInfo.interval = 71;
+	// delayInfo.iteration = 300;
+	// Receive(&childTid, (char*)&created, sizeof(int));
+	// Reply(childTid, (char*)&delayInfo, sizeof(delayInfo));
 
 
 	bwprintf(COM2, "First: exiting\n\r");
@@ -302,9 +307,12 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 										// Reference the priority queues array
 
 	// Fill Notifier array
-	notifiers[CLOCK].task = 0;
-	notifiers[CLOCK].data = 0;
-	notifiers[CLOCK].eventWaiting = 0;
+	for (i = 0; i < NUM_NOTIFIERS; i++)
+	{
+		notifiers[i].task = 0;
+		notifiers[i].data = 0;
+		notifiers[i].eventWaiting = 0;
+	}
 
 	asm("mrs r0, CPSR\n\t"
 		"bic r0, r0, #0x1F\n\t"
@@ -411,31 +419,44 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
-				int *clr = (int *)TIME_CLR;
-				*clr = 1;
-				rescheduleActive( priorityQueues, req );
+				int VIC2IRQ = *((int *)VIC2);
+				if ( VIC2IRQ & VIC_CLK ) {
+					int *clr = (int *)TIME_CLR;
+					*clr = 1;
+					rescheduleActive( priorityQueues, req );
 
-				// Currently not checking the IRQ state register for which interrupt type occured
-				if (notifiers[CLOCK].task == 0)  // No body is waiting
-				{
-					notifiers[CLOCK].data = 0;
-					notifiers[CLOCK].eventWaiting = 1;
-				} 
-				else {    // Notifier is waiting, reschedule the task and put in the retVal
-					TD *notifier = (TD *)notifiers[CLOCK].task;
-					notifier->retVal = 0;
-					rescheduleBlock(priorityQueues, notifier->priority, notifier);
+					// Currently not checking the IRQ state register for which interrupt type occured
+					if (notifiers[CLOCK].task == 0)  // No body is waiting
+					{
+						notifiers[CLOCK].data = 0;
+						notifiers[CLOCK].eventWaiting = 1;
+					} 
+					else {    // Notifier is waiting, reschedule the task and put in the retVal
+						TD *notifier = (TD *)notifiers[CLOCK].task;
+						notifier->retVal = 0;
+						rescheduleBlock(priorityQueues, notifier->priority, notifier);
+					}
+
+					unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
+					*timeLoad = ONE_TICK;
+					unsigned int *control = (unsigned int *)TIME_CTRL;
+					*control = *control | 0x40;
+					*control = *control | FREQ_BIT;
+					*control = *control | ENABLE_BIT;
+
+					int *vicEnable2 = (int *)(VIC2 + 0x10);
+									// bwprintf(COM2, "interrupt status: %x\n\r", *vicEnable2);
+
+					*(vicEnable2) = 0x00080000;
+				} else {
+					int UART1Int = *((int *)UART1IntDIntClr);
+					int UART2Int = *((int *)UART2IntDIntClr);
+					if ( UART2Int & 0x2 ) {
+						int *data = (int *)( UART2_BASE + UART_DATA_OFFSET );
+						bwprintf( COM2, "%c\n\r", *data );
+						*((int *)UART2IntDIntClr) = 1;	// clear
+					}
 				}
-
-				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
-				*timeLoad = ONE_TICK;
-				unsigned int *control = (unsigned int *)TIME_CTRL;
-				*control = *control | 0x40;
-				*control = *control | FREQ_BIT;
-				*control = *control | ENABLE_BIT;
-
-				int *vicEnable2 = (int *)(VIC2 + 0x10);
-				*(vicEnable2) = 0x00080000;
 			}
 			break;
 		case CREATE:
@@ -535,10 +556,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				sender->msgLen    = req->arg2;
 				sender->rcvAddr   = (char *)req->arg3;
 				sender->rcvLen    = req->arg4;
-				TD *receiver      = &(tds[receiverTid - 1]);
-
-		// bwprintf(COM2, "%d send to %d \n\r", senderTid, receiverTid);
-				
+				TD *receiver      = &(tds[receiverTid - 1]);				
 				// Checking if the target Tid is valid.
 				if (receiverTid < 1 || receiverTid > MAX_TASKS)
 				{
@@ -601,8 +619,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					// Remove sender from sendQ
 					sender->state = RPL_BLOCKED;
 					receiver->nextSender = sender->nextSender;
-
-					// bwprintf(COM2, "%d receive from %d \n\r", receiverTid, sender->tid);
 				}
 		    }
 		    break;
@@ -616,9 +632,6 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				unsigned int copyLen = (replyLen <= sender->rcvLen) ? replyLen : sender->rcvLen; // send the bottle neck len
 				copyMsg(sender->rcvAddr, reply, copyLen);
 
-				// bwprintf(COM2, "%d reply to %d \n\r", priorityQueues[req->taskPriority].headOfQueue->tid, sender->tid);
-
-				// bwprintf(COM2, "reply to %d\n\r", sender->tid);
 				priorityQueues[whichQueue].headOfQueue->retVal = copyLen;
 
 				// Put both tasks back to ready queue
@@ -685,12 +698,6 @@ int main( int argc, char *argv[] ) {
 		handle( tds, priorityQueues, &req, notifiers );	
 												// Execute the kernel code of the kernel primitive-h
 	} // for
-
-// int i;
-// for (i = 0; i < 9; i++)
-// {
-// 	bwprintf(COM2, "tid: %d, state: %d\n\r", tds[i].tid, tds[i].state);
-// }
 
 	unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
 	*timeLoad = 0;

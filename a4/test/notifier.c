@@ -11,6 +11,26 @@ void notifier( ){
 	
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
 	switch ( reply.type ) {
+		case UART1XMIT:
+			;
+		case UART1GET:
+			{
+				bwsetfifo( COM1, OFF );
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = *(vicEnable2) | 0x00100000;
+			}
+			break;
+		case UART2XMIT:
+			;
+		case UART2GET:
+			{
+				bwsetfifo( COM2, OFF );
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = *(vicEnable2) | 0x00400000;
+			}
+			break;
 		case CLOCK:
 			{
 				unsigned int *timeLoad = (unsigned int *)TIME_LOAD;
@@ -21,7 +41,7 @@ void notifier( ){
 				*control = *control | ENABLE_BIT;
 
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
-				*(vicEnable2) = 0x00080000;
+				*(vicEnable2) = *(vicEnable2) | 0x00080000;
 			}
 			break;
 	}

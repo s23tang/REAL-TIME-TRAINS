@@ -70,11 +70,6 @@ void clockServer( ) {
 	// Start server
 	FOREVER {
 		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
-		int i;
-		for (i = 0; i < 6000; ++i)
-		{
-			
-		}
 		switch( reply.type ) {
 			case NOTI_REQ:
 				send.type = REQUEST_OK;

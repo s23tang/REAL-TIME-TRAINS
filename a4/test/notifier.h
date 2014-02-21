@@ -1,5 +1,10 @@
 // Event type
 #define CLOCK           0
+#define UART1XMIT		1
+#define UART1GET		2
+#define UART2XMIT		3
+#define UART2GET		4
+
 // Timer Macros
 #define TIME_LOAD    	0x80810080
 #define TIME_CLR		0x8081008C
@@ -13,7 +18,10 @@
 #define VIC1			0x800B0000
 #define VIC2			0x800C0000
 
+// VIC Flag Bits
+#define VIC_CLK			0x00080000
+
 // Notifiers
-#define NUM_NOTIFIERS	1
+#define NUM_NOTIFIERS	5
 
 void notifier( );
