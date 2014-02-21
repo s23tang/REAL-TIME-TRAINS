@@ -5,6 +5,10 @@
 #define UART2XMIT		3
 #define UART2GET		4
 
+// UART Macros
+#define UART1CTRL		0x808C0014
+#define UART2CTRL		0x808D0014
+
 // Timer Macros
 #define TIME_LOAD    	0x80810080
 #define TIME_CLR		0x8081008C

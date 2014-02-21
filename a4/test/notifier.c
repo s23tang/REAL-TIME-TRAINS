@@ -12,20 +12,21 @@ void notifier( ){
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
 	switch ( reply.type ) {
 		case UART1XMIT:
-			;
+			break;
 		case UART1GET:
-			{
-				bwsetfifo( COM1, OFF );
-
-				int *vicEnable2 = (int *)(VIC2 + 0x10);
-				*(vicEnable2) = *(vicEnable2) | 0x00100000;
-			}
 			break;
 		case UART2XMIT:
-			;
+			{
+				int *ctrl = (int *)UART2CTRL;
+				*ctrl = *ctrl | 0x00000020;
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = *(vicEnable2) | 0x00400000;
+			}
 		case UART2GET:
 			{
-				bwsetfifo( COM2, OFF );
+				int *ctrl = (int *)UART2CTRL;
+				*ctrl = *ctrl | 0x00000010;
 
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = *(vicEnable2) | 0x00400000;

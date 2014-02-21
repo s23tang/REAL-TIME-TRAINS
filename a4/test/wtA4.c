@@ -423,6 +423,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				if ( VIC2IRQ & VIC_CLK ) {
 					int *clr = (int *)TIME_CLR;
 					*clr = 1;
+
 					rescheduleActive( priorityQueues, req );
 
 					// Currently not checking the IRQ state register for which interrupt type occured
@@ -677,6 +678,8 @@ int main( int argc, char *argv[] ) {
 		 "bic r0, r0, r1\n\t"
 		 "ORR r0, r0, r1\n\t"
 		 "MCR p15, 0, r0, c1, c0, 0" );
+
+	bwsetfifo( COM2, OFF );
 
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
