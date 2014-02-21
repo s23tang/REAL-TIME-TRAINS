@@ -24,7 +24,7 @@ void print( char*arr, int len ) {
 	unsigned int i;
 	for ( i = 0; i < len; i++ ) {
 		unsigned int j;
-		for ( j=0; j < 10; j++ );
+		for ( j=0; j < 100; j++ );
 		Putc( COM2, arr[i] );
 	}
 }
