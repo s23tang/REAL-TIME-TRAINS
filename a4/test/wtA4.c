@@ -321,6 +321,7 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 
 	asm("ldr r0, =0x44FA4\n\t"
 		"mov sp,r0");
+	asm(".ltorg");
 
 	asm("mrs r0, CPSR\n\r"
 		"bic r0, r0, #0x1F\n\t"
@@ -433,6 +434,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 						notifiers[CLOCK].eventWaiting = 1;
 					} 
 					else {    // Notifier is waiting, reschedule the task and put in the retVal
+						// bwprintf(COM2, "KEEP HERE\n\r");
 						TD *notifier = (TD *)notifiers[CLOCK].task;
 						notifier->retVal = 0;
 						rescheduleBlock(priorityQueues, notifier->priority, notifier);
@@ -446,16 +448,27 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					*control = *control | ENABLE_BIT;
 
 					int *vicEnable2 = (int *)(VIC2 + 0x10);
-									// bwprintf(COM2, "interrupt status: %x\n\r", *vicEnable2);
-
 					*(vicEnable2) = 0x00080000;
 				} else {
+					rescheduleActive( priorityQueues, req );
+
 					int UART1Int = *((int *)UART1IntDIntClr);
 					int UART2Int = *((int *)UART2IntDIntClr);
 					if ( UART2Int & 0x2 ) {
 						int *data = (int *)( UART2_BASE + UART_DATA_OFFSET );
-						bwprintf( COM2, "%c\n\r", *data );
-						*((int *)UART2IntDIntClr) = 1;	// clear
+						// *((int *)UART2IntDIntClr) = *((int *)UART2IntDIntClr) & (~0x2);	// clear
+
+						// Currently not checking the IRQ state register for which interrupt type occured
+						if (notifiers[UART2GET].task == 0)  // No body is waiting
+						{
+							notifiers[UART2GET].data = *data;
+							notifiers[UART2GET].eventWaiting = 1;
+						} 
+						else {    // Notifier is waiting, reschedule the task and put in the retVal
+							TD *notifier = (TD *)notifiers[UART2GET].task;
+							notifier->retVal = *data;
+							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
 					}
 				}
 			}
@@ -649,6 +662,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				TD *notifier             = &(tds[notifierTid - 1]);
 				int eventType = req->arg0;
 				// Check if there's already an event in the queue
+
 				if ( notifiers[eventType].eventWaiting > 0 )   // has event waiting
 				{
 					notifiers[eventType].task = 0;

@@ -6,11 +6,15 @@
 // Notifier for a specific event. Will be created by server
 //-----------------------------------------------------------------------------------------------
 void notifier( ){
+	int flag = 0;
 	int server;
+	int type;
 	ComReqStruct send, reply;
-	
+
 	Receive( &server, (char *)&reply, sizeof(ComReqStruct));
-	switch ( reply.type ) {
+
+	type = reply.type;
+	switch ( type ) {
 		case UART1XMIT:
 			break;
 		case UART1GET:
@@ -25,6 +29,8 @@ void notifier( ){
 			}
 		case UART2GET:
 			{
+				flag = 1;
+
 				int *ctrl = (int *)UART2CTRL;
 				*ctrl = *ctrl | 0x00000010;
 
@@ -51,7 +57,7 @@ void notifier( ){
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
 	FOREVER {
 		send.type = NOTI_REQ;
-		send.data1 = AwaitEvent(reply.type);
+		send.data1 = AwaitEvent(type);
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 	}
 }

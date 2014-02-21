@@ -129,6 +129,11 @@ setfifo:
 	.word	-2138308600
 	.word	-2138243064
 	.size	setfifo, .-setfifo
+	.section	.rodata
+	.align	2
+.LC0:
+	.ascii	"got %c\012\015\000"
+	.text
 	.align	2
 	.global	uart2GetServer
 	.type	uart2GetServer, %function
@@ -190,6 +195,14 @@ uart2GetServer:
 	beq	.L27
 	b	.L24
 .L26:
+	ldr	r3, [fp, #-484]
+	and	r3, r3, #255
+	mov	r2, r3
+	mov	r0, #1
+	ldr	r3, .L36+8
+	add	r3, sl, r3
+	mov	r1, r3
+	bl	bwprintf(PLT)
 	mov	r3, #0
 	str	r3, [fp, #-480]
 	ldr	r3, [fp, #-48]
@@ -205,7 +218,7 @@ uart2GetServer:
 	ldr	r1, [fp, #-36]
 	ldr	r3, [fp, #-484]
 	and	r0, r3, #255
-	ldr	r2, .L36+8
+	ldr	r2, .L36+12
 	sub	ip, fp, #16
 	add	r3, ip, r1
 	add	r2, r3, r2
@@ -213,7 +226,7 @@ uart2GetServer:
 	strb	r3, [r2, #0]
 	ldr	r3, [fp, #-36]
 	add	r1, r3, #1
-	ldr	r3, .L36+12
+	ldr	r3, .L36+16
 	smull	r0, r3, r1, r3
 	mov	r2, r3, asr #5
 	mov	r3, r1, asr #31
@@ -229,7 +242,7 @@ uart2GetServer:
 	b	.L24
 .L28:
 	ldr	r3, [fp, #-32]
-	ldr	r2, .L36+16
+	ldr	r2, .L36+20
 	mov	r3, r3, asl #2
 	sub	r1, fp, #16
 	add	r3, r3, r1
@@ -238,7 +251,7 @@ uart2GetServer:
 	str	r3, [fp, #-20]
 	ldr	r3, [fp, #-32]
 	add	r1, r3, #1
-	ldr	r3, .L36+20
+	ldr	r3, .L36+24
 	smull	r2, r3, r1, r3
 	add	r3, r3, r1
 	mov	r2, r3, asr #4
@@ -265,7 +278,7 @@ uart2GetServer:
 	bne	.L31
 	ldr	r3, [fp, #-28]
 	ldr	r1, [fp, #-52]
-	ldr	r2, .L36+16
+	ldr	r2, .L36+20
 	mov	r3, r3, asl #2
 	sub	ip, fp, #16
 	add	r3, r3, ip
@@ -273,7 +286,7 @@ uart2GetServer:
 	str	r1, [r3, #0]
 	ldr	r3, [fp, #-28]
 	add	r1, r3, #1
-	ldr	r3, .L36+20
+	ldr	r3, .L36+24
 	smull	r0, r3, r1, r3
 	add	r3, r3, r1
 	mov	r2, r3, asr #4
@@ -288,7 +301,7 @@ uart2GetServer:
 	b	.L24
 .L31:
 	ldr	r3, [fp, #-40]
-	ldr	r2, .L36+8
+	ldr	r2, .L36+12
 	sub	r1, fp, #16
 	add	r3, r1, r3
 	add	r3, r3, r2
@@ -296,7 +309,7 @@ uart2GetServer:
 	str	r3, [fp, #-476]
 	ldr	r3, [fp, #-40]
 	add	r1, r3, #1
-	ldr	r3, .L36+12
+	ldr	r3, .L36+16
 	smull	r2, r3, r1, r3
 	mov	r2, r3, asr #5
 	mov	r3, r1, asr #31
@@ -325,6 +338,7 @@ uart2GetServer:
 .L36:
 	.word	_GLOBAL_OFFSET_TABLE_-(.L35+8)
 	.word	notifier(GOT)
+	.word	.LC0(GOTOFF)
 	.word	-336
 	.word	458129845
 	.word	-456

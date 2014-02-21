@@ -85,6 +85,7 @@ void uart2GetServer( ){
 		switch( reply.type ) {
 			case NOTI_REQ:
 				{
+					bwprintf(COM2, "got %c\n\r", (char )reply.data1);
 					// reply to server
 					send.type = REQUEST_OK;
 					Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
