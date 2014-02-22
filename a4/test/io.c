@@ -27,15 +27,11 @@ int setfifo( int channel, int state ) {
 //-----------------------------------------------------------------------------------------------
 //	Calling task blocks and gets the character from the UART(1,2) Get Server
 //-----------------------------------------------------------------------------------------------
-int Getc( int channel ) {
-	int serverTid;
+int Getc( int server, int channel ) {
 	ComReqStruct send, reply;
 
-	if ( channel == COM1 ) serverTid = WhoIs( "u1g" );
-	else serverTid = WhoIs( "u2g" );
-
 	send.type = UART2GET_REQ;
-	Send( serverTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	return reply.data1;
 } // Getc
@@ -43,16 +39,12 @@ int Getc( int channel ) {
 //-----------------------------------------------------------------------------------------------
 //	Calling task blocks and gets the character from the UART(1,2) Get Server
 //-----------------------------------------------------------------------------------------------
-int Putc( int channel, char ch ) {
-	int serverTid;
+int Putc( int server, int channel, char ch ) {
 	ComReqStruct send, reply;
-
-	if ( channel == COM1 ) serverTid = WhoIs( "u1x" );
-	else serverTid = WhoIs( "u2x" );
 
 	send.type = UART2XMIT_REQ;
 	send.data1 = ch;
-	Send( serverTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	return reply.type;
 } // Getc
@@ -74,7 +66,7 @@ void uart2GetServer( ){
 
 	// Initializing
 	int reqTid;
-	char rcvQueue[300];
+	char rcvQueue[IO_SIZE];
 	int rcvStart = 0;				// start index of the ring buffer
 	int rcvEnd = 0;			    // end index of the ring buffer
 	int getQueue[MAX_TASKS];               // Assume we have 50 that wants to io (might be changed when we finish project)
@@ -100,7 +92,7 @@ void uart2GetServer( ){
 					{
 						// put the character into the rcvQueue
 						rcvQueue[rcvEnd] = (char) reply.data1;
-						rcvEnd = (rcvEnd + 1) % 300;
+						rcvEnd = (rcvEnd + 1) % IO_SIZE;
 					} else {
 						// extract next client who is waiting for a character
 						int client = getQueue[getStart];
@@ -118,7 +110,7 @@ void uart2GetServer( ){
 						getEnd = (getEnd + 1) % MAX_TASKS;
 					} else {
 						send.data1 = (int) rcvQueue[rcvStart];
-						rcvStart = (rcvStart + 1) % 300;
+						rcvStart = (rcvStart + 1) % IO_SIZE;
 						send.type = REQUEST_OK;
 						temp = Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
 					}
@@ -146,7 +138,7 @@ void uart2PutServer( ){
 
 	// Initializing
 	int reqTid;
-	char xmitQueue[300];
+	char xmitQueue[IO_SIZE];
 	int xmitStart = 0;				// start index of the ring buffer
 	int xmitEnd = 0;			    // end index of the ring buffer
 	int readyFlag = 0;              // indicate if the notifier is ready, 1=ready, 0=not ready
@@ -169,7 +161,7 @@ void uart2PutServer( ){
 					} else {
 						// reply to the notifier with a character 
 						char character = xmitQueue[xmitStart];
-						xmitStart = (xmitStart + 1) % 300;
+						xmitStart = (xmitStart + 1) % IO_SIZE;
 						send.data1 = (int) character;
 						Reply(notiTid, (char *)&send, sizeof(ComReqStruct));
 						readyFlag = 0;
@@ -186,7 +178,7 @@ void uart2PutServer( ){
 					if (readyFlag == 0)   //notifier not ready, insert the byte into xmitQ
 					{
 						xmitQueue[xmitEnd] = (char) reply.data1;
-						xmitEnd = (xmitEnd + 1) % 300;
+						xmitEnd = (xmitEnd + 1) % IO_SIZE;
 					} else {
 
 						// reply the notifier with the byte to write
@@ -202,3 +194,130 @@ void uart2PutServer( ){
 	} // FOREVER
 }
 
+/*
+ *
+ *	bwprintf converted to use Putc (slowed down to allow output to catch up to input in buffer)
+ *
+ */
+
+void putw( int server, int channel, int n, char fc, char *bf ) {
+	char ch;
+	char *p = bf;
+
+	while( *p++ && n > 0 ) n--;
+	while( n-- > 0 ) Putc( server, channel, fc );
+	while( ( ch = *bf++ ) ) Putc( server, channel, ch );
+}
+
+int a2d( char ch ) {
+	if( ch >= '0' && ch <= '9' ) return ch - '0';
+	if( ch >= 'a' && ch <= 'f' ) return ch - 'a' + 10;
+	if( ch >= 'A' && ch <= 'F' ) return ch - 'A' + 10;
+	return -1;
+}
+
+char a2i( char ch, char **src, int base, int *nump ) {
+	int num, digit;
+	char *p;
+
+	p = *src; num = 0;
+	while( ( digit = a2d( ch ) ) >= 0 ) {
+		if ( digit > base ) break;
+		num = num*base + digit;
+		ch = *p++;
+	}
+	*src = p; *nump = num;
+	return ch;
+}
+
+void ui2a( unsigned int num, unsigned int base, char *bf ) {
+	int n = 0;
+	int dgt;
+	unsigned int d = 1;
+	
+	while( (num / d) >= base ) d *= base;
+	while( d != 0 ) {
+		dgt = num / d;
+		num %= d;
+		d /= base;
+		if( n || dgt > 0 || d == 0 ) {
+			*bf++ = dgt + ( dgt < 10 ? '0' : 'a' - 10 );
+			++n;
+		}
+	}
+	*bf = 0;
+}
+
+void i2a( int num, char *bf ) {
+	if( num < 0 ) {
+		num = -num;
+		*bf++ = '-';
+	}
+	ui2a( num, 10, bf );
+}
+
+void format ( int server, int channel, char *fmt, va_list va ) {
+	char bf[12];
+	char ch, lz;
+	int w;
+
+	
+	while ( ( ch = *(fmt++) ) ) {
+		int i;
+		for ( i=0; i<500; i++);
+		if ( ch != '%' )
+			Putc( server, channel, ch );
+		else {
+			lz = 0; w = 0;
+			ch = *(fmt++);
+			switch ( ch ) {
+			case '0':
+				lz = 1; ch = *(fmt++);
+				break;
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				ch = a2i( ch, &fmt, 10, &w );
+				break;
+			}
+			switch( ch ) {
+			case 0: return;
+			case 'c':
+				Putc( server, channel, va_arg( va, char ) );
+				break;
+			case 's':
+				putw( server, channel, w, 0, va_arg( va, char* ) );
+				break;
+			case 'u':
+				ui2a( va_arg( va, unsigned int ), 10, bf );
+				bwputw( channel, w, lz, bf );
+				break;
+			case 'd':
+				i2a( va_arg( va, int ), bf );
+				putw( server, channel, w, lz, bf );
+				break;
+			case 'x':
+				ui2a( va_arg( va, unsigned int ), 16, bf );
+				putw( server, channel, w, lz, bf );
+				break;
+			case '%':
+				Putc( server, channel, ch );
+				break;
+			}
+		}
+	}
+}
+
+void myprintf( int server, int channel, char *fmt, ... ) {
+        va_list va;
+
+        va_start(va,fmt);
+        format( server, channel, fmt, va );
+        va_end(va);
+}

@@ -60,8 +60,9 @@ void notifier( ){
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 		
 		if ( flag == 3 ) {
-			int *data = (int *)(UART2_BASE + UART_DATA_OFFSET);
-			*data = (char)reply.data1;
+				int *data = (int *)(UART2_BASE + UART_DATA_OFFSET);
+				*data = (char)reply.data1;
+			
 		} // if
 	} // FOREVER
 } // notifier
