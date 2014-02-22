@@ -14,6 +14,7 @@
 #define RECEIVE         7
 #define REPLY           8
 #define AWAIT_EVENT     9
+#define QUIT			10
 
 struct TD;
 
@@ -72,3 +73,4 @@ int Send ( int tid, char *message, int mslen, char *reply, int rplen );
 int Receive ( int *tid, char *message, int mslen );
 int Reply ( int tid, char *reply, int rplen );
 int AwaitEvent ( int EventType );
+void Quit( );

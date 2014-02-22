@@ -30,13 +30,9 @@ int setfifo( int channel, int state ) {
 int Getc( int server, int channel ) {
 	ComReqStruct send, reply;
 
-	if (channel == COM1)
-	{
-		send.type = UART1XMIT_REQ;
-	}
-	else {
-		send.type = UART2XMIT_REQ;
-	}
+	if ( channel == COM1 ) send.type = UART1GET_REQ;
+	else send.type = UART2GET_REQ;
+
 	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	return reply.data1;
@@ -48,13 +44,8 @@ int Getc( int server, int channel ) {
 int Putc( int server, int channel, char ch ) {
 	ComReqStruct send, reply;
 
-	if (channel == COM1)
-	{
-		send.type = UART1XMIT_REQ;
-	}
-	else {
-		send.type = UART2XMIT_REQ;
-	}
+	if ( channel == COM1 ) send.type = UART1XMIT_REQ;
+	else send.type = UART2XMIT_REQ;
 
 	send.data1 = ch;
 	Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
@@ -207,80 +198,6 @@ void uart2PutServer( ){
 	} // FOREVER
 }
 
-//-----------------------------------------------------------------------------------------------
-//	Server that handle putc for UART 2
-//-----------------------------------------------------------------------------------------------
-void uart1PutServer( ){
-	if ( RegisterAs( "u1x" ) == -1 ) {
-		bwprintf( COM2, "uart1PutServer: register failed\n\r" );
-		Exit();
-	}
-
-	// Create notifier
-	unsigned int notiTid;
-	void (*noti)();
-	noti = notifier;
-	notiTid = Create( 0, noti );
-
-	// Initializing
-	int reqTid;
-	char xmitQueue[IO_SIZE];
-	int xmitStart = 0;				// start index of the ring buffer
-	int xmitEnd = 0;			    // end index of the ring buffer
-	int readyFlag = 0;              // indicate if the notifier is ready, 1=ready, 0=not ready
-
-	// Let notifier know that its done
-	ComReqStruct send, reply;
-	send.type = UART1XMIT;
-	Send( notiTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
-	// Start server
-	FOREVER {
-		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
-		switch( reply.type ) {
-			case NOTI_REQ:
-				{
-					if (xmitStart == xmitEnd)   // xmitQ is empty 
-					{
-						// mark notifier ready
-						readyFlag = 1;
-					} else {
-						// reply to the notifier with a character 
-						char character = xmitQueue[xmitStart];
-						xmitStart = (xmitStart + 1) % IO_SIZE;
-						send.data1 = (int) character;
-						Reply(notiTid, (char *)&send, sizeof(ComReqStruct));
-						readyFlag = 0;
-					}
-				}
-				break;
-			case UART1XMIT_REQ:
-				{
-					// reply to client
-					send.type = REQUEST_OK;
-					send.data1 = 0;
-					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
-
-					if (readyFlag == 0)   //notifier not ready, insert the byte into xmitQ
-					{
-						xmitQueue[xmitEnd] = (char) reply.data1;
-						xmitEnd = (xmitEnd + 1) % IO_SIZE;
-					} else {
-
-						// reply the notifier with the byte to write
-						send.data1 = reply.data1;
-						send.type = REQUEST_OK;
-						temp = Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
-						readyFlag = 0;
-					}
-				}
-				break;
-		}
-
-	} // FOREVER
-}
-
-
 /*
  *
  *	bwprintf converted to use Putc (slowed down to allow output to catch up to input in buffer)
@@ -351,7 +268,7 @@ void format ( int server, int channel, char *fmt, va_list va ) {
 	
 	while ( ( ch = *(fmt++) ) ) {
 		int i;
-		for ( i=0; i<500; i++);
+		for ( i=0; i<300; i++);
 		if ( ch != '%' )
 			Putc( server, channel, ch );
 		else {
@@ -407,22 +324,4 @@ void myprintf( int server, int channel, char *fmt, ... ) {
         va_start(va,fmt);
         format( server, channel, fmt, va );
         va_end(va);
-}
-
-// Set the line control for UART1
-int setTrainConnectionn(){
-	int *high, *mid, *low;
-	// set baud rate = 2400
-	mid = (int *)( UART1_BASE + UART_LCRM_OFFSET );
-	low = (int *)( UART1_BASE + UART_LCRL_OFFSET );
-	*mid = 0x0;
-	*low = 0xBF;
-	// set no parity, 2 stop bits, 8 databits
-	unsigned int modeWord;
-	modeWord = 0 | STP2_MASK | WLEN_MASK | FEN_MASK;
-	high = (int *)( UART1_BASE + UART_LCRH_OFFSET );
-	*high = *high & 0xffffff80;  // clear the lower bits of control high register
-	*high = *high | modeWord;
-	*high = modeWord;
-	return 0;
 }

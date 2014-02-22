@@ -1,10 +1,9 @@
-#define IO_SIZE		500
+#define IO_SIZE		3000
 
 int Getc( int server, int channel );
 int Putc( int server, int channel, char ch );
 void uart2GetServer( );
 void uart2PutServer( );
-void uart1PutServer( );
 
 void putw( int server, int channel, int n, char fc, char *bf );
 int a2d( char ch );
@@ -13,5 +12,3 @@ void ui2a( unsigned int num, unsigned int base, char *bf );
 void i2a( int num, char *bf );
 void format ( int server, int channel, char *fmt, char* va );
 void myprintf( int server, int channel, char *fmt, ... );
-int setTrainConnectionn();
-

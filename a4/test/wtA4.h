@@ -19,6 +19,14 @@
 #define UART1IntDIntClr 0x808C001C
 #define UART2IntDIntClr	0x808D001C
 
+// Communication Macros
+#define MAX_INPUT			60
+#define PRINT_CHAR			1
+#define BAD_INPUT			2
+#define TIME_UPDATE			3
+#define BACKSPACE			4
+#define QUIT_COMMAND		5
+
 
 struct TD;
 
@@ -28,6 +36,7 @@ struct TD;
 typedef struct {
 	int type;
 	int data1;
+	int data2;
 } ComReqStruct;
 
 /*
