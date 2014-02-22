@@ -13,38 +13,39 @@
  */
 
 void t1( ) {
-		int server = WhoIs( "u2x" );
-		int s2 = WhoIs( "u2g");
+	int server = WhoIs( "u2x" );
+	int s2 = WhoIs( "u2g");
+	int uart1xmit = WhoIs( "u1x" );
 
-		myprintf( server, COM2, "\033[2J\033[9;1HSensors:  1 = train passing, 0 = nothing\033[33;4H" );
-		myprintf( server, COM2, "\033[10;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2, "\033[11;1HA1 |A2 |A3 |A4 |A5 |A6 |A7 |A8 |A9 |A10|A11|A12|A13|A14|A15|A16\033[33;4H");
-		myprintf( server, COM2, "\033[12;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2, "\033[13;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H");
-		myprintf( server, COM2, "\033[14;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2, "\033[15;1HB1 |B2 |B3 |B4 |B5 |B6 |B7 |B8 |B9 |B10|B11|B12|B13|B14|B15|B16\033[33;4H");
-		myprintf( server, COM2, "\033[16;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2, "\033[17;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H");
-		myprintf( server, COM2, "\033[18;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[19;1HC1 |C2 |C3 |C4 |C5 |C6 |C7 |C8 |C9 |C10|C11|C12|C13|C14|C15|C16\033[33;4H");
-		myprintf( server, COM2,  "\033[20;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[21;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H");
-		myprintf( server, COM2,  "\033[22;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[23;1HD1 |D2 |D3 |D4 |D5 |D6 |D7 |D8 |D9 |D10|D11|D12|D13|D14|D15|D16\033[33;4H");
-		myprintf( server, COM2,  "\033[24;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[25;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H");
-		myprintf( server, COM2,  "\033[26;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[27;1HE1 |E2 |E3 |E4 |E5 |E6 |E7 |E8 |E9 |E10|E11|E12|E13|E14|E15|E16\033[33;4H");
-		myprintf( server, COM2,  "\033[28;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "\033[29;1H 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \033[33;4H");
-		myprintf( server, COM2,  "\033[30;1H---------------------------------------------------------------\033[33;4H");
-		myprintf( server, COM2,  "%d %d %d %d", 10, 214, 3255, 2 );
-		FOREVER {
-			char c = Getc( s2, COM2 );
-			Putc( server, COM2, c );
-		}
+	myprintf( server, COM2, "\033[2J\033[9;1HSensors:  1 = train passing, 0 = nothing\n" );
+	myprintf( server, COM2, "---------------------------------------------------------------\n");
+	myprintf( server, COM2, "A1 |A2 |A3 |A4 |A5 |A6 |A7 |A8 |A9 |A10|A11|A12|A13|A14|A15|A16\n");
+	myprintf( server, COM2, "---------------------------------------------------------------\n");
+	myprintf( server, COM2, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
+	myprintf( server, COM2, "---------------------------------------------------------------\n");
+	myprintf( server, COM2, "B1 |B2 |B3 |B4 |B5 |B6 |B7 |B8 |B9 |B10|B11|B12|B13|B14|B15|B16\n");
+	myprintf( server, COM2, "---------------------------------------------------------------\n");
+	myprintf( server, COM2, " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
+	myprintf( server, COM2, "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  "C1 |C2 |C3 |C4 |C5 |C6 |C7 |C8 |C9 |C10|C11|C12|C13|C14|C15|C16\n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  "D1 |D2 |D3 |D4 |D5 |D6 |D7 |D8 |D9 |D10|D11|D12|D13|D14|D15|D16\n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  "E1 |E2 |E3 |E4 |E5 |E6 |E7 |E8 |E9 |E10|E11|E12|E13|E14|E15|E16\n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
+	myprintf( server, COM2,  "---------------------------------------------------------------\n");
+	myprintf( server, COM2,  "\033[33;1H>>\033[33;4H");
 
-	Exit();
+	FOREVER {
+		char c = Getc( s2, COM2 );
+		if ( c == '\r' ) myprintf( server, COM2, "\033[33;1H\033[K>>\033[33;4H");
+		else Putc( server, COM2, c );
+	}
 }
 
 void t2(){
@@ -78,6 +79,9 @@ void firstUserTask(){
 	tid = Create( 1, func );
 
 	func = uart2PutServer;
+	tid = Create( 1, func );
+
+	func = uart1PutServer;
 	tid = Create( 1, func );
 
 	func = t1;
@@ -313,6 +317,9 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 		"bic r0, r0, #0x1F\n\t"
 		"orr r0, r0, #0x13\n\t"
 		"msr CPSR, r0");
+
+	//setup the UART1 control attributes
+	setTrainConnectionn();
 } // initialize
 
 //-----------------------------------------------------------------------------------------------
@@ -437,7 +444,24 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 
 					int UART1Int = *((int *)UART1IntDIntClr);
 					int UART2Int = *((int *)UART2IntDIntClr);
-					if ( UART2Int & 0x2 ) {
+
+					if (UART1Int & 0x4){
+						int *ctrl = (int *)UART1CTRL;
+						*ctrl = *ctrl & (~0x00000020);
+						// make sure the notifier is waiting
+						if (notifiers[UART1XMIT].task != 0)
+						{
+							TD *notifier = (TD *)notifiers[UART1XMIT].task;
+							notifiers[UART1XMIT].task = 0;
+							notifier->retVal = 0;       // this value is not used for uart1
+							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
+						else {
+							notifiers[UART1XMIT].data = 0;
+							notifiers[UART1XMIT].eventWaiting = 1;
+						}
+					}
+					else if ( UART2Int & 0x2 ) {
 						int *data = (int *)( UART2_BASE + UART_DATA_OFFSET );
 						// Currently not checking the IRQ state register for which interrupt type occured
 						if (notifiers[UART2GET].task == 0)  // No body is waiting
@@ -665,6 +689,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				if (eventType == UART2XMIT)
 				{
 					int *ctrl = (int *)UART2CTRL;
+					*ctrl = *ctrl | 0x00000020;
+				}
+				else if (eventType == UART1XMIT)
+				{
+					int *ctrl = (int *)UART1CTRL;
 					*ctrl = *ctrl | 0x00000020;
 				}
 

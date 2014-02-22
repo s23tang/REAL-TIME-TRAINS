@@ -16,6 +16,11 @@ void notifier( ){
 	type = reply.type;
 	switch ( type ) {
 		case UART1XMIT:
+			{
+				flag = 1;
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = *(vicEnable2) | 0x00100000;
+			}
 			break;
 		case UART1GET:
 			break;
@@ -59,7 +64,12 @@ void notifier( ){
 		send.data1 = AwaitEvent(type);
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 		
-		if ( flag == 3 ) {
+		if (flag == 1)
+		{
+			int *data = (int *)(UART1_BASE + UART_DATA_OFFSET);
+				*data = (char)reply.data1;
+		}
+		else if ( flag == 3 ) {
 				int *data = (int *)(UART2_BASE + UART_DATA_OFFSET);
 				*data = (char)reply.data1;
 			
