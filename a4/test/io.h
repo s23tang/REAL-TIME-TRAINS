@@ -1,9 +1,10 @@
-#define IO_SIZE		3000
+#define IO_SIZE		5000
 
 int Getc( int server, int channel );
 int Putc( int server, int channel, char ch );
 void uart2GetServer( );
 void uart2PutServer( );
+void uart1GetServer( );
 void uart1PutServer( );
 int setTrainConnectionn();
 

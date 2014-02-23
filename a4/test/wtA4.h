@@ -31,6 +31,11 @@
 #define BACKSPACE			4
 #define QUIT_COMMAND		5
 #define SPEED_COMMAND		6
+#define SWITCH_COMMAND		7
+#define SENSOR_UPDATE		8
+#define REVERSE_COMMAND		9
+#define WAITING_STOP		10
+#define DONE_STOP			11
 
 
 struct TD;
@@ -42,6 +47,7 @@ typedef struct {
 	int type;
 	int data1;
 	int data2;
+	int data3;
 } ComReqStruct;
 
 /*

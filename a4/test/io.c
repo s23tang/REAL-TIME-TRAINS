@@ -198,7 +198,6 @@ void uart2PutServer( ){
 	} // FOREVER
 }
 
-
 //-----------------------------------------------------------------------------------------------
 //	Server that handle putc for UART 1
 //-----------------------------------------------------------------------------------------------
@@ -218,8 +217,8 @@ void uart1GetServer( ){
 	int reqTid;
 	char rcvQueue[IO_SIZE];
 	int rcvStart = 0;				// start index of the ring buffer
-	int rcvEnd = 0;			    // end index of the ring buffer
-	int getQueue[MAX_TASKS];               // Assume we have 50 that wants to io (might be changed when we finish project)
+	int rcvEnd = 0;			    	// end index of the ring buffer
+	int getQueue[MAX_TASKS];        // Assume we have 50 that wants to io (might be changed when we finish project)
 	int getStart = 0;				// start index of the ring buffer
 	int getEnd = 0; 				// end index of the ring buffer
 
@@ -252,7 +251,7 @@ void uart1GetServer( ){
 					}
 				}
 				break;
-			case UART2GET_REQ:
+			case UART1GET_REQ:
 				{
 					if (rcvStart == rcvEnd)   //receive queue is empty, insert the request into getQ
 					{
@@ -295,20 +294,20 @@ void uart1PutServer( ){
 	int readyFlag = 0;              // indicate if the notifier is ready, 1=ready, 0=not ready
 	int CTSFlag;
 	int previousCTS = 0;
-	CTSFlag = 1;
-	// if ( *((int*)UART1Flag) & 0x1 )
-	// {
-	// 					bwprintf(COM2, "a\n\r");
+	//CTSFlag = 1;
+	if ( *((int*)UART1Flag) & 0x1 )
+	{
+						//bwprintf(COM2, "a\n\r");
 
-	// 	CTSFlag = 1;
-	// 	previousCTS = 1;
-	// }
-	// else {
-	// 					bwprintf(COM2, "b\n\r");
+		CTSFlag = 1;
+		previousCTS = 1;
+	}
+	else {
+						//bwprintf(COM2, "b\n\r");
 
-	// 	CTSFlag = 0;
-	// 	previousCTS = 0;
-	// }
+		CTSFlag = 0;
+		previousCTS = 1;
+	}
 
 	// Let notifier know that its done
 	ComReqStruct send, reply;

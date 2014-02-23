@@ -6,7 +6,6 @@
 // Notifier for a specific event. Will be created by server
 //-----------------------------------------------------------------------------------------------
 void notifier( ){
-	int flag = 0;
 	int server;
 	int type;
 	ComReqStruct send, reply;
@@ -28,11 +27,13 @@ void notifier( ){
 			}
 			break;
 		case UART1GET:
-				int *ctrl = (int *)UART1CTRL;   // Enable rcvReady interrut
-				*ctrl = *ctrl | 0x00000010;
-
+			{
 				int *vicEnable2 = (int *)(VIC2 + 0x10);			// Enable combine interrupt
 				*(vicEnable2) = *(vicEnable2) | 0x00100000;
+
+				int *ctrl = (int *)UART1CTRL;  // Enable rcvReady interrut
+				*ctrl = *ctrl | 0x00000010;
+			}
 			break;
 		case UART2XMIT:
 			{
