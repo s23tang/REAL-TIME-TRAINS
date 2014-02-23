@@ -198,6 +198,199 @@ void uart2PutServer( ){
 	} // FOREVER
 }
 
+
+//-----------------------------------------------------------------------------------------------
+//	Server that handle putc for UART 1
+//-----------------------------------------------------------------------------------------------
+void uart1GetServer( ){
+	if ( RegisterAs( "u1g" ) == -1 ) {
+		bwprintf( COM2, "uart1GetServer: register failed\n\r" );
+		Exit();
+	}
+
+	// Create notifier
+	unsigned int notiTid;
+	void (*noti)();
+	noti = notifier;
+	notiTid = Create( 0, noti );
+
+	// Initializing
+	int reqTid;
+	char rcvQueue[IO_SIZE];
+	int rcvStart = 0;				// start index of the ring buffer
+	int rcvEnd = 0;			    // end index of the ring buffer
+	int getQueue[MAX_TASKS];               // Assume we have 50 that wants to io (might be changed when we finish project)
+	int getStart = 0;				// start index of the ring buffer
+	int getEnd = 0; 				// end index of the ring buffer
+
+	// Let notifier know that its done
+	ComReqStruct send, reply;
+	send.type = UART1GET;
+	Send( notiTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+	// Start server
+	FOREVER {
+		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
+		switch( reply.type ) {
+			case NOTI_REQ:
+				{
+					// reply to server
+					send.type = REQUEST_OK;
+					Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
+
+					if (getStart == getEnd)   // nobody is waiting for the character 
+					{
+						// put the character into the rcvQueue
+						rcvQueue[rcvEnd] = (char) reply.data1;
+						rcvEnd = (rcvEnd + 1) % IO_SIZE;
+					} else {
+						// extract next client who is waiting for a character
+						int client = getQueue[getStart];
+						getStart = (getStart + 1) % MAX_TASKS;
+						send.data1 = reply.data1;
+						Reply(client, (char *)&send, sizeof(ComReqStruct));
+					}
+				}
+				break;
+			case UART2GET_REQ:
+				{
+					if (rcvStart == rcvEnd)   //receive queue is empty, insert the request into getQ
+					{
+						getQueue[getEnd] = reqTid;
+						getEnd = (getEnd + 1) % MAX_TASKS;
+					} else {
+						send.data1 = (int) rcvQueue[rcvStart];
+						rcvStart = (rcvStart + 1) % IO_SIZE;
+						send.type = REQUEST_OK;
+						temp = Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+					}
+				}
+				break;
+		}
+
+	} // FOREVER
+}
+
+//-----------------------------------------------------------------------------------------------
+//	Server that handle putc for UART 1
+//-----------------------------------------------------------------------------------------------
+void uart1PutServer( ){
+	if ( RegisterAs( "u1x" ) == -1 ) {
+		bwprintf( COM2, "uart1PutServer: register failed\n\r" );
+		Exit();
+	}
+
+	// Create notifier
+	unsigned int notiTid, msiNoti;
+	void (*noti)();
+	noti = notifier;
+	notiTid = Create( 0, noti );
+	msiNoti = Create( 0, noti );    // Create the notifier for MSI
+
+	// Initializing
+	int reqTid;
+	char xmitQueue[IO_SIZE];
+	int xmitStart = 0;				// start index of the ring buffer
+	int xmitEnd = 0;			    // end index of the ring buffer
+	int readyFlag = 0;              // indicate if the notifier is ready, 1=ready, 0=not ready
+	int CTSFlag;
+	int previousCTS = 0;
+	CTSFlag = 1;
+	// if ( *((int*)UART1Flag) & 0x1 )
+	// {
+	// 					bwprintf(COM2, "a\n\r");
+
+	// 	CTSFlag = 1;
+	// 	previousCTS = 1;
+	// }
+	// else {
+	// 					bwprintf(COM2, "b\n\r");
+
+	// 	CTSFlag = 0;
+	// 	previousCTS = 0;
+	// }
+
+	// Let notifier know that its done
+	ComReqStruct send, reply;
+	send.type = UART1XMIT;
+	Send( notiTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	send.type = MSI;
+	Send( msiNoti, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+	// Start server
+	FOREVER {
+		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
+		switch( reply.type ) {
+			case NOTI_REQ:
+				{
+					if (CTSFlag && ( xmitStart != xmitEnd ))   // Test if CTS is asserted
+					{
+						// reply to the notifier with a character 
+						char character = xmitQueue[xmitStart];
+						xmitStart = (xmitStart + 1) % IO_SIZE;
+						send.data1 = (int) character;
+						Reply(notiTid, (char *)&send, sizeof(ComReqStruct));
+						readyFlag = 0;
+						CTSFlag = 0;
+					}
+					else {
+						readyFlag = 1;
+					}
+				}
+				break;
+			case UART1XMIT_REQ:
+				{
+					// reply to client
+					send.type = REQUEST_OK;
+					send.data1 = 0;
+					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
+
+					if (CTSFlag && (readyFlag != 0) )     // Test CTS flag and transmit ready
+					{		
+						// reply the notifier with the byte to write
+						send.data1 = reply.data1;
+						send.type = REQUEST_OK;
+						temp = Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
+						readyFlag = 0;
+						CTSFlag = 0;
+					} else {
+						xmitQueue[xmitEnd] = (char) reply.data1;
+						xmitEnd = (xmitEnd + 1) % IO_SIZE;
+					}
+				}
+				break;
+			case MSI_REQ:
+				{
+					int flagValue = *(int *)UART1Flag;
+					// Check CTS
+					if ( (flagValue & 0x1) && (previousCTS == 0) )  // CTS is re-asserted
+					{
+						previousCTS = 1;
+						if (readyFlag && (xmitStart != xmitEnd))  //transmit ready and has a byte to send
+						{
+							// reply to the notifier with a character 
+							char character = xmitQueue[xmitStart];
+							xmitStart = (xmitStart + 1) % IO_SIZE;
+							send.data1 = (int) character;
+							Reply(notiTid, (char *)&send, sizeof(ComReqStruct));
+							readyFlag = 0;
+							CTSFlag = 0;
+						}
+						else {  // we dont unblock the msi notifier in this case 
+							CTSFlag = 1;
+						}
+					}
+					else if ((flagValue == (flagValue & ~0x1)) && (previousCTS == 1)) {
+						previousCTS = 0;
+					} // else MSI is not triggerd by CTS
+					Reply( msiNoti, (char *)&send, sizeof(ComReqStruct));     //unblock the msi notifier
+				}
+				break;
+		}
+
+	} // FOREVER
+}
+
 /*
  *
  *	bwprintf converted to use Putc (slowed down to allow output to catch up to input in buffer)
@@ -324,4 +517,26 @@ void myprintf( int server, int channel, char *fmt, ... ) {
         va_start(va,fmt);
         format( server, channel, fmt, va );
         va_end(va);
+}
+
+// Set the line control for UART1
+int setTrainConnectionn(){
+	int *high, *mid, *low;
+	// set baud rate = 2400
+	mid = (int *)( UART1_BASE + UART_LCRM_OFFSET );
+	low = (int *)( UART1_BASE + UART_LCRL_OFFSET );
+	*mid = 0x0;
+	*low = 0xBF;
+	// set no parity, 2 stop bits, 8 databits
+	unsigned int modeWord;
+	modeWord = 0 | STP2_MASK | WLEN_MASK | FEN_MASK;
+	high = (int *)( UART1_BASE + UART_LCRH_OFFSET );
+	*high = *high & 0xffffff80;  // clear the lower bits of control high register
+	*high = *high | modeWord;
+	*high = modeWord;
+
+	// enable modern status interrupt
+	int *ctrl = (int *)UART1CTRL;
+	*ctrl = *ctrl | 0x8;
+	return 0;
 }

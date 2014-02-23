@@ -4,6 +4,8 @@ int Getc( int server, int channel );
 int Putc( int server, int channel, char ch );
 void uart2GetServer( );
 void uart2PutServer( );
+void uart1PutServer( );
+int setTrainConnectionn();
 
 void putw( int server, int channel, int n, char fc, char *bf );
 int a2d( char ch );

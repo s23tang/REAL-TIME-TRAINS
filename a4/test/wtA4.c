@@ -33,7 +33,65 @@ void Terminal() {
 							if ( input[i] != ' ') break;
 						}
 						if ( i == inputIndex ) send.type = QUIT_COMMAND;
+					} else if ( input[i] == 't' && input[i+1] == 'r' ) {
+						int speed = -1;
+						int train = -1;
+						int cmdBad = 1;
+						for ( i = i+2; i < inputIndex; i++ ) {
+							if ( input[i] != ' ' ) {
+								if ( input[i] >= '1' && input[i] <= '9' && input[i+1] == ' ' ) {
+									train = input[i] - NUM_OFFSET;
+									i += 2;
+									cmdBad = 0;
+									break;
+								} else if ( input[i] >= '1' && input[i] <= '7' && input[i+1] >= '0' && input[i+1] <= '9' && input[i+2] == ' ') {
+									train = input[i+1] - NUM_OFFSET + ( input[i] - NUM_OFFSET )*10;
+									i += 3;
+									cmdBad = 0;
+									break;
+								} else if ( input[i] == '8' && input[i+1] == '0' && input[i+2] == ' ' ) {
+									train = 80;
+									i += 3;
+									cmdBad = 0;
+									break;
+								}
+								break;
+							}
+						}
+						if ( cmdBad == 1 ) {
+							inputIndex = 0;
+							break;
+						}
+						for ( ; i < inputIndex; i++ ) {
+							if ( input[i] != ' ' ) {
+								if ( input[i] >= '0' && input[i] <= '9' && ( input[i+1] == ' ' || (i+1 == inputIndex) )  ) {
+					   				speed = input[i] - NUM_OFFSET;
+					   				i += 1;
+					   				cmdBad = 0;
+					   				break;
+					   			} else if ( input[i] == '1' && input[i+1] >= '0' && input[i+1] <= '4' ) {
+					   				speed = input[i+1] - NUM_OFFSET + 10;
+					   				i += 2;
+					   				cmdBad = 0;
+					   				break;
+					   			} 
+					   			break;
+							}
+						}
+						if ( cmdBad == 1 ) {
+							inputIndex = 0;
+							break;
+						}
+						for ( ; i < inputIndex; i++ ) {
+							if ( input[i] != ' ' ) break;
+						}
+						if ( i == inputIndex && speed != -1 && train != -1) {
+							send.type = SPEED_COMMAND;
+							send.data1 = speed;
+							send.data2 = train;
+						}
 					}
+					break;
 				}
 			}
 			inputIndex = 0;
@@ -70,6 +128,7 @@ void Timer() {
 
 void Printer( ) {
 	int uart2XServer = WhoIs( "u2x" );
+	int uart1XServer = WhoIs( "u1x ");
 	myprintf( uart2XServer, COM2, "\033[2J");
 
 	myprintf( uart2XServer, COM2, "\033[H\033[KTIME 00:00:0");
@@ -111,6 +170,9 @@ void Printer( ) {
 	func = Timer;
 	Create( 2, func );
 
+	// Start Train Controller Here
+	Putc(uart1XServer, COM1, (char) 0x60);
+
 	int sender;
 	int cursor = 4;
 	ComReqStruct recv, reply;
@@ -135,16 +197,22 @@ void Printer( ) {
 			Putc( uart2XServer, COM2, recv.data1 );
 			cursor++;
 		} else if ( recv.type == BAD_INPUT ) {
-			myprintf( uart2XServer, COM2, "\033[32;1HBAD COMMAND\n");
+			myprintf( uart2XServer, COM2, "\033[32;1H\033[KBAD COMMAND\n");
 			myprintf( uart2XServer, COM2, "\033[33;4H\033[K" );
 			cursor = 4;
 		} else if ( recv.type == BACKSPACE ) {
 			cursor--;
 			myprintf( uart2XServer, COM2, "\033[33;%dH\033[K", cursor );
 		} else if ( recv.type == QUIT_COMMAND ) {
-			myprintf( uart2XServer, COM2, "\033[32;1HShutting down\n");
+			myprintf( uart2XServer, COM2, "\033[32;1H\033[KShutting down\n");
 			myprintf( uart2XServer, COM2, "\033[33;4H\033[K" );
 			break;
+		} else if ( recv.type == SPEED_COMMAND ) {
+			Putc( uart1XServer, COM1, recv.data1 );
+			Putc( uart1XServer, COM1, recv.data2 );
+			myprintf( uart2XServer, COM2, "\033[32;1H\033[KSetting Train: %d Speed: %d\n", recv.data2, recv.data1);
+			myprintf( uart2XServer, COM2, "\033[33;4H\033[K" );
+			cursor = 4;
 		}
 
 		reply.type = REQUEST_OK;
@@ -179,18 +247,20 @@ void firstUserTask(){
 	tid = Create( 0, func );
 	// bwprintf(COM2, "First: created Name Server\n\r");
 
-	func = clockServer;
-	tid = Create( 1, func );
-
 	func = uart2GetServer;
 	tid = Create( 1, func );
 
 	func = uart2PutServer;
 	tid = Create( 1, func );
 
+	func = uart1PutServer;
+	tid = Create( 1, func );
+
+	func = clockServer;
+	tid = Create( 1, func );
+
 	func = Printer;
 	tid = Create( 3, func );
-
 
 	// Idle task
 	func = T2;
@@ -408,6 +478,9 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 		notifiers[i].eventWaiting = 0;
 	}
 
+	setTrainConnectionn();
+
+
 	asm("mrs r0, CPSR\n\t"
 		"bic r0, r0, #0x1F\n\t"
 		"orr r0, r0, #0x12\n\t"
@@ -545,7 +618,41 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 
 					int UART1Int = *((int *)UART1IntDIntClr);
 					int UART2Int = *((int *)UART2IntDIntClr);
-					if ( UART2Int & 0x2 ) {
+					if (UART1Int & 0x4){		// UART1 Xmit ready
+						int *ctrl = (int *)UART1CTRL;
+						*ctrl = *ctrl & (~0x00000020);
+						// make sure the notifier is waiting
+						if (notifiers[UART1XMIT].task != 0)
+						{
+							TD *notifier = (TD *)notifiers[UART1XMIT].task;
+							notifiers[UART1XMIT].task = 0;
+							notifier->retVal = 0;       // this value is not used for uart1
+							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
+						else {
+							notifiers[UART1XMIT].data = 0;
+							notifiers[UART1XMIT].eventWaiting = 1;
+						}
+					}
+					else if (UART1Int & 0x1) {        //MSI asserted 
+						//clear and turn off the interrut
+						 *((int *)UART1IntDIntClr) = 1;
+						// int *ctrl = (int *)UART1CTRL;
+						// *ctrl = *ctrl & (~0x00000008);
+						// check if the notifier is waiting
+						if (notifiers[MSI].task == 0)  // No body is waiting
+						{
+							notifiers[MSI].data = 0;
+							notifiers[MSI].eventWaiting = 1;
+						} 
+						else {    // Notifier is waiting, reschedule the task and put in the retVal
+							TD *notifier = (TD *)notifiers[MSI].task;
+							notifiers[MSI].task = 0;
+							notifier->retVal = 0;
+							rescheduleBlock(priorityQueues, notifier->priority, notifier);
+						}
+					}
+					else if ( UART2Int & 0x2 ) {
 						int *data = (int *)( UART2_BASE + UART_DATA_OFFSET );
 						// Currently not checking the IRQ state register for which interrupt type occured
 						if (notifiers[UART2GET].task == 0)  // No body is waiting
@@ -775,6 +882,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					int *ctrl = (int *)UART2CTRL;
 					*ctrl = *ctrl | 0x00000020;
 				}
+				else if (eventType == UART1XMIT)
+				{
+					int *ctrl = (int *)UART1CTRL;
+					*ctrl = *ctrl | 0x00000020;
+				}
 
 				// Check if there's already an event in the queue
 				if ( notifiers[eventType].eventWaiting > 0 )   // has event waiting
@@ -793,6 +905,10 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 		    break;
 		case QUIT:
 			{
+				// Turn off MSI interrupt
+				int *ctrl = (int *)UART1CTRL;
+				*ctrl = *ctrl & ~0x8;
+
 				unsigned int whichQueue = 9;
 				TD *idleTask = priorityQueues[whichQueue].headOfQueue;
 				idleTask->state = ZOMBIE;
@@ -815,6 +931,7 @@ int main( int argc, char *argv[] ) {
 		 "ORR r0, r0, r1\n\t"
 		 "MCR p15, 0, r0, c1, c0, 0" );
 
+	bwsetfifo( COM1, OFF );
 	bwsetfifo( COM2, OFF );
 
 	// Declare kernel data structures

@@ -15,26 +15,33 @@ void notifier( ){
 
 	type = reply.type;
 	switch ( type ) {
+		case MSI:
+			{
+				int *vicEnable2 = (int *)(VIC2 + 0x10);
+				*(vicEnable2) = *(vicEnable2) | 0x00100000;
+			}
+			break;
 		case UART1XMIT:
 			{
-				flag = 1;
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = *(vicEnable2) | 0x00100000;
 			}
 			break;
 		case UART1GET:
+				int *ctrl = (int *)UART1CTRL;   // Enable rcvReady interrut
+				*ctrl = *ctrl | 0x00000010;
+
+				int *vicEnable2 = (int *)(VIC2 + 0x10);			// Enable combine interrupt
+				*(vicEnable2) = *(vicEnable2) | 0x00100000;
 			break;
 		case UART2XMIT:
 			{
-				flag = 3;
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = *(vicEnable2) | 0x00400000;
 			}
 			break;
 		case UART2GET:
 			{
-				flag = 1;
-
 				int *ctrl = (int *)UART2CTRL;
 				*ctrl = *ctrl | 0x00000010;
 
@@ -60,16 +67,22 @@ void notifier( ){
 	// tell the server: successfully created
 	Reply(server, (char *)&send, sizeof(ComReqStruct));
 	FOREVER {
-		send.type = NOTI_REQ;
+		if (type == MSI)
+		{
+			send.type = MSI_REQ;
+		}
+		else {
+			send.type = NOTI_REQ;
+		}
 		send.data1 = AwaitEvent(type);
 		Send( server, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 		
-		if (flag == 1)
+		if (type == UART1XMIT)
 		{
 			int *data = (int *)(UART1_BASE + UART_DATA_OFFSET);
 				*data = (char)reply.data1;
 		}
-		else if ( flag == 3 ) {
+		else if ( type == UART2XMIT ) {
 				int *data = (int *)(UART2_BASE + UART_DATA_OFFSET);
 				*data = (char)reply.data1;
 			

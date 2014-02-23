@@ -4,6 +4,7 @@
 #define UART1GET		2
 #define UART2XMIT		3
 #define UART2GET		4
+#define MSI             5
 
 // UART Macros
 #define UART1CTRL		0x808C0014
@@ -26,6 +27,6 @@
 #define VIC_CLK			0x00080000
 
 // Notifiers
-#define NUM_NOTIFIERS	5
+#define NUM_NOTIFIERS	10
 
 void notifier( );
