@@ -530,7 +530,8 @@ void Printer( ) {
 } // Printer
 
 void T2(){
-	//int clkServer = WhoIs( "clock\000" );
+	int *timer4 = 0x80810064;
+	*timer4 = *timer4 | 2;
 
 	FOREVER{
 		// int time = Time(clkServer);
