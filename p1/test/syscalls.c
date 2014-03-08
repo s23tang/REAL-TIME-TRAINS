@@ -98,7 +98,7 @@ void Quit( ) {
 	asm("swi 10");
 }
 
-void IdleTime( ) {
+int IdleTime( ) {
 	asm("swi 11");
 	return;
 }

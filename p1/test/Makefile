@@ -5,7 +5,7 @@ XCC     = gcc
 AS	= as
 LD      = ld
 CFLAGS  = -D MAX_TASKS=$(mt) -D MAX_PRIORITIES=$(mp) -c -fPIC -Wall -Wno-return-type -I. -I../include -mcpu=arm920t -msoft-float
-# -g: include hooks for gdb
+# -g: include hooks for gd calibrateServer.ob
 # -c: only compile
 # -mcpu=arm920t: generate code for the 920t architecture
 # -fpic: emit position-independent code
@@ -16,7 +16,7 @@ ASFLAGS	= -mcpu=arm920t -mapcs-32
 
 LDFLAGS = -init main -Map wtA4.map -N  -T orex.ld -L/u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2 -L../lib -L.
 
-all: syscalls.s nameServer.s notifier.s clockServer.s wtA4.s io.s wtA4.elf
+all: syscalls.s nameServer.s routeFinder.s trainDriver.s calibrateServer.s notifier.s clockServer.s wtA4.s io.s wtA4.elf
 
 syscalls.s: syscalls.c syscalls.h
 	$(XCC) -S $(CFLAGS) syscalls.c
@@ -29,6 +29,24 @@ nameServer.s: nameServer.c nameServer.h
 
 nameServer.o: nameServer.s
 	$(AS) $(ASFLAGS) -o nameServer.o nameServer.s
+
+routeFinder.s: routeFinder.c routeFinder.h
+	$(XCC) -S $(CFLAGS) routeFinder.c
+
+routeFinder.o: routeFinder.s
+	$(AS) $(ASFLAGS) -o routeFinder.o routeFinder.s
+
+trainDriver.s: trainDriver.c trainDriver.h
+	$(XCC) -S $(CFLAGS) trainDriver.c
+
+trainDriver.o: trainDriver.s
+	$(AS) $(ASFLAGS) -o trainDriver.o trainDriver.s
+
+calibrateServer.s: calibrateServer.c calibrateServer.h
+	$(XCC) -S $(CFLAGS) calibrateServer.c
+
+calibrateServer.o: calibrateServer.s
+	$(AS) $(ASFLAGS) -o calibrateServer.o calibrateServer.s
 
 notifier.s: notifier.c notifier.h
 	$(XCC) -S $(CFLAGS) notifier.c
@@ -60,8 +78,8 @@ wtA4.s: wtA4.c wtA4.h
 wtA4.o: wtA4.s
 	$(AS) $(ASFLAGS) -o wtA4.o wtA4.s
 
-wtA4.elf: syscalls.o nameServer.o notifier.o clockServer.o io.o wtA4.o
-	$(LD) $(LDFLAGS) -o $@ syscalls.o nameServer.o notifier.o clockServer.o io.o wtA4.o -lbwio -lgcc
+wtA4.elf: syscalls.o nameServer.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o
+	$(LD) $(LDFLAGS) -o $@ syscalls.o nameServer.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o -lbwio -lgcc
 
 clean:
 	-rm -f wtA4.elf *.s *.o wtA4.map

@@ -5,6 +5,7 @@
 #include "syscalls.h"
 #include "nameServer.h"
 #include "clockServer.h"
+#include "calibrateServer.h"
 #include "notifier.h"
 #include "io.h"
 
@@ -403,7 +404,8 @@ void Printer( ) {
 				}
 			}
 			//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
-			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d and %d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, percent, cursor );
+			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
+			myprintf( uart2XServer, COM2, "Idle Usage: %d\%\033[33;%dH", percent, cursor );
 		} else if ( recv.type == PRINT_CHAR ) {
 			Putc( uart2XServer, COM2, recv.data1 );
 			cursor++;
@@ -808,7 +810,7 @@ TD *schedule( Queue *priorityQueues, Request *req, int *beforeIdle ) {
 	unsigned int i;
 	for ( i = 0; i < MAX_PRIORITIES; i++ ) {
 		if ( i == 9 ) {
-			int *low = 0x80810060;
+			int *low = (int *)0x80810060;
 			*beforeIdle = *low;
 		}
 		if ( priorityQueues[i].headOfQueue != 0 ) {
@@ -829,7 +831,7 @@ void rescheduleActive( Queue *priorityQueues, Request *req, int *beforeIdle, int
 	unsigned int whichQueue	= req->taskPriority;
 
 	if ( whichQueue == 9 ) {
-		int *low = 0x80810060;
+		int *low = (int *) 0x80810060;
 		*afterIdle = *low;
 		*idleTime = *idleTime + ( *afterIdle - *beforeIdle ); 
 	}
@@ -1255,7 +1257,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 			break;
 		case IDLE_TIME:
 			{
-				int *low = 0x80810060;
+				int *low = (int *) 0x80810060;
 				int totalTime = *low - *startClock;
 				//int percent = (*idleTime * 100) / totalTime;
 				priorityQueues[req->taskPriority].headOfQueue->retVal = ((double)*idleTime / totalTime) * 100;
@@ -1281,8 +1283,8 @@ int main( int argc, char *argv[] ) {
 	bwsetfifo( COM1, OFF );
 	bwsetfifo( COM2, OFF );
 
-	int *timer4 = 0x80810064;
-	int *low = 0x80810060;
+	int *timer4 = (int *) 0x80810064;
+	int *low = (int *) 0x80810060;
 	*timer4 = *timer4 | 256;
 
 	// Declare kernel data structures

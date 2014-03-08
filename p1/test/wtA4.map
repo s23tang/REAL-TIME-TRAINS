@@ -159,6 +159,9 @@ text            0x0000000000000000     0x889c
 .rel.dyn
 LOAD syscalls.o
 LOAD nameServer.o
+LOAD routeFinder.o
+LOAD trainDriver.o
+LOAD calibrateServer.o
 LOAD notifier.o
 LOAD clockServer.o
 LOAD io.o
@@ -167,14 +170,17 @@ LOAD ../lib/libbwio.a
 LOAD /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a
 OUTPUT(wtA4.elf elf32-littlearm)
 
-.comment        0x0000000000000000       0x7e
+.comment        0x0000000000000000       0xb4
  .comment       0x0000000000000000       0x12 syscalls.o
  .comment       0x0000000000000012       0x12 nameServer.o
- .comment       0x0000000000000024       0x12 notifier.o
- .comment       0x0000000000000036       0x12 clockServer.o
- .comment       0x0000000000000048       0x12 io.o
- .comment       0x000000000000005a       0x12 wtA4.o
- .comment       0x000000000000006c       0x12 ../lib/libbwio.a(bwio.o)
+ .comment       0x0000000000000024       0x12 routeFinder.o
+ .comment       0x0000000000000036       0x12 trainDriver.o
+ .comment       0x0000000000000048       0x12 calibrateServer.o
+ .comment       0x000000000000005a       0x12 notifier.o
+ .comment       0x000000000000006c       0x12 clockServer.o
+ .comment       0x000000000000007e       0x12 io.o
+ .comment       0x0000000000000090       0x12 wtA4.o
+ .comment       0x00000000000000a2       0x12 ../lib/libbwio.a(bwio.o)
 
 .debug_line     0x0000000000000000      0x595
  .debug_line    0x0000000000000000       0x86 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)

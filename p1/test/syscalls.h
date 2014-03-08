@@ -75,3 +75,4 @@ int Receive ( int *tid, char *message, int mslen );
 int Reply ( int tid, char *reply, int rplen );
 int AwaitEvent ( int EventType );
 void Quit( );
+int IdleTime();
