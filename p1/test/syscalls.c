@@ -97,3 +97,8 @@ int AwaitEvent ( int EventType ) {
 void Quit( ) {
 	asm("swi 10");
 }
+
+void IdleTime( ) {
+	asm("swi 11");
+	return;
+}

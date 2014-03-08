@@ -394,6 +394,7 @@ void Printer( ) {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
 
 		if ( recv.type == TIME_UPDATE ){
+			int percent = IdleTime( );
 			tenth = (tenth + 1) % 10;
 			if ( tenth == 0 ) {
 				sec = (sec + 1 ) % 60;
@@ -401,7 +402,8 @@ void Printer( ) {
 					min = min + 1;
 				}
 			}
-			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
+			//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
+			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d and %d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, percent, cursor );
 		} else if ( recv.type == PRINT_CHAR ) {
 			Putc( uart2XServer, COM2, recv.data1 );
 			cursor++;
@@ -530,17 +532,9 @@ void Printer( ) {
 } // Printer
 
 void T2(){
-	int *timer4 = 0x80810064;
-	*timer4 = *timer4 | 2;
 
 	FOREVER{
-		// int time = Time(clkServer);
-		// // bwprintf(COM2, "9 get reply from 3\n\r");
-		// if (time > 250)
-		// {
 
-		// 	Exit();
-		// }
 	}
 }
 
@@ -810,9 +804,13 @@ void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifie
 //-----------------------------------------------------------------------------------------------
 //	Get the task at the highest priority queue's front and return it
 //-----------------------------------------------------------------------------------------------
-TD *schedule( Queue *priorityQueues, Request *req ) {
+TD *schedule( Queue *priorityQueues, Request *req, int *beforeIdle ) {
 	unsigned int i;
 	for ( i = 0; i < MAX_PRIORITIES; i++ ) {
+		if ( i == 9 ) {
+			int *low = 0x80810060;
+			*beforeIdle = *low;
+		}
 		if ( priorityQueues[i].headOfQueue != 0 ) {
 			TD *scheduled = priorityQueues[i].headOfQueue;
 			req->taskPriority = i;
@@ -827,8 +825,15 @@ TD *schedule( Queue *priorityQueues, Request *req ) {
 //-----------------------------------------------------------------------------------------------
 //	Place the last active task at the back of the priority queue that it is in
 //-----------------------------------------------------------------------------------------------
-void rescheduleActive( Queue *priorityQueues, Request *req ) {
+void rescheduleActive( Queue *priorityQueues, Request *req, int *beforeIdle, int *afterIdle, int *idleTime ) {
 	unsigned int whichQueue	= req->taskPriority;
+
+	if ( whichQueue == 9 ) {
+		int *low = 0x80810060;
+		*afterIdle = *low;
+		*idleTime = *idleTime + ( *afterIdle - *beforeIdle ); 
+	}
+
 	Queue *currQueue = &(priorityQueues[whichQueue]);
 
 	TD *lastActive = currQueue->headOfQueue;
@@ -894,7 +899,7 @@ void closeActive( Queue *priorityQueues, Request *req ) {
 //	Handle each kernel primitive (Create, MyTid, MyParentTid, Pass, Exit), last active task will
 //	be the task that called the kernel primitive
 //-----------------------------------------------------------------------------------------------
-void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers ) {
+void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, int *beforeIdle, int *afterIdle, int *idleTime, int *startClock ) {
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
@@ -903,7 +908,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					int *clr = (int *)TIME_CLR;
 					*clr = 1;
 
-					rescheduleActive( priorityQueues, req );
+					rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );
 
 					// Currently not checking the IRQ state register for which interrupt type occured
 					if (notifiers[CLOCK].task == 0)  // No body is waiting
@@ -926,7 +931,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					*control = *control | FREQ_BIT;
 					*control = *control | ENABLE_BIT;
 				} else {
-					rescheduleActive( priorityQueues, req );
+					rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );
 
 					int UART1Int = *((int *)UART1IntDIntClr);
 					int UART2Int = *((int *)UART2IntDIntClr);
@@ -1074,7 +1079,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 
 				req->freeIndex++;									// Update the index for next TD
 
-				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+				rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );			// Place last active task at back of 
 																	// queue behind the created task
 			}
 			break;
@@ -1082,7 +1087,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 			{	/*	MyTid */
 				unsigned int whichQueue	= req->taskPriority;
 				priorityQueues[whichQueue].headOfQueue->retVal = priorityQueues[whichQueue].headOfQueue->tid;
-				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+				rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );			// Place last active task at back of 
 																	// queue behind the created task
 			}
 			break;
@@ -1090,13 +1095,13 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 			{	/*	MyParentTid */
 				unsigned int whichQueue	= req->taskPriority;
 				priorityQueues[whichQueue].headOfQueue->retVal = priorityQueues[whichQueue].headOfQueue->parentTid;
-				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+				rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );			// Place last active task at back of 
 																	// queue behind the created task
 			}
 			break;
 		case PASS:
 			{	/*	Pass */
-				rescheduleActive( priorityQueues, req );			// Place last active task at back of 
+				rescheduleActive( priorityQueues, req, beforeIdle, afterIdle, idleTime );			// Place last active task at back of 
 																	// queue behind the created task
 			}
 			break;
@@ -1175,7 +1180,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					receiver->retVal = copyLen;
 					sender->retVal   = copyLen;
 					*(receiver->senderTid) = sender->tid;        // Indicate who the sender is
-					rescheduleActive(priorityQueues, req);
+					rescheduleActive(priorityQueues, req, beforeIdle, afterIdle, idleTime);
 					// Remove sender from sendQ
 					sender->state = RPL_BLOCKED;
 					receiver->nextSender = sender->nextSender;
@@ -1198,7 +1203,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				sender->state = READY;
 
 				rescheduleBlock(priorityQueues, sender->priority, sender);
-				rescheduleActive(priorityQueues, req);
+				rescheduleActive(priorityQueues, req, beforeIdle, afterIdle, idleTime);
 		    }
 		    break;
 		case AWAIT_EVENT:
@@ -1226,7 +1231,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 					notifiers[eventType].task = 0;
 					notifier->retVal = notifiers[eventType].data[notifiers[eventType].start];
 					notifiers[eventType].start = ( notifiers[eventType].start + 1 ) % DATA_BUFFER;
-					rescheduleActive(priorityQueues, req);
+					rescheduleActive(priorityQueues, req, beforeIdle, afterIdle, idleTime);
 					notifiers[eventType].eventWaiting = 0;
 				} else{
 					//Just block the notifier and wait for event
@@ -1248,6 +1253,15 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers )
 				blockActive(whichQueue, priorityQueues);
 			}
 			break;
+		case IDLE_TIME:
+			{
+				int *low = 0x80810060;
+				int totalTime = *low - *startClock;
+				//int percent = (*idleTime * 100) / totalTime;
+				priorityQueues[req->taskPriority].headOfQueue->retVal = ((double)*idleTime / totalTime) * 100;
+				rescheduleActive(priorityQueues, req, beforeIdle, afterIdle, idleTime);
+			}
+			break;
 	} // switch
 } // handle
 
@@ -1267,6 +1281,10 @@ int main( int argc, char *argv[] ) {
 	bwsetfifo( COM1, OFF );
 	bwsetfifo( COM2, OFF );
 
+	int *timer4 = 0x80810064;
+	int *low = 0x80810060;
+	*timer4 = *timer4 | 256;
+
 	// Declare kernel data structures
 	TD tds[MAX_TASKS];						
 	Queue priorityQueues[MAX_PRIORITIES];
@@ -1277,14 +1295,19 @@ int main( int argc, char *argv[] ) {
 	initialize( tds, priorityQueues, &req, notifiers );	
 												// tds is an array of TDs
 	
+	int beforeIdle = 0;
+	int afterIdle = 0;
+	int idleTime = 0;
+	int startClock = *low;
+
 	// Begin kernel execution
 	FOREVER {
-		active = schedule( priorityQueues, &req );
+		active = schedule( priorityQueues, &req, &beforeIdle );
 		// bwprintf(COM2, "next task: %d\n\r", active->tid);
         										// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
 		getNextRequest( active, &req );			// req is a pointer to a Request
-		handle( tds, priorityQueues, &req, notifiers );	
+		handle( tds, priorityQueues, &req, notifiers, &beforeIdle, &afterIdle, &idleTime, &startClock );	
 												// Execute the kernel code of the kernel primitive-h
 	} // for
 

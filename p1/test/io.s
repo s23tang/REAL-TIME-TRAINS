@@ -1880,7 +1880,7 @@ format:
 .L181:
 	.align	2
 .L180:
-	.word	999
+	.word	599
 	.size	format, .-format
 	.align	2
 	.global	myprintf

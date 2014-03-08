@@ -142,4 +142,16 @@ Quit:
 	swi 10
 	ldmfd	sp, {fp, sp, pc}
 	.size	Quit, .-Quit
+	.align	2
+	.global	IdleTime
+	.type	IdleTime, %function
+IdleTime:
+	@ args = 0, pretend = 0, frame = 0
+	@ frame_needed = 1, uses_anonymous_args = 0
+	mov	ip, sp
+	stmfd	sp!, {fp, ip, lr, pc}
+	sub	fp, ip, #4
+	swi 11
+	ldmfd	sp, {fp, sp, pc}
+	.size	IdleTime, .-IdleTime
 	.ident	"GCC: (GNU) 4.0.2"

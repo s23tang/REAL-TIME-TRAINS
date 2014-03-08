@@ -15,6 +15,7 @@
 #define REPLY           8
 #define AWAIT_EVENT     9
 #define QUIT			10
+#define IDLE_TIME		11
 
 struct TD;
 
