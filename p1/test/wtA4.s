@@ -1504,45 +1504,48 @@ reverseTask:
 	.ascii	"\033[32;1H\033[K\033[33;4H\000"
 	.align	2
 .LC24:
-	.ascii	"\033[H\033[KTIME %d%d:%d%d:%d and %d\033[33;%dH\000"
+	.ascii	"\033[H\033[KTIME %d%d:%d%d:%d\012\000"
 	.align	2
 .LC25:
-	.ascii	"\033[32;1H\033[K\033[31mBAD COMMAND\012\000"
+	.ascii	"Idle Usage: %d%%\033[33;%dH\000"
 	.align	2
 .LC26:
-	.ascii	"\033[0m\033[33;4H\033[K\000"
+	.ascii	"\033[32;1H\033[K\033[31mBAD COMMAND\012\000"
 	.align	2
 .LC27:
-	.ascii	"\033[33;%dH\033[K\000"
+	.ascii	"\033[0m\033[33;4H\033[K\000"
 	.align	2
 .LC28:
-	.ascii	"\033[32;1H\033[K\033[32mShutting down\012\000"
+	.ascii	"\033[33;%dH\033[K\000"
 	.align	2
 .LC29:
+	.ascii	"\033[32;1H\033[K\033[32mShutting down\012\000"
+	.align	2
+.LC30:
 	.ascii	"\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d"
 	.ascii	"\012\000"
 	.align	2
-.LC30:
+.LC31:
 	.ascii	"\033[32m\033[6;%dH%c\033[0m\000"
 	.align	2
-.LC31:
+.LC32:
 	.ascii	"\033[32;1H\033[K\033[32mSetting Switch: %d State: %"
 	.ascii	"c\012\000"
 	.align	2
-.LC32:
+.LC33:
 	.ascii	"\033[32m\033[%d;%dH%d\033[33;4H\033[0m\000"
 	.align	2
-.LC33:
+.LC34:
 	.ascii	"\033[33;%dH\000"
 	.align	2
-.LC34:
+.LC35:
 	.ascii	"\033[32;1H\033[K\033[31mSet Train %d's Speed First\012"
 	.ascii	"\000"
 	.align	2
-.LC35:
+.LC36:
 	.ascii	"\033[32;1H\033[K\033[32mReversing Train %d\012\000"
 	.align	2
-.LC36:
+.LC37:
 	.ascii	"\033[32;1H\033[K\033[32mStop at sensor: %d\012\000"
 	.text
 	.align	2
@@ -1554,7 +1557,7 @@ Printer:
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #908
+	sub	sp, sp, #900
 	ldr	sl, .L286
 .L285:
 	add	sl, pc, sl
@@ -1931,16 +1934,21 @@ Printer:
 	str	r1, [sp, #8]
 	ldr	r3, [fp, #-96]
 	str	r3, [sp, #12]
-	ldr	r3, [fp, #-84]
-	str	r3, [sp, #16]
-	ldr	r3, [fp, #-108]
-	str	r3, [sp, #20]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
 	ldr	r3, .L286+120
 	add	r3, sl, r3
 	mov	r2, r3
 	mov	r3, ip
+	bl	myprintf(PLT)
+	ldr	r3, [fp, #-108]
+	str	r3, [sp, #0]
+	ldr	r0, [fp, #-120]
+	mov	r1, #1
+	ldr	r3, .L286+124
+	add	r3, sl, r3
+	mov	r2, r3
+	ldr	r3, [fp, #-84]
 	bl	myprintf(PLT)
 	b	.L213
 .L208:
@@ -1963,13 +1971,13 @@ Printer:
 	bne	.L216
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+124
+	ldr	r3, .L286+128
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -1985,7 +1993,7 @@ Printer:
 	str	r3, [fp, #-108]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+132
+	ldr	r3, .L286+136
 	add	r3, sl, r3
 	mov	r2, r3
 	ldr	r3, [fp, #-108]
@@ -2001,13 +2009,13 @@ Printer:
 	bl	Putc(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+136
+	ldr	r3, .L286+140
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2039,14 +2047,14 @@ Printer:
 	str	r3, [sp, #0]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+140
+	ldr	r3, .L286+144
 	add	r3, sl, r3
 	mov	r2, r3
 	mov	r3, ip
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2064,7 +2072,7 @@ Printer:
 	ldr	r3, [r3, #0]
 	cmp	r3, #0
 	bne	.L224
-	ldr	r3, .L286+144
+	ldr	r3, .L286+148
 	ldr	r3, [sl, r3]
 	str	r3, [fp, #-112]
 	mov	r0, #2
@@ -2155,7 +2163,7 @@ Printer:
 	cmp	r3, #18
 	bgt	.L236
 	ldr	r1, [fp, #-64]
-	ldr	r3, .L286+148
+	ldr	r3, .L286+152
 	smull	r2, r3, r1, r3
 	mov	r2, r3, asr #1
 	mov	r3, r1, asr #31
@@ -2179,7 +2187,7 @@ Printer:
 	b	.L235
 .L236:
 	ldr	r1, [fp, #-64]
-	ldr	r3, .L286+152
+	ldr	r3, .L286+156
 	smull	r2, r3, r1, r3
 	add	r3, r3, r1
 	mov	r2, r3, asr #7
@@ -2203,7 +2211,7 @@ Printer:
 	str	r3, [sp, #0]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+156
+	ldr	r3, .L286+160
 	add	r3, sl, r3
 	mov	r2, r3
 	ldr	r3, [fp, #-64]
@@ -2213,14 +2221,14 @@ Printer:
 	str	r3, [sp, #0]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+160
+	ldr	r3, .L286+164
 	add	r3, sl, r3
 	mov	r2, r3
 	mov	r3, ip
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2384,14 +2392,14 @@ Printer:
 	str	r2, [sp, #4]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+164
+	ldr	r3, .L286+168
 	add	r3, sl, r3
 	mov	r2, r3
 	ldr	r3, [fp, #-52]
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+168
+	ldr	r3, .L286+172
 	add	r3, sl, r3
 	mov	r2, r3
 	ldr	r3, [fp, #-108]
@@ -2441,14 +2449,14 @@ Printer:
 	bne	.L275
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+172
+	ldr	r3, .L286+176
 	add	r3, sl, r3
 	mov	r2, r3
 	ldr	r3, [fp, #-28]
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2467,14 +2475,14 @@ Printer:
 	ldr	ip, [fp, #-140]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+176
+	ldr	r3, .L286+180
 	add	r3, sl, r3
 	mov	r2, r3
 	mov	r3, ip
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2548,14 +2556,14 @@ Printer:
 	ldr	ip, [fp, #-140]
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+180
+	ldr	r3, .L286+184
 	add	r3, sl, r3
 	mov	r2, r3
 	mov	r3, ip
 	bl	myprintf(PLT)
 	ldr	r0, [fp, #-120]
 	mov	r1, #1
-	ldr	r3, .L286+128
+	ldr	r3, .L286+132
 	add	r3, sl, r3
 	mov	r2, r3
 	bl	myprintf(PLT)
@@ -2616,16 +2624,17 @@ Printer:
 	.word	.LC27(GOTOFF)
 	.word	.LC28(GOTOFF)
 	.word	.LC29(GOTOFF)
+	.word	.LC30(GOTOFF)
 	.word	reverseTask(GOT)
 	.word	780903145
 	.word	-701792041
-	.word	.LC30(GOTOFF)
 	.word	.LC31(GOTOFF)
 	.word	.LC32(GOTOFF)
 	.word	.LC33(GOTOFF)
 	.word	.LC34(GOTOFF)
 	.word	.LC35(GOTOFF)
 	.word	.LC36(GOTOFF)
+	.word	.LC37(GOTOFF)
 	.size	Printer, .-Printer
 	.align	2
 	.global	T2

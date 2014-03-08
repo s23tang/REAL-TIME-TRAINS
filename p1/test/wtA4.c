@@ -405,7 +405,7 @@ void Printer( ) {
 			}
 			//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
 			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
-			myprintf( uart2XServer, COM2, "Idle Usage: %d\%\033[33;%dH", percent, cursor );
+			myprintf( uart2XServer, COM2, "Idle Usage: %d%%\033[33;%dH", percent, cursor );
 		} else if ( recv.type == PRINT_CHAR ) {
 			Putc( uart2XServer, COM2, recv.data1 );
 			cursor++;
