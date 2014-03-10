@@ -37,6 +37,9 @@
 #define WAITING_STOP		10
 #define DONE_STOP			11
 #define STOP_COMMAND		12
+#define WAIT_ON_LOC			13
+#define GOTO_COMMAND		14
+#define ROUTE_INFO			15
 
 #define DATA_BUFFER			50
 
@@ -51,6 +54,15 @@ typedef struct {
 	int data2;
 	int data3;
 } ComReqStruct;
+
+/*
+ * A structure for send queue. The field "queue" is a ring buffer
+ */
+typedef struct {
+	int startIndex;
+	int endIndex;
+	int queue[MAX_TASKS];
+} sendQueue;
 
 /*
  * A structure that stores the data for a notifier

@@ -8,6 +8,7 @@
 #include "calibrateServer.h"
 #include "notifier.h"
 #include "io.h"
+#include "routeFinder.h"
 
 /*
  * User tasks are below
@@ -15,6 +16,7 @@
 
 void Terminal() {
 	int server = WhoIs( "u2g" );
+	int router = WhoIs( "route" );
 	int printer = MyParentTid();
 	ComReqStruct send, reply;
 	char input[MAX_INPUT];
@@ -90,6 +92,63 @@ void Terminal() {
 							send.type = SPEED_COMMAND;
 							send.data1 = speed;
 							send.data2 = train;
+						} else if ( i <= inputIndex && speed != -1 && train != -1 ) {
+							int trackIndex = -1;
+							for ( ; i < inputIndex; i++ ) {
+								if ( input[i] != ' ' ) {
+									if ( input[i] == 'B' && input[i+1] == 'R' ) {
+										if ( input[i+2] >= '1' && input[i+2] <= '9' && ( input[i+3] == ' ' || (i+3 == inputIndex) ) ) {
+											trackIndex = 80 + (input[i+2] - NUM_OFFSET - 1)*2;
+											i += 3;
+											break;
+										} else if ( input[i+2] == '1' && input[i+3] >= '0' && input[i+3] <= '8' && ( input[i+4] == ' ' || (i+4 == inputIndex) ) ) {
+											trackIndex = 80 + (input[i+3] - NUM_OFFSET + 10 - 1)*2;
+											i += 4;
+											break;
+										} else if ( input[i+2] == '1' && input[i+3] == '5' && input[i+4] >= '3' && input[i+4] <= '6' && ( input[i+5] == ' ' || (i+5 == inputIndex) ) ) {
+											trackIndex = 116 + (input[i+4] - NUM_OFFSET + 150 - 153)*2;
+											i += 5;
+											break;
+										}
+									} else if ( input[i] == 'M' && input[i+1] == 'R' ) {
+										if ( input[i+2] >= '1' && input[i+2] <= '9' && ( input[i+3] == ' ' || (i+3 == inputIndex) ) ) {
+											trackIndex = 81 + (input[i+2] - NUM_OFFSET - 1)*2;
+											i += 3;
+											break;
+										} else if ( input[i+2] == '1' && input[i+3] >= '0' && input[i+3] <= '8' && ( input[i+4] == ' ' || (i+4 == inputIndex) ) ) {
+											trackIndex = 81 + (input[i+3] - NUM_OFFSET + 10 - 1)*2;
+											i += 4;
+											break;
+										} else if ( input[i+2] == '1' && input[i+3] == '5' && input[i+4] >= '3' && input[i+4] <= '6' && ( input[i+5] == ' ' || (i+5 == inputIndex) ) ) {
+											trackIndex = 117 + (input[i+4] - NUM_OFFSET + 150 - 153)*2;
+											i += 5;
+											break;
+										}
+									} else if ( input[i] >= 'A' && input[i] <= 'E' ) {
+										if ( input[i+1] >= '1' && input[i+1] <= '9' && ( input[i+2] == ' ' || (i+2 == inputIndex) ) ) {
+											trackIndex = (input[i]-65) * 16 + (input[i+1] - NUM_OFFSET - 1);
+											i += 2;
+											break;
+										} else if ( input[i+1] == '1' && input[i+2] >= '0' && input[i+2] <= '6' && ( input[i+3] == ' ' || (i+3 == inputIndex) ) ) {
+											trackIndex = (input[i]-65) * 16 + (input[i+2] - NUM_OFFSET + 10 - 1);
+											i += 3;
+											break;
+										}
+									}
+								}
+							}
+							for ( ; i < inputIndex; i++ ) {
+								if ( input[i] != ' ' ) break;
+							}
+							if ( i == inputIndex && trackIndex != -1 ) {
+								send.type = GOTO_COMMAND;
+								send.data1 = trackIndex;
+								Send( router, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+								send.type = GOTO_COMMAND;
+								send.data1 = speed;
+								send.data2 = train;
+								send.data3 = trackIndex;
+							}
 						}
 					} else if ( input[i] == 'r' && input[i+1] == 'v' ) {
 						int train = -1;
@@ -98,7 +157,7 @@ void Terminal() {
 							if ( input[i] != ' ' ) {
 								if ( input[i] >= '1' && input[i] <= '9' && ( input[i+1] == ' ' || (i+1 == inputIndex) ) ) {
 									train = input[i] - NUM_OFFSET;
-									i += 2;
+									i += 1;
 									cmdBad = 0;
 									break;
 								} else if ( input[i] >= '1' && input[i] <= '7' && input[i+1] >= '0' && input[i+1] <= '9') {
@@ -190,7 +249,7 @@ void Terminal() {
 							if ( input[i] != ' ' ) {
 								if ( input[i] >= '0' && input[i] <= '9' && ( input[i+1] == ' ' || (i+1 == inputIndex) ) ) {
 									sensor = input[i] - NUM_OFFSET;
-									i += 2;
+									i += 1;
 									cmdBad = 0;
 									break;
 								} else if ( input[i] >= '1' && input[i] <= '7' && input[i+1] >= '0' && input[i+1] <= '9') {
@@ -294,6 +353,9 @@ void reverseTask( ) {
 }
 
 void Printer( ) {
+	int u2get = WhoIs( "u2g" );
+	char throwAway = Getc( u2get, COM2 );
+
 	int clk = WhoIs( "clock" );
 	int uart2XServer = WhoIs( "u2x" );
 	int uart1XServer = WhoIs( "u1x ");
@@ -338,6 +400,9 @@ void Printer( ) {
 	func = Timer;
 	Create( 2, func );
 
+	func = routeFinder;
+	int router = Create( 3, func );
+
 	// Start Train Controller Here
 	Putc(uart1XServer, COM1, (char) 0x60);
 
@@ -355,12 +420,14 @@ void Printer( ) {
 	int reverseTrains[80];
 	int speedTrains[80];
 	char sensorStates[80];
+	int trainDrivers[80];
 
 	int counter;
 	for ( counter = 0; counter < 80; counter++ ) {
 		speedTrains[counter] = -1;
 		sensorStates[counter] = 0;
 		reverseTrains[counter] = 0;
+		trainDrivers[counter] = 0;
 	}
 
 	// myprintf( uart2XServer, COM2, "\033[32m" );
@@ -390,140 +457,236 @@ void Printer( ) {
 	myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[33;4H");
 
 	int stopSensor = -1;
+	int stopping = 0;
+	int waitForTrip = 0;
 
 	FOREVER {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
 
-		if ( recv.type == TIME_UPDATE ){
-			int percent = IdleTime( );
-			tenth = (tenth + 1) % 10;
-			if ( tenth == 0 ) {
-				sec = (sec + 1 ) % 60;
-				if ( sec == 0 ) {
-					min = min + 1;
+		switch (recv.type) {
+			case TIME_UPDATE:
+				{
+					int percent = IdleTime( );
+					tenth = (tenth + 1) % 10;
+					if ( tenth == 0 ) {
+						sec = (sec + 1 ) % 60;
+						if ( sec == 0 ) {
+							min = min + 1;
+						}
+					}
+					//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
+					myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
+					myprintf( uart2XServer, COM2, "Idle Usage: %d%%\033[33;%dH", percent, cursor );
 				}
-			}
-			//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
-			myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
-			myprintf( uart2XServer, COM2, "Idle Usage: %d%%\033[33;%dH", percent, cursor );
-		} else if ( recv.type == PRINT_CHAR ) {
-			Putc( uart2XServer, COM2, recv.data1 );
-			cursor++;
-		} else if ( recv.type == BAD_INPUT ) {
-			myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[31mBAD COMMAND\n");
-			myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			cursor = 4;
-		} else if ( recv.type == BACKSPACE ) {
-			cursor--;
-			myprintf( uart2XServer, COM2, "\033[33;%dH\033[K", cursor );
-		} else if ( recv.type == QUIT_COMMAND ) {
-			Putc( uart1XServer, COM1, 0x61 );
-			myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mShutting down\n");
-			myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			Delay( clk, 300 );
-			break;
-		} else if ( recv.type == SPEED_COMMAND ) {
-			Putc( uart1XServer, COM1, recv.data1 );
-			Putc( uart1XServer, COM1, recv.data2 );
-			myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d\n", recv.data2, recv.data1);
-			myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			int loc = recv.data2;
-			int spd = recv.data1;
-			if ( reverseTrains[loc-1] == 0 ) {
-				func = reverseTask;
-				int tid = Create( 2, func );
-				reverseTrains[loc-1] = tid;
-				speedTrains[loc-1] = spd;
-			} else {
-				speedTrains[loc-1] = spd;
-			}
-			cursor = 4;
-		} else if ( recv.type == SWITCH_COMMAND ) {
-			Putc( uart1XServer, COM1, recv.data1 );
-			Putc( uart1XServer, COM1, recv.data2 );
-			char sOrC = recv.data1 == 33 ? 'S' : 'C';
-			int pos = recv.data2;
-			if ( pos >= 1 && pos <= 10 ) {
-				pos = pos*2 - 1;
-			} else if ( pos >= 11 && pos <= 18 ) {
-				pos = 22 + 3*(pos % 11);
-			} else {
-				pos = 47 + 4*(pos % 153);
-			}
-			myprintf( uart2XServer, COM2, "\033[32m\033[6;%dH%c\033[0m", pos, sOrC);
-			myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Switch: %d State: %c\n", recv.data2, sOrC);
-			myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			cursor = 4;
-		} else if ( recv.type == SENSOR_UPDATE ) {
-			int high = (recv.data1 + 4) % 5;
-			if ( high == 0 ) high = 5;
-			int low = (recv.data1 + 3) % 5;
-			if ( low == 0 ) low = 5;
-			int row;
-			char mask = 0x80;
-			int index;
-			int col;
-			int counter;
-			for ( counter = 1; counter <=16; counter++ ) {
-				col = (counter - 1)*4 + 2;
-				char onOrOff = 0;
-				if ( counter < 9 ) {
-					if ( high == 2 ) row = 29;
-					else if ( high == 1 ) row = 25;
-					else row = high*4 + 1;
-					if ( (recv.data3 & mask ) == mask ) onOrOff = 1;
-				} else {
-					if ( low == 2 ) row = 29;
-					else if ( low == 1 ) row = 25;
-					else row = low*4 + 1;
-					if ( (recv.data2 & mask ) == mask ) onOrOff = 1;
+				break;
+			case PRINT_CHAR:
+				{
+					Putc( uart2XServer, COM2, recv.data1 );
+					cursor++;
 				}
-				index = (((row - 1)/4 - 2 ) - 1 ) * 16 + counter - 1;
-				if ( stopSensor != -1 ) {
-					if ( index == stopSensor && onOrOff == 1 ) {
-						Putc( uart1XServer, COM1, 0 );
-						Putc( uart1XServer, COM1, 50 );
+				break;
+			case BAD_INPUT:
+				{
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[31mBAD COMMAND\n");
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					cursor = 4;
+				}
+				break;
+			case BACKSPACE:
+				{
+					cursor--;
+					myprintf( uart2XServer, COM2, "\033[33;%dH\033[K", cursor );
+				}
+				break;
+			case QUIT_COMMAND:
+				{
+					Putc( uart1XServer, COM1, 0x61 );
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mShutting down\n");
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					Delay( clk, 300 );
+					stopping = 1;
+				}
+				break;
+			case SPEED_COMMAND:
+				{
+					Putc( uart1XServer, COM1, recv.data1 );
+					Putc( uart1XServer, COM1, recv.data2 );
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d\n", recv.data2, recv.data1);
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					int loc = recv.data2;
+					int spd = recv.data1;
+					if ( reverseTrains[loc-1] == 0 ) {
+						func = reverseTask;
+						int tid = Create( 2, func );
+						reverseTrains[loc-1] = tid;
+						speedTrains[loc-1] = spd;
+					} else {
+						speedTrains[loc-1] = spd;
+					}
+					cursor = 4;
+				}
+				break;
+			case SWITCH_COMMAND:
+				{
+					Putc( uart1XServer, COM1, recv.data1 );
+					Putc( uart1XServer, COM1, recv.data2 );
+					char sOrC = recv.data1 == 33 ? 'S' : 'C';
+					int pos = recv.data2;
+					if ( pos >= 1 && pos <= 10 ) {
+						pos = pos*2 - 1;
+					} else if ( pos >= 11 && pos <= 18 ) {
+						pos = 22 + 3*(pos % 11);
+					} else {
+						pos = 47 + 4*(pos % 153);
+					}
+					myprintf( uart2XServer, COM2, "\033[32m\033[6;%dH%c\033[0m", pos, sOrC);
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Switch: %d State: %c\n", recv.data2, sOrC);
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					cursor = 4;
+				}
+				break;
+			case SENSOR_UPDATE:
+				{
+					int high = (recv.data1 + 4) % 5;
+					if ( high == 0 ) high = 5;
+					int low = (recv.data1 + 3) % 5;
+					if ( low == 0 ) low = 5;
+					int row;
+					char mask = 0x80;
+					int index;
+					int col;
+					int counter;
+					for ( counter = 1; counter <=16; counter++ ) {
+						col = (counter - 1)*4 + 2;
+						char onOrOff = 0;
+						if ( counter < 9 ) {
+							if ( high == 2 ) row = 29;
+							else if ( high == 1 ) row = 25;
+							else row = high*4 + 1;
+							if ( (recv.data3 & mask ) == mask ) onOrOff = 1;
+						} else {
+							if ( low == 2 ) row = 29;
+							else if ( low == 1 ) row = 25;
+							else row = low*4 + 1;
+							if ( (recv.data2 & mask ) == mask ) onOrOff = 1;
+						}
+						index = (((row - 1)/4 - 2 ) - 1 ) * 16 + counter - 1;
+						if ( stopSensor != -1 ) {
+							if ( index == stopSensor && onOrOff == 1 ) {
+								Putc( uart1XServer, COM1, 0 );
+								Putc( uart1XServer, COM1, 50 );
+							}
+						}
+						if ( sensorStates[index] != onOrOff ) {
+							if ( waitForTrip ) {
+								reply.type = REQUEST_OK;
+								reply.data1 = index;
+								Reply( router, (char *)&reply, sizeof(ComReqStruct) );
+								waitForTrip = 0;
+								
+								int c;
+
+								ComReqStruct joke;
+								joke.type = REQUEST_OK;
+								Path nima;
+								Send( router, (char *)&joke, sizeof(ComReqStruct), (char *)&nima, sizeof(Path) );
+
+								for ( c = nima.startIndex; c > 0; c-- ) {
+									if ( nima.path[c].index > 79 && nima.path[c].index < 124 && (nima.path[c].index % 2 == 0) ) {
+										int pos;
+										int cOrS;
+										if ( nima.path[c].index <= 114 ) {
+											pos = ( nima.path[c].index - 80 ) / 2 + 1;
+										} else {
+											pos = ( nima.path[c].index - 116 ) / 2 + 153;
+										}
+
+										if ( nima.path[c-1].curved == 1 ) {
+											cOrS = 34;
+										} else {
+											cOrS = 33;
+										}
+										Putc( uart1XServer, COM1, cOrS );
+										Putc( uart1XServer, COM1, pos );
+
+										char sOrC = cOrS == 33 ? 'S' : 'C';
+										if ( pos >= 1 && pos <= 10 ) {
+											pos = pos*2 - 1;
+										} else if ( pos >= 11 && pos <= 18 ) {
+											pos = 22 + 3*(pos % 11);
+										} else {
+											pos = 47 + 4*(pos % 153);
+										}
+										myprintf( uart2XServer, COM2, "\033[32m\033[6;%dH%c\033[0m", pos, sOrC);
+									}
+								}
+
+							}
+							myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[33;4H\033[0m", row, col, onOrOff );
+							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
+							sensorStates[index] = onOrOff;
+						}
+						if ( counter == 8 ) mask = 0x80;
+						else mask = mask >> 1;
 					}
 				}
-				if ( sensorStates[index] != onOrOff ) {
-					myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[33;4H\033[0m", row, col, onOrOff );
-					myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
-					sensorStates[index] = onOrOff;
+				break;
+			case REVERSE_COMMAND:
+				{
+					int loc = recv.data1;
+					if ( reverseTrains[loc-1] == 0 ) {
+						myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[31mSet Train %d's Speed First\n", loc);
+						myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					} else {
+						Putc( uart1XServer, COM1, 0 );
+						Putc( uart1XServer, COM1, recv.data1 );
+						myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mReversing Train %d\n", recv.data1);
+						myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+						reply.type = REQUEST_OK;
+						reply.data1 = 400;
+						reply.data2 = loc;
+						Reply( reverseTrains[loc-1], (char *)&reply, sizeof(ComReqStruct) );
+					}
+					cursor = 4;
 				}
-				if ( counter == 8 ) mask = 0x80;
-				else mask = mask >> 1;
-			}
-		} else if ( recv.type == REVERSE_COMMAND ) {
-			int loc = recv.data1;
-			if ( reverseTrains[loc-1] == 0 ) {
-				myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[31mSet Train %d's Speed First\n", loc);
-				myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			} else {
-				Putc( uart1XServer, COM1, 0 );
-				Putc( uart1XServer, COM1, recv.data1 );
-				myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mReversing Train %d\n", recv.data1);
-				myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-				reply.type = REQUEST_OK;
-				reply.data1 = 400;
-				reply.data2 = loc;
-				Reply( reverseTrains[loc-1], (char *)&reply, sizeof(ComReqStruct) );
-			}
-			cursor = 4;
-		} else if ( recv.type == DONE_STOP ) {
-			int loc = recv.data1;
-			int spd = speedTrains[loc-1];
-			Putc( uart1XServer, COM1, 0xf );
-			Putc( uart1XServer, COM1, loc );
-			Putc( uart1XServer, COM1, spd );
-			Putc( uart1XServer, COM1, loc );
-		} else if ( recv.type == STOP_COMMAND ) {
-			stopSensor = recv.data1;
-			myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mStop at sensor: %d\n", recv.data1);
-			myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
-			cursor = 4;
+				break;
+			case DONE_STOP:
+				{
+					int loc = recv.data1;
+					int spd = speedTrains[loc-1];
+					Putc( uart1XServer, COM1, 0xf );
+					Putc( uart1XServer, COM1, loc );
+					Putc( uart1XServer, COM1, spd );
+					Putc( uart1XServer, COM1, loc );
+				}
+				break;
+			case STOP_COMMAND:
+				{
+					stopSensor = recv.data1;
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mStop at sensor: %d\n", recv.data1);
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					cursor = 4;
+				}
+				break;
+			case GOTO_COMMAND:
+				{
+					Putc( uart1XServer, COM1, recv.data1 );
+					Putc( uart1XServer, COM1, recv.data2 );
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d Loc: %d\n", recv.data2, recv.data1, recv.data3 );
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					cursor = 4;
+				}
+				break;
+			case WAIT_ON_LOC:
+				{
+					waitForTrip = 1;
+				}
+				break;
 		}
 
-		if ( recv.type != WAITING_STOP ) {
+		if ( stopping ) break;
+
+		if ( recv.type != WAITING_STOP && recv.type != WAIT_ON_LOC ) {
 			reply.type = REQUEST_OK;
 			Reply( sender, (char *)&reply, sizeof(ComReqStruct) );
 		}
@@ -551,10 +714,10 @@ void firstUserTask(){
 	// bwprintf(COM2, "First: created Name Server\n\r");
 
 	func = uart2GetServer;
-	tid = Create( 1, func );
+	int cao = Create( 1, func );
 
 	func = uart2PutServer;
-	tid = Create( 1, func );
+	int cao2 = Create( 1, func );
 
 	func = uart1PutServer;
 	tid = Create( 1, func );
@@ -730,8 +893,15 @@ unsigned int getStackSize( ) {
 //	kernel execution; i.e. the first user stack will be filled with placeholder values, and the 
 //	lr will be the program counter for the code of the first task
 //-----------------------------------------------------------------------------------------------
-void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers ) {
+void initialize( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, sendQueue* sendQ) {
 	unsigned int i;
+
+	// Initialize the sendQ
+	for (i = 0; i < MAX_TASKS; i++)
+	{
+		sendQ[i].startIndex = 0;
+		sendQ[i].endIndex = 0;
+	}
 
 	// Initialize the queue to be all empty
 	for ( i = 0; i <MAX_PRIORITIES; i++ ) {
@@ -901,7 +1071,7 @@ void closeActive( Queue *priorityQueues, Request *req ) {
 //	Handle each kernel primitive (Create, MyTid, MyParentTid, Pass, Exit), last active task will
 //	be the task that called the kernel primitive
 //-----------------------------------------------------------------------------------------------
-void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, int *beforeIdle, int *afterIdle, int *idleTime, int *startClock ) {
+void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, int *beforeIdle, int *afterIdle, int *idleTime, int *startClock, sendQueue *sendQ) {
 	switch( req->type ) {
 		case HWINTERRUPT:
 			{
@@ -917,7 +1087,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 					{
 						notifiers[CLOCK].data[notifiers[CLOCK].end] = 0;
 						notifiers[CLOCK].end = ( notifiers[CLOCK].end + 1 ) % DATA_BUFFER;
-						notifiers[CLOCK].eventWaiting = 1;
+						notifiers[CLOCK].eventWaiting++;
 					} 
 					else {    // Notifier is waiting, reschedule the task and put in the retVal
 						TD *notifier = (TD *)notifiers[CLOCK].task;
@@ -944,7 +1114,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						{
 							notifiers[UART1GET].data[notifiers[UART1GET].end] = *data;
 							notifiers[UART1GET].end = ( notifiers[UART1GET].end + 1 ) % DATA_BUFFER;
-							notifiers[UART1GET].eventWaiting = 1;
+							notifiers[UART1GET].eventWaiting++;
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[UART1GET].task;
@@ -967,7 +1137,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						else {
 							notifiers[UART1XMIT].data[notifiers[UART1XMIT].end] = 0;
 							notifiers[UART1XMIT].end = ( notifiers[UART1XMIT].end + 1 ) % DATA_BUFFER;
-							notifiers[UART1XMIT].eventWaiting = 1;
+							notifiers[UART1XMIT].eventWaiting++;
 						}
 					}
 					else if (UART1Int & 0x1) {        //MSI asserted 
@@ -980,7 +1150,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						{
 							notifiers[MSI].data[notifiers[MSI].end] = 0;
 							notifiers[MSI].end = ( notifiers[MSI].end + 1 ) % DATA_BUFFER;
-							notifiers[MSI].eventWaiting = 1;
+							notifiers[MSI].eventWaiting++;
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[MSI].task;
@@ -996,7 +1166,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						{
 							notifiers[UART2GET].data[notifiers[UART2GET].end] = *data;
 							notifiers[UART2GET].end = ( notifiers[UART2GET].end + 1 ) % DATA_BUFFER;
-							notifiers[UART2GET].eventWaiting = 1;
+							notifiers[UART2GET].eventWaiting++;
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[UART2GET].task;
@@ -1020,7 +1190,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						else {
 							notifiers[UART2XMIT].data[notifiers[UART2XMIT].end] = 0;
 							notifiers[UART2XMIT].end = ( notifiers[UART2XMIT].end + 1 ) % DATA_BUFFER;
-							notifiers[UART2XMIT].eventWaiting = 1;
+							notifiers[UART2XMIT].eventWaiting++;
 						}
 					}
 				}
@@ -1147,16 +1317,9 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 				}
 				else { 
 					sender->state = RCV_BLOCKED;
-					sender->nextSender = 0;   // Adding the sender to the back of sendQ
-					if (receiver->nextSender != 0)
-					{
-						TD *lastSender         = (TD *)receiver->lastSender;
-						lastSender->nextSender = (struct TD *)sender;
-						receiver->lastSender   = (struct TD *)sender;
-					}else {
-						receiver->nextSender = (struct TD *)sender;
-						receiver->lastSender = (struct TD *)sender;
-					}
+					// Add the sender to receiver's sendQ
+					sendQ[receiverTid-1].queue[sendQ[receiverTid-1].endIndex] = senderTid;
+					sendQ[receiverTid-1].endIndex = (sendQ[receiverTid-1].endIndex + 1) % MAX_TASKS;
 				}
 			}
 			break;
@@ -1170,13 +1333,15 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 				receiver->rcvLen    = req->arg2;             // Maximum size of msg I can store
 
 				// Check if sendQ is empty
-				if (receiver->nextSender == 0)
+				if (sendQ[receiverTid-1].startIndex == sendQ[receiverTid-1].endIndex)
 				{
 					receiver->state = SND_BLOCKED;
 					blockActive(whichQueue, priorityQueues);
 				}
 				else {   // Not empty, copy the msg
-					TD *sender = (TD *)receiver->nextSender;
+					int senderId = sendQ[receiverTid-1].queue[sendQ[receiverTid-1].startIndex];
+					TD *sender = (TD *)&(tds[senderId - 1]);    // get the sender from the sendQ
+					sendQ[receiverTid-1].startIndex = (sendQ[receiverTid-1].startIndex + 1) % MAX_TASKS;     //increment startIndex
 					unsigned int copyLen = (sender->msgLen <= receiver->rcvLen) ? sender->msgLen : receiver->rcvLen; // send the bottle neck len
 					copyMsg(receiver->rcvAddr, sender->msgToSend, copyLen);
 					receiver->retVal = copyLen;
@@ -1215,11 +1380,11 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 				TD *notifier             = &(tds[notifierTid - 1]);
 				int eventType = req->arg0;
 
-				// Turn on the transmit ready interrupt
+				// // Turn on the transmit ready interrupt
 				if (eventType == UART2XMIT)
 				{
 					int *ctrl = (int *)UART2CTRL;
-					*ctrl = *ctrl | 0x00000020;
+				 	*ctrl = *ctrl | 0x00000020;
 				}
 				else if (eventType == UART1XMIT)
 				{
@@ -1234,7 +1399,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 					notifier->retVal = notifiers[eventType].data[notifiers[eventType].start];
 					notifiers[eventType].start = ( notifiers[eventType].start + 1 ) % DATA_BUFFER;
 					rescheduleActive(priorityQueues, req, beforeIdle, afterIdle, idleTime);
-					notifiers[eventType].eventWaiting = 0;
+					notifiers[eventType].eventWaiting--;
 				} else{
 					//Just block the notifier and wait for event
 					notifier->state = AWAIT_BLOCKED;
@@ -1291,10 +1456,11 @@ int main( int argc, char *argv[] ) {
 	TD tds[MAX_TASKS];						
 	Queue priorityQueues[MAX_PRIORITIES];
 	Notifier notifiers[NUM_NOTIFIERS];    		//for now, only one notifiers
+	sendQueue sendQ[MAX_TASKS];
 
 	TD *active;									// The task that will run
 	Request req;								// The requests of the task along with other info
-	initialize( tds, priorityQueues, &req, notifiers );	
+	initialize( tds, priorityQueues, &req, notifiers, sendQ );	
 												// tds is an array of TDs
 	
 	int beforeIdle = 0;
@@ -1309,7 +1475,7 @@ int main( int argc, char *argv[] ) {
         										// Active will be scheduled to run next
 		if ( active == 0 ) break;				// Return cleanly if all tasks exited
 		getNextRequest( active, &req );			// req is a pointer to a Request
-		handle( tds, priorityQueues, &req, notifiers, &beforeIdle, &afterIdle, &idleTime, &startClock );	
+		handle( tds, priorityQueues, &req, notifiers, &beforeIdle, &afterIdle, &idleTime, &startClock, sendQ );	
 												// Execute the kernel code of the kernel primitive-h
 	} // for
 

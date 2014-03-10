@@ -174,10 +174,6 @@ void uart2PutServer( ){
 				break;
 			case UART2XMIT_REQ:
 				{
-					// reply to client
-					send.type = REQUEST_OK;
-					send.data1 = 0;
-					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
 
 					if (readyFlag == 0)   //notifier not ready, insert the byte into xmitQ
 					{
@@ -191,6 +187,11 @@ void uart2PutServer( ){
 						temp = Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
 						readyFlag = 0;
 					}
+
+					// reply to client
+					send.type = REQUEST_OK;
+					send.data1 = 0;
+					Reply( reqTid, (char *)&send, sizeof(ComReqStruct) );
 				}
 				break;
 		}
@@ -460,7 +461,6 @@ void format ( int server, int channel, char *fmt, va_list va ) {
 	
 	while ( ( ch = *(fmt++) ) ) {
 		int i;
-		for ( i=0; i<600; i++);
 		if ( ch != '%' )
 			Putc( server, channel, ch );
 		else {
@@ -533,6 +533,14 @@ int setTrainConnectionn(){
 	*high = *high & 0xffffff80;  // clear the lower bits of control high register
 	*high = *high | modeWord;
 	*high = modeWord;
+
+	int *high2, *mid2, *low2;
+	mid = (int *)( UART2_BASE + UART_LCRM_OFFSET );
+	low = (int *)( UART2_BASE + UART_LCRL_OFFSET );
+	*mid = 0x0;
+	*low = 0xb;	// 9600 baud rate
+	high =  (int *)( UART2_BASE + UART_LCRH_OFFSET );
+	*high = *high;
 
 	// enable modern status interrupt
 	int *ctrl = (int *)UART1CTRL;

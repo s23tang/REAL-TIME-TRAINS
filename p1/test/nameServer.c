@@ -41,6 +41,7 @@ void nameServer() {
     serverTable[UART1XMIT_S].name 	= "u1x";
     serverTable[UART2GET_S].name 	= "u2g";
     serverTable[UART2XMIT_S].name 	= "u2x";
+    serverTable[ROUTE_FINDER].name  = "route";
 
     int senderTid;
     NSstruct request;
@@ -82,6 +83,10 @@ void nameServer() {
                     		} // if
                     	} // if
                     	serverTable[serverIndex].tid = senderTid;
+                    } else if (reqName[0] == 'r' ) {
+                        reply.type = REQUEST_OK;
+                        serverIndex = ROUTE_FINDER;
+                        serverTable[serverIndex].tid = senderTid;
                     } else {
                     	reply.type = REQUEST_BAD;
                     }
@@ -114,6 +119,10 @@ void nameServer() {
                     		} // if
                     	} // if
                     	reply.tid = serverTable[serverIndex].tid;
+                    } else if (reqName[0] == 'r' ) {
+                        reply.type = REQUEST_OK;
+                        serverIndex = ROUTE_FINDER;
+                        reply.tid = serverTable[serverIndex].tid;
                     } else {
                     	reply.type = REQUEST_BAD;
                     }

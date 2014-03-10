@@ -34,7 +34,7 @@ bss             0x0000000000000000        0x0
  *(.bss)
                 0x0000000000000000                _BssEnd = .
 
-text            0x0000000000000000    0x150d8
+text            0x0000000000000000    0x169dc
  *(.text)
  .text          0x0000000000000000      0x134 syscalls.o
                 0x0000000000000074                Send
@@ -48,117 +48,119 @@ text            0x0000000000000000    0x150d8
                 0x0000000000000024                MyTid
                 0x0000000000000060                Exit
                 0x000000000000010c                Quit
- .text          0x0000000000000134      0x40c nameServer.o
+ .text          0x0000000000000134      0x4a8 nameServer.o
                 0x00000000000001ac                WhoIs
                 0x0000000000000224                nameServer
                 0x0000000000000134                RegisterAs
- .text          0x0000000000000540     0xc53c track_data.o
-                0x0000000000006904                init_trackb
-                0x00000000000005ac                init_tracka
- .text          0x000000000000ca7c       0x28 routeFinder.o
-                0x000000000000ca7c                routeFinder
- .text          0x000000000000caa4      0x294 notifier.o
-                0x000000000000caa4                notifier
- .text          0x000000000000cd38      0x490 clockServer.o
-                0x000000000000ce60                clockServer
-                0x000000000000ce04                DelayUntil
-                0x000000000000cd88                Delay
-                0x000000000000cd38                Time
- .text          0x000000000000d1c8     0x1acc io.o
-                0x000000000000e454                putw
-                0x000000000000d290                Getc
-                0x000000000000d764                uart2PutServer
-                0x000000000000d2fc                Putc
-                0x000000000000e810                i2a
-                0x000000000000e874                format
-                0x000000000000deb4                uart1PutServer
-                0x000000000000d1c8                setfifo
-                0x000000000000eb90                myprintf
-                0x000000000000e6cc                ui2a
-                0x000000000000d378                uart2GetServer
-                0x000000000000e608                a2i
-                0x000000000000e560                a2d
-                0x000000000000ebd0                setTrainConnectionn
-                0x000000000000dac8                uart1GetServer
- .text          0x000000000000ec94     0x4428 wtA4.o
-                0x00000000000100d0                Printer
-                0x00000000000110fc                T2
-                0x0000000000011a64                closeActive
-                0x0000000000011448                getStackSize
-                0x0000000000011788                schedule
-                0x0000000000011254                getNextRequest
-                0x000000000000fe24                Train
-                0x000000000000ff88                Timer
-                0x00000000000113d4                copyMsg
-                0x0000000000011b08                handle
-                0x000000000001000c                reverseTask
-                0x00000000000119e4                blockActive
-                0x000000000001110c                firstUserTask
-                0x0000000000011958                rescheduleBlock
-                0x0000000000012ea4                main
-                0x0000000000011490                initialize
-                0x000000000001185c                rescheduleActive
-                0x000000000000ec94                Terminal
- .text          0x00000000000130bc      0xc54 ../lib/libbwio.a(bwio.o)
-                0x0000000000013434                bwputr
-                0x00000000000139a0                bwi2a
-                0x00000000000130bc                bwsetfifo
-                0x0000000000013290                bwputc
-                0x00000000000136f0                bwa2d
-                0x0000000000013184                bwsetspeed
-                0x0000000000013354                c2x
-                0x0000000000013798                bwa2i
-                0x0000000000013638                bwgetc
-                0x000000000001385c                bwui2a
-                0x0000000000013a04                bwformat
-                0x0000000000013530                bwputw
-                0x0000000000013cd8                bwprintf
-                0x00000000000133b4                bwputx
-                0x00000000000134b4                bwputstr
- .text          0x0000000000013d10      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
-                0x0000000000013d10                __udivsi3
-                0x0000000000013e08                __aeabi_uidivmod
- .text          0x0000000000013e20       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
-                0x0000000000013e20                __umodsi3
- .text          0x0000000000013eec        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
-                0x0000000000013eec                __aeabi_ldiv0
-                0x0000000000013eec                __div0
-                0x0000000000013eec                __aeabi_idiv0
- .text          0x0000000000013ef0      0x400 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_addsubdf3.o)
-                0x0000000000014284                __floatdidf
-                0x0000000000014204                __floatsidf
-                0x00000000000141dc                __aeabi_ui2d
-                0x0000000000013ef0                __aeabi_drsub
-                0x0000000000014230                __extendsfdf2
-                0x0000000000013efc                __adddf3
-                0x00000000000141dc                __floatunsidf
-                0x0000000000013efc                __aeabi_dadd
-                0x0000000000014270                __aeabi_ul2d
-                0x0000000000013ef8                __aeabi_dsub
-                0x0000000000014270                __floatundidf
-                0x0000000000014204                __aeabi_i2d
-                0x0000000000014284                __aeabi_l2d
-                0x0000000000014230                __aeabi_f2d
-                0x0000000000013ef8                __subdf3
- .text          0x00000000000142f0      0x470 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_muldivdf3.o)
-                0x000000000001455c                __aeabi_ddiv
-                0x00000000000142f0                __aeabi_dmul
-                0x000000000001455c                __divdf3
-                0x00000000000142f0                __muldf3
- .text          0x0000000000014760       0x5c /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_fixdfsi.o)
-                0x0000000000014760                __fixdfsi
-                0x0000000000014760                __aeabi_d2iz
+ .text          0x00000000000005dc     0xc53c track_data.o
+                0x00000000000069a0                init_trackb
+                0x0000000000000648                init_tracka
+ .text          0x000000000000cb18      0x860 routeFinder.o
+                0x000000000000d1bc                routeFinder
+                0x000000000000cb18                route
+ .text          0x000000000000d378      0x294 notifier.o
+                0x000000000000d378                notifier
+ .text          0x000000000000d60c      0x490 clockServer.o
+                0x000000000000d734                clockServer
+                0x000000000000d6d8                DelayUntil
+                0x000000000000d65c                Delay
+                0x000000000000d60c                Time
+ .text          0x000000000000da9c     0x1aec io.o
+                0x000000000000ed28                putw
+                0x000000000000db64                Getc
+                0x000000000000e038                uart2PutServer
+                0x000000000000dbd0                Putc
+                0x000000000000f0e4                i2a
+                0x000000000000f148                format
+                0x000000000000e788                uart1PutServer
+                0x000000000000da9c                setfifo
+                0x000000000000f438                myprintf
+                0x000000000000efa0                ui2a
+                0x000000000000dc4c                uart2GetServer
+                0x000000000000eedc                a2i
+                0x000000000000ee34                a2d
+                0x000000000000f478                setTrainConnectionn
+                0x000000000000e39c                uart1GetServer
+ .text          0x000000000000f588     0x53e8 wtA4.o
+                0x00000000000112c8                Printer
+                0x0000000000012748                T2
+                0x000000000001310c                closeActive
+                0x0000000000012a94                getStackSize
+                0x0000000000012e30                schedule
+                0x00000000000128a0                getNextRequest
+                0x000000000001101c                Train
+                0x0000000000011180                Timer
+                0x0000000000012a20                copyMsg
+                0x00000000000131b0                handle
+                0x0000000000011204                reverseTask
+                0x000000000001308c                blockActive
+                0x0000000000012758                firstUserTask
+                0x0000000000013000                rescheduleBlock
+                0x00000000000146e8                main
+                0x0000000000012adc                initialize
+                0x0000000000012f04                rescheduleActive
+                0x000000000000f588                Terminal
+ .text          0x0000000000014970      0xc54 ../lib/libbwio.a(bwio.o)
+                0x0000000000014ce8                bwputr
+                0x0000000000015254                bwi2a
+                0x0000000000014970                bwsetfifo
+                0x0000000000014b44                bwputc
+                0x0000000000014fa4                bwa2d
+                0x0000000000014a38                bwsetspeed
+                0x0000000000014c08                c2x
+                0x000000000001504c                bwa2i
+                0x0000000000014eec                bwgetc
+                0x0000000000015110                bwui2a
+                0x00000000000152b8                bwformat
+                0x0000000000014de4                bwputw
+                0x000000000001558c                bwprintf
+                0x0000000000014c68                bwputx
+                0x0000000000014d68                bwputstr
+ .text          0x00000000000155c4      0x110 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_udivsi3.o)
+                0x00000000000155c4                __udivsi3
+                0x00000000000156bc                __aeabi_uidivmod
+ .text          0x00000000000156d4       0xcc /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_umodsi3.o)
+                0x00000000000156d4                __umodsi3
+ .text          0x00000000000157a0        0x4 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_dvmd_tls.o)
+                0x00000000000157a0                __aeabi_ldiv0
+                0x00000000000157a0                __div0
+                0x00000000000157a0                __aeabi_idiv0
+ .text          0x00000000000157a4      0x400 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_addsubdf3.o)
+                0x0000000000015b38                __floatdidf
+                0x0000000000015ab8                __floatsidf
+                0x0000000000015a90                __aeabi_ui2d
+                0x00000000000157a4                __aeabi_drsub
+                0x0000000000015ae4                __extendsfdf2
+                0x00000000000157b0                __adddf3
+                0x0000000000015a90                __floatunsidf
+                0x00000000000157b0                __aeabi_dadd
+                0x0000000000015b24                __aeabi_ul2d
+                0x00000000000157ac                __aeabi_dsub
+                0x0000000000015b24                __floatundidf
+                0x0000000000015ab8                __aeabi_i2d
+                0x0000000000015b38                __aeabi_l2d
+                0x0000000000015ae4                __aeabi_f2d
+                0x00000000000157ac                __subdf3
+ .text          0x0000000000015ba4      0x470 /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_muldivdf3.o)
+                0x0000000000015e10                __aeabi_ddiv
+                0x0000000000015ba4                __aeabi_dmul
+                0x0000000000015e10                __divdf3
+                0x0000000000015ba4                __muldf3
+ .text          0x0000000000016014       0x5c /u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2/libgcc.a(_fixdfsi.o)
+                0x0000000000016014                __fixdfsi
+                0x0000000000016014                __aeabi_d2iz
  *(.got)
- .got           0x00000000000147bc       0x38 nameServer.o
+ .got           0x0000000000016070       0x3c nameServer.o
  *(.got.plt)
- .got.plt       0x00000000000147f4        0xc nameServer.o
-                0x00000000000147f4                _GLOBAL_OFFSET_TABLE_
+ .got.plt       0x00000000000160ac        0xc nameServer.o
+                0x00000000000160ac                _GLOBAL_OFFSET_TABLE_
  *(.rodata)
- .rodata        0x0000000000014800       0x18 nameServer.o
- .rodata        0x0000000000014818      0x2b0 track_data.o
- .rodata        0x0000000000014ac8       0x28 clockServer.o
- .rodata        0x0000000000014af0       0xa0 io.o
- .rodata        0x0000000000014b90      0x548 wtA4.o
+ .rodata        0x00000000000160b8       0x20 nameServer.o
+ .rodata        0x00000000000160d8      0x2b0 track_data.o
+ .rodata        0x0000000000016388        0x8 routeFinder.o
+ .rodata        0x0000000000016390       0x28 clockServer.o
+ .rodata        0x00000000000163b8       0xa0 io.o
+ .rodata        0x0000000000016458      0x584 wtA4.o
  *(.glue_7)
  *(.glue_7t)
 
