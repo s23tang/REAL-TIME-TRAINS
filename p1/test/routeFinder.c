@@ -37,6 +37,7 @@ void route( track_node *track, Path *shortest, int src, int dest ) {
 		int alt, v, num, count;
 		node_type type;
 		if ( track[lowestDist].type == NODE_BRANCH ) count = 2;
+		else if ( track[lowestDist].type == NODE_EXIT || track[lowestDist].type == NODE_ENTER ) count = 0;
 		else count = 1;
 		for ( i = 0; i < count; i++ ) {
 			alt = dist[lowestDist] + track[lowestDist].edge[i].dist;
@@ -50,6 +51,10 @@ void route( track_node *track, Path *shortest, int src, int dest ) {
 			} else if ( type == NODE_MERGE ) {
 				if ( num <= 18 ) v = 81 + (num-1)*2;
 				else v = 117 + (num-153)*2;
+			} else if ( type == NODE_ENTER ) {
+				v = lowestDist;
+			} else if ( type == NODE_EXIT ) {
+				v = lowestDist;
 			}
 			if ( alt < dist[v] ) {
 				// if ( !flag ) flag = v;
@@ -58,23 +63,23 @@ void route( track_node *track, Path *shortest, int src, int dest ) {
 				prev[v].curved = i;
 			}
 		}
-		alt = dist[lowestDist];
-		type = track[lowestDist].reverse->type;
-		num = track[lowestDist].reverse->num;
-		if ( type == NODE_SENSOR ) {
-			v = num;
-		} else if ( type == NODE_BRANCH ) {
-			if ( num <= 18 ) v = 80 + (num-1)*2;
-			else v = 116 + (num-153)*2;
-		} else if ( type == NODE_MERGE ) {
-			if ( num <= 18 ) v = 81 + (num-1)*2;
-			else v = 117 + (num-153)*2;
-		}
-		if ( alt < dist[v] ) {
-			dist[v] = alt;
-			prev[v].index = lowestDist;
-			prev[v].curved = 0;
-		}
+		// alt = dist[lowestDist];
+		// type = track[lowestDist].reverse->type;
+		// num = track[lowestDist].reverse->num;
+		// if ( type == NODE_SENSOR ) {
+		// 	v = num;
+		// } else if ( type == NODE_BRANCH ) {
+		// 	if ( num <= 18 ) v = 80 + (num-1)*2;
+		// 	else v = 116 + (num-153)*2;
+		// } else if ( type == NODE_MERGE ) {
+		// 	if ( num <= 18 ) v = 81 + (num-1)*2;
+		// 	else v = 117 + (num-153)*2;
+		// }
+		// if ( alt < dist[v] ) {
+		// 	dist[v] = alt;
+		// 	prev[v].index = lowestDist;
+		// 	prev[v].curved = 0;
+		// }
 	}
 
 	i = 0;

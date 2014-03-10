@@ -9,6 +9,7 @@
 #include "notifier.h"
 #include "io.h"
 #include "routeFinder.h"
+#include "track_data.h"
 
 /*
  * User tasks are below
@@ -353,8 +354,11 @@ void reverseTask( ) {
 }
 
 void Printer( ) {
-	int u2get = WhoIs( "u2g" );
-	char throwAway = Getc( u2get, COM2 );
+	// int u2get = WhoIs( "u2g" );
+	// char throwAway = Getc( u2get, COM2 );
+
+	track_node track[TRACK_MAX];
+	init_tracka(track);
 
 	int clk = WhoIs( "clock" );
 	int uart2XServer = WhoIs( "u2x" );
@@ -591,6 +595,11 @@ void Printer( ) {
 								Path nima;
 								Send( router, (char *)&joke, sizeof(ComReqStruct), (char *)&nima, sizeof(Path) );
 
+
+								// myprintf( uart2XServer, COM2, "\033[32;1H" );
+								// for ( c = nima.startIndex; c > 0; c-- ) {
+								// 	myprintf( uart2XServer, COM2, "%s ", track[nima.path[c].index].name );
+								// }
 								for ( c = nima.startIndex; c > 0; c-- ) {
 									if ( nima.path[c].index > 79 && nima.path[c].index < 124 && (nima.path[c].index % 2 == 0) ) {
 										int pos;

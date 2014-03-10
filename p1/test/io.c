@@ -461,6 +461,7 @@ void format ( int server, int channel, char *fmt, va_list va ) {
 	
 	while ( ( ch = *(fmt++) ) ) {
 		int i;
+		for ( i=0; i<600; i++ );
 		if ( ch != '%' )
 			Putc( server, channel, ch );
 		else {
@@ -534,13 +535,13 @@ int setTrainConnectionn(){
 	*high = *high | modeWord;
 	*high = modeWord;
 
-	int *high2, *mid2, *low2;
-	mid = (int *)( UART2_BASE + UART_LCRM_OFFSET );
-	low = (int *)( UART2_BASE + UART_LCRL_OFFSET );
-	*mid = 0x0;
-	*low = 0xb;	// 9600 baud rate
-	high =  (int *)( UART2_BASE + UART_LCRH_OFFSET );
-	*high = *high;
+	// int *high2, *mid2, *low2;
+	// mid = (int *)( UART2_BASE + UART_LCRM_OFFSET );
+	// low = (int *)( UART2_BASE + UART_LCRL_OFFSET );
+	// *mid = 0x0;
+	// *low = 0xb;	// 9600 baud rate
+	// high =  (int *)( UART2_BASE + UART_LCRH_OFFSET );
+	// *high = *high;
 
 	// enable modern status interrupt
 	int *ctrl = (int *)UART1CTRL;
