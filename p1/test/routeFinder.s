@@ -22,15 +22,15 @@ route:
 	b	.L2
 .L3:
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
 	add	r2, r3, r2
-	ldr	r3, .L29+4
+	ldr	r3, .L45+4
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29+8
+	ldr	r2, .L45+8
 	mov	r3, r3, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -38,7 +38,7 @@ route:
 	mvn	r3, #0
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29+12
+	ldr	r2, .L45+12
 	mov	r3, r3, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -46,7 +46,7 @@ route:
 	mvn	r3, #0
 	strb	r3, [r2, #0]
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29+16
+	ldr	r2, .L45+16
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -61,7 +61,7 @@ route:
 	cmp	r3, #143
 	ble	.L3
 	ldr	r3, [fp, #-2368]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -72,14 +72,14 @@ route:
 	str	r3, [fp, #-44]
 	b	.L5
 .L6:
-	ldr	r3, .L29+4
+	ldr	r3, .L45+4
 	str	r3, [fp, #-36]
 	mov	r3, #0
 	str	r3, [fp, #-48]
 	b	.L7
 .L8:
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29+16
+	ldr	r2, .L45+16
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -88,7 +88,7 @@ route:
 	cmp	r3, #1
 	bne	.L9
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -98,7 +98,7 @@ route:
 	cmp	r2, r3
 	bge	.L9
 	ldr	r3, [fp, #-48]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -120,7 +120,7 @@ route:
 	cmp	r2, r3
 	beq	.L13
 	ldr	r3, [fp, #-44]
-	ldr	r2, .L29+16
+	ldr	r2, .L45+16
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -180,7 +180,7 @@ route:
 	b	.L21
 .L22:
 	ldr	r3, [fp, #-44]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -202,10 +202,96 @@ route:
 	ldr	r3, [r3, #0]
 	add	r3, r0, r3
 	str	r3, [fp, #-32]
+	ldr	r2, [fp, #-44]
+	mov	r3, r2
+	mov	r3, r3, asl #1
+	add	r3, r3, r2
+	mov	r3, r3, asl #4
+	mov	r2, r3
+	ldr	r3, [fp, #-2360]
+	add	r1, r2, r3
+	ldr	r3, [fp, #-48]
+	mov	r2, #24
+	mov	r3, r3, asl #4
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r3, [r3, #0]
+	ldr	r3, [r3, #4]
+	str	r3, [fp, #-16]
+	ldr	r2, [fp, #-44]
+	mov	r3, r2
+	mov	r3, r3, asl #1
+	add	r3, r3, r2
+	mov	r3, r3, asl #4
+	mov	r2, r3
+	ldr	r3, [fp, #-2360]
+	add	r1, r2, r3
+	ldr	r3, [fp, #-48]
+	mov	r2, #24
+	mov	r3, r3, asl #4
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r3, [r3, #0]
+	ldr	r3, [r3, #8]
+	str	r3, [fp, #-24]
+	ldr	r3, [fp, #-16]
+	cmp	r3, #1
+	bne	.L23
+	ldr	r3, [fp, #-24]
+	str	r3, [fp, #-28]
+	b	.L25
+.L23:
+	ldr	r3, [fp, #-16]
+	cmp	r3, #2
+	bne	.L26
+	ldr	r3, [fp, #-24]
+	cmp	r3, #18
+	bgt	.L28
+	ldr	r3, [fp, #-24]
+	mov	r3, r3, asl #1
+	add	r3, r3, #78
+	str	r3, [fp, #-28]
+	b	.L25
+.L28:
+	ldr	r3, [fp, #-24]
+	mov	r3, r3, asl #1
+	sub	r3, r3, #190
+	str	r3, [fp, #-28]
+	b	.L25
+.L26:
+	ldr	r3, [fp, #-16]
+	cmp	r3, #3
+	bne	.L31
+	ldr	r3, [fp, #-24]
+	cmp	r3, #18
+	bgt	.L33
+	ldr	r3, [fp, #-24]
+	mov	r3, r3, asl #1
+	add	r3, r3, #79
+	str	r3, [fp, #-28]
+	b	.L25
+.L33:
+	ldr	r3, [fp, #-24]
+	mov	r3, r3, asl #1
+	sub	r3, r3, #189
+	str	r3, [fp, #-28]
+	b	.L25
+.L31:
+	ldr	r3, [fp, #-16]
+	cmp	r3, #4
+	bne	.L36
 	ldr	r3, [fp, #-44]
 	str	r3, [fp, #-28]
+	b	.L25
+.L36:
+	ldr	r3, [fp, #-16]
+	cmp	r3, #5
+	bne	.L25
+	ldr	r3, [fp, #-44]
+	str	r3, [fp, #-28]
+.L25:
 	ldr	r3, [fp, #-28]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -213,9 +299,9 @@ route:
 	ldr	r2, [r3, #0]
 	ldr	r3, [fp, #-32]
 	cmp	r2, r3
-	ble	.L23
+	ble	.L39
 	ldr	r3, [fp, #-28]
-	ldr	r2, .L29
+	ldr	r2, .L45
 	mov	r3, r3, asl #2
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -223,7 +309,7 @@ route:
 	ldr	r3, [fp, #-32]
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-28]
-	ldr	r2, .L29+8
+	ldr	r2, .L45+8
 	mov	r3, r3, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -233,14 +319,14 @@ route:
 	ldr	r1, [fp, #-28]
 	ldr	r3, [fp, #-48]
 	and	r0, r3, #255
-	ldr	r2, .L29+12
+	ldr	r2, .L45+12
 	mov	r3, r1, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
 	add	r2, r3, r2
 	mov	r3, r0
 	strb	r3, [r2, #0]
-.L23:
+.L39:
 	ldr	r3, [fp, #-48]
 	add	r3, r3, #1
 	str	r3, [fp, #-48]
@@ -258,15 +344,15 @@ route:
 	str	r3, [fp, #-48]
 	ldr	r3, [fp, #-2372]
 	str	r3, [fp, #-40]
-	b	.L25
-.L26:
+	b	.L41
+.L42:
 	ldr	r1, [fp, #-48]
 	ldr	r2, [fp, #-2364]
 	ldr	r3, [fp, #-40]
 	str	r3, [r2, r1, asl #3]
 	ldr	r0, [fp, #-48]
 	ldr	r3, [fp, #-40]
-	ldr	r2, .L29+12
+	ldr	r2, .L45+12
 	mov	r3, r3, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -280,7 +366,7 @@ route:
 	mov	r3, ip
 	strb	r3, [r2, #0]
 	ldr	r3, [fp, #-40]
-	ldr	r2, .L29+8
+	ldr	r2, .L45+8
 	mov	r3, r3, asl #3
 	sub	r1, fp, #12
 	add	r3, r3, r1
@@ -290,19 +376,19 @@ route:
 	ldr	r3, [fp, #-48]
 	add	r3, r3, #1
 	str	r3, [fp, #-48]
-.L25:
+.L41:
 	ldr	r3, [fp, #-40]
 	cmn	r3, #1
-	bne	.L26
+	bne	.L42
 	ldr	r3, [fp, #-48]
 	sub	r2, r3, #1
 	ldr	r3, [fp, #-2364]
 	str	r2, [r3, #400]
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
-.L30:
+.L46:
 	.align	2
-.L29:
+.L45:
 	.word	-616
 	.word	99999
 	.word	-1768
@@ -318,79 +404,45 @@ route:
 	.global	routeFinder
 	.type	routeFinder, %function
 routeFinder:
-	@ args = 0, pretend = 0, frame = 7364
+	@ args = 0, pretend = 0, frame = 7344
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #7360
-	sub	sp, sp, #8
-	ldr	sl, .L35
-.L34:
+	sub	sp, sp, #7296
+	sub	sp, sp, #48
+	ldr	sl, .L51
+.L50:
 	add	sl, pc, sl
 	sub	r3, fp, #6912
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #8
 	mov	r0, r3
 	bl	init_tracka(PLT)
-	ldr	r3, .L35+4
+	ldr	r3, .L51+4
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	RegisterAs(PLT)
-	bl	MyParentTid(PLT)
-	mov	r3, r0
-	str	r3, [fp, #-28]
-.L32:
+.L48:
 	sub	r2, fp, #6912
 	sub	r2, r2, #16
-	sub	r2, r2, #44
+	sub	r2, r2, #24
 	sub	r3, fp, #6912
 	sub	r3, r3, #16
-	sub	r3, r3, #48
+	sub	r3, r3, #28
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
 	bl	Receive(PLT)
-	ldr	r3, .L35+8
+	ldr	r3, .L51+8
 	mov	r2, #4
 	sub	r1, fp, #16
 	add	r3, r1, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-24]
-	ldr	r2, .L35+12
-	mov	r3, #0
-	sub	r1, fp, #16
-	str	r3, [r1, r2]
-	ldr	r3, .L35+16
-	sub	r1, fp, #16
-	ldr	r2, [r1, r3]
-	sub	r3, fp, #6912
-	sub	r3, r3, #16
-	sub	r3, r3, #28
-	mov	r0, r2
-	mov	r1, r3
-	mov	r2, #16
-	bl	Reply(PLT)
-	ldr	r2, .L35+12
-	mov	r3, #13
-	sub	r1, fp, #16
-	str	r3, [r1, r2]
-	sub	r2, fp, #6912
-	sub	r2, r2, #16
-	sub	r2, r2, #28
-	sub	ip, fp, #6912
-	sub	ip, ip, #16
-	sub	ip, ip, #44
-	mov	r3, #16
-	str	r3, [sp, #0]
-	ldr	r0, [fp, #-28]
-	mov	r1, r2
-	mov	r2, #16
-	mov	r3, ip
-	bl	Send(PLT)
-	ldr	r3, .L35+8
-	mov	r2, #4
+	ldr	r3, .L51+8
+	mov	r2, #8
 	sub	r1, fp, #16
 	add	r3, r1, r3
 	add	r3, r3, r2
@@ -398,43 +450,32 @@ routeFinder:
 	str	r3, [fp, #-20]
 	sub	r2, fp, #6912
 	sub	r2, r2, #16
-	sub	r2, r2, #12
-	sub	r3, fp, #7360
-	sub	r3, r3, #16
-	sub	r3, r3, #4
-	mov	r0, r2
-	mov	r1, r3
-	ldr	r2, [fp, #-20]
-	ldr	r3, [fp, #-24]
-	bl	route(PLT)
-	sub	r2, fp, #6912
-	sub	r2, r2, #16
-	sub	r2, r2, #44
-	sub	r3, fp, #6912
+	sub	r2, r2, #8
+	sub	r3, fp, #7296
 	sub	r3, r3, #16
 	sub	r3, r3, #48
-	mov	r0, r3
-	mov	r1, r2
-	mov	r2, #16
-	bl	Receive(PLT)
-	ldr	r3, .L35+16
+	mov	r0, r2
+	mov	r1, r3
+	ldr	r2, [fp, #-24]
+	ldr	r3, [fp, #-20]
+	bl	route(PLT)
+	ldr	r3, .L51+12
 	sub	r1, fp, #16
 	ldr	r2, [r1, r3]
-	sub	r3, fp, #7360
+	sub	r3, fp, #7296
 	sub	r3, r3, #16
-	sub	r3, r3, #4
+	sub	r3, r3, #48
 	mov	r0, r2
 	mov	r1, r3
 	mov	r2, #404
 	bl	Reply(PLT)
-	b	.L32
-.L36:
+	b	.L48
+.L52:
 	.align	2
-.L35:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L34+8)
+.L51:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L50+8)
 	.word	.LC0(GOTOFF)
-	.word	-6956
+	.word	-6936
 	.word	-6940
-	.word	-6960
 	.size	routeFinder, .-routeFinder
 	.ident	"GCC: (GNU) 4.0.2"

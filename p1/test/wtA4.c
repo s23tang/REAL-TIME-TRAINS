@@ -9,6 +9,7 @@
 #include "notifier.h"
 #include "io.h"
 #include "routeFinder.h"
+#include "trainDriver.h"
 #include "track_data.h"
 
 /*
@@ -17,7 +18,8 @@
 
 void Terminal() {
 	int server = WhoIs( "u2g" );
-	int router = WhoIs( "route" );
+	// int router = WhoIs( "route" );
+	int driver = WhoIs( "driver" );
 	int printer = MyParentTid();
 	ComReqStruct send, reply;
 	char input[MAX_INPUT];
@@ -144,11 +146,10 @@ void Terminal() {
 							if ( i == inputIndex && trackIndex != -1 ) {
 								send.type = GOTO_COMMAND;
 								send.data1 = trackIndex;
-								Send( router, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-								send.type = GOTO_COMMAND;
-								send.data1 = speed;
-								send.data2 = train;
-								send.data3 = trackIndex;
+								send.data2 = speed;
+								send.data3 = train;
+								// Pass the command to the driver
+								Send( driver, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 							}
 						}
 					} else if ( input[i] == 'r' && input[i+1] == 'v' ) {
@@ -288,7 +289,10 @@ void Terminal() {
 			input[inputIndex] = c;
 			inputIndex++;
 		}
-		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		if (send.type != GOTO_COMMAND)
+		{	// We want the trainDriver to send the command itself
+			Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		}
 	}
 }
 
@@ -367,6 +371,9 @@ void Printer( ) {
 
 	myprintf( uart2XServer, COM2, "\033[H\033[KTIME 00:00:0");
 
+	myprintf( uart2XServer, COM2, "\033[7;1HTimeInterval: 0\n");
+
+
 	myprintf( uart2XServer, COM2, "\033[3;1HSwitches\n");
 	myprintf( uart2XServer, COM2, "1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|153|154|155|156\n");
 	myprintf( uart2XServer, COM2, "------------------------------------------------------------\n");
@@ -405,7 +412,9 @@ void Printer( ) {
 	Create( 2, func );
 
 	func = routeFinder;
-	int router = Create( 3, func );
+	Create( 3, func );
+	func = trainDriver;
+	Create( 3, func );
 
 	// Start Train Controller Here
 	Putc(uart1XServer, COM1, (char) 0x60);
@@ -425,6 +434,9 @@ void Printer( ) {
 	int speedTrains[80];
 	char sensorStates[80];
 	int trainDrivers[80];
+	// subscriber: Used to find out who is subscribing for sensor data.
+	//        	   Should be an array in the future
+	int subscriber = 0; 
 
 	int counter;
 	for ( counter = 0; counter < 80; counter++ ) {
@@ -462,7 +474,7 @@ void Printer( ) {
 
 	int stopSensor = -1;
 	int stopping = 0;
-	int waitForTrip = 0;
+	// int waitForTrip = 0;
 
 	FOREVER {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
@@ -582,54 +594,12 @@ void Printer( ) {
 							}
 						}
 						if ( sensorStates[index] != onOrOff ) {
-							if ( waitForTrip ) {
+							if ( subscriber && onOrOff == 1 ) {  // Someone has subscribe for data!! Give him.
+								ComReqStruct junk;
 								reply.type = REQUEST_OK;
 								reply.data1 = index;
-								Reply( router, (char *)&reply, sizeof(ComReqStruct) );
-								waitForTrip = 0;
-								
-								int c;
-
-								ComReqStruct joke;
-								joke.type = REQUEST_OK;
-								Path nima;
-								Send( router, (char *)&joke, sizeof(ComReqStruct), (char *)&nima, sizeof(Path) );
-
-
-								// myprintf( uart2XServer, COM2, "\033[32;1H" );
-								// for ( c = nima.startIndex; c > 0; c-- ) {
-								// 	myprintf( uart2XServer, COM2, "%s ", track[nima.path[c].index].name );
-								// }
-								for ( c = nima.startIndex; c > 0; c-- ) {
-									if ( nima.path[c].index > 79 && nima.path[c].index < 124 && (nima.path[c].index % 2 == 0) ) {
-										int pos;
-										int cOrS;
-										if ( nima.path[c].index <= 114 ) {
-											pos = ( nima.path[c].index - 80 ) / 2 + 1;
-										} else {
-											pos = ( nima.path[c].index - 116 ) / 2 + 153;
-										}
-
-										if ( nima.path[c-1].curved == 1 ) {
-											cOrS = 34;
-										} else {
-											cOrS = 33;
-										}
-										Putc( uart1XServer, COM1, cOrS );
-										Putc( uart1XServer, COM1, pos );
-
-										char sOrC = cOrS == 33 ? 'S' : 'C';
-										if ( pos >= 1 && pos <= 10 ) {
-											pos = pos*2 - 1;
-										} else if ( pos >= 11 && pos <= 18 ) {
-											pos = 22 + 3*(pos % 11);
-										} else {
-											pos = 47 + 4*(pos % 153);
-										}
-										myprintf( uart2XServer, COM2, "\033[32m\033[6;%dH%c\033[0m", pos, sOrC);
-									}
-								}
-
+								// Notify the trainDriver
+								Send( subscriber, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
 							}
 							myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[33;4H\033[0m", row, col, onOrOff );
 							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
@@ -686,16 +656,26 @@ void Printer( ) {
 					cursor = 4;
 				}
 				break;
-			case WAIT_ON_LOC:
+			case SUBSCRIBE:
 				{
-					waitForTrip = 1;
+					subscriber = recv.data1;
+				}
+				break;
+			case UNSUBSCRIBE:
+				{   // Do not send sensor data to driver anymore!!
+					subscriber = 0;
+				}
+				break;
+			case UPDATE_STAT:
+				{
+					myprintf( uart2XServer, COM2, "\033[7;1H\033[KActual: %d, expected: %d\n", recv.data1, recv.data2);
 				}
 				break;
 		}
 
 		if ( stopping ) break;
 
-		if ( recv.type != WAITING_STOP && recv.type != WAIT_ON_LOC ) {
+		if ( recv.type != WAITING_STOP ) {
 			reply.type = REQUEST_OK;
 			Reply( sender, (char *)&reply, sizeof(ComReqStruct) );
 		}
@@ -723,10 +703,10 @@ void firstUserTask(){
 	// bwprintf(COM2, "First: created Name Server\n\r");
 
 	func = uart2GetServer;
-	int cao = Create( 1, func );
+	tid = Create( 1, func );
 
 	func = uart2PutServer;
-	int cao2 = Create( 1, func );
+	tid = Create( 1, func );
 
 	func = uart1PutServer;
 	tid = Create( 1, func );

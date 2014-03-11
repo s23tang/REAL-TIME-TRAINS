@@ -100,33 +100,20 @@ void routeFinder( ) {
 
 	RegisterAs( "route" );
 
-	int printer = MyParentTid();
-	ComReqStruct send, reply;
+	// int printer = MyParentTid();
+	ComReqStruct reply;
 	int sender;
 
 	FOREVER {
-		// Wait until the train driver has gotten the location (from tr)
 		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
 
-		// Only accept sensors right now no offset
-		int dest = reply.data1;
-		send.type = REQUEST_OK;
-
-		// Unblock the train driver immediately
-		Reply( sender, (char *)&send, sizeof(ComReqStruct) );
-
-		send.type = WAIT_ON_LOC;
-
-		// Send to the printer to wait until first sensor is tripped and replied by printer
-		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
-		int src = reply.data1;	// No offset right now
+		int src  = reply.data1;	// No offset right now
+		int dest = reply.data2;
 
 		// Begin finding the shortest path from the src to the dest
 		Path shortest;
 		route( track, &shortest, src, dest );
 
-		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
 		Reply( sender, (char *)&shortest, sizeof(Path) );
 	}
 }

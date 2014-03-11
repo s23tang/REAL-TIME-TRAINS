@@ -37,9 +37,12 @@
 #define WAITING_STOP		10
 #define DONE_STOP			11
 #define STOP_COMMAND		12
-#define WAIT_ON_LOC			13
+#define SUBSCRIBE			13
 #define GOTO_COMMAND		14
 #define ROUTE_INFO			15
+#define COURIER				16
+#define UNSUBSCRIBE         17
+#define UPDATE_STAT			18
 
 #define DATA_BUFFER			50
 
