@@ -437,6 +437,8 @@ void Printer( ) {
 	// subscriber: Used to find out who is subscribing for sensor data.
 	//        	   Should be an array in the future
 	int subscriber = 0; 
+	int *locationInfo = -1;
+	int timeCount = 0;
 
 	int counter;
 	for ( counter = 0; counter < 80; counter++ ) {
@@ -482,6 +484,7 @@ void Printer( ) {
 		switch (recv.type) {
 			case TIME_UPDATE:
 				{
+					timeCount++;
 					int percent = IdleTime( );
 					tenth = (tenth + 1) % 10;
 					if ( tenth == 0 ) {
@@ -493,6 +496,17 @@ void Printer( ) {
 					//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
 					myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
 					myprintf( uart2XServer, COM2, "Idle Usage: %d%%\033[33;%dH", percent, cursor );
+					if (locationInfo != -1)
+					{ 
+						int t = Time(clk);
+						int d = ((double)(t - locationInfo[2]) / 100) * locationInfo[1];
+						myprintf( uart2XServer, COM2, "\033[8;1H\033[KLocation: %dmm past sensor: %s\033[33;%dH",  d, track[locationInfo[0]].name, cursor);
+					}
+				}
+				break;
+			case TRAIN_POS:
+				{
+					locationInfo = recv.data1;
 				}
 				break;
 			case PRINT_CHAR:
@@ -664,11 +678,12 @@ void Printer( ) {
 			case UNSUBSCRIBE:
 				{   // Do not send sensor data to driver anymore!!
 					subscriber = 0;
+					locationInfo = -1;
 				}
 				break;
 			case UPDATE_STAT:
 				{
-					myprintf( uart2XServer, COM2, "\033[7;1H\033[KActual: %d, expected: %d\n", recv.data1, recv.data2);
+					myprintf( uart2XServer, COM2, "\033[7;1H\033[KActual: %d, Expected: %d\n", recv.data1, recv.data2);
 				}
 				break;
 		}

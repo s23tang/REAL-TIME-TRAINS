@@ -554,35 +554,35 @@ howFarFromDest:
 	.global	trainDriver
 	.type	trainDriver, %function
 trainDriver:
-	@ args = 0, pretend = 0, frame = 7640
+	@ args = 0, pretend = 0, frame = 7656
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {r4, r5, r6, r7, sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #7616
-	sub	sp, sp, #28
-	ldr	sl, .L106
-.L105:
+	sub	sp, sp, #44
+	ldr	sl, .L107
+.L106:
 	add	sl, pc, sl
 	sub	r3, fp, #6976
 	sub	r3, r3, #32
 	sub	r3, r3, #20
 	mov	r0, r3
 	bl	init_tracka(PLT)
-	ldr	r3, .L106+4
+	ldr	r3, .L107+4
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	RegisterAs(PLT)
 	bl	MyParentTid(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-116]
-	ldr	r3, .L106+8
+	ldr	r3, .L107+8
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	WhoIs(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-112]
-	ldr	r3, .L106+12
+	ldr	r3, .L107+12
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	WhoIs(PLT)
@@ -628,32 +628,32 @@ trainDriver:
 	mov	r1, r2
 	mov	r2, #16
 	bl	Receive(PLT)
-	ldr	r3, .L106+16
+	ldr	r3, .L107+16
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-76]
-	ldr	r3, .L106+16
+	ldr	r3, .L107+16
 	mov	r2, #8
 	sub	r1, fp, #32
 	add	r3, r1, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-72]
-	ldr	r3, .L106+16
+	ldr	r3, .L107+16
 	mov	r2, #12
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-68]
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #0
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
-	ldr	r3, .L106+24
+	ldr	r3, .L107+20
 	sub	r0, fp, #32
 	ldr	r2, [r0, r3]
 	sub	r3, fp, #6976
@@ -663,11 +663,11 @@ trainDriver:
 	mov	r1, r3
 	mov	r2, #16
 	bl	Reply(PLT)
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #13
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
@@ -687,18 +687,18 @@ trainDriver:
 	mov	r2, #16
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #14
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r2, r3, r2
 	ldr	r3, [fp, #-72]
 	str	r3, [r2, #0]
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #8
 	sub	r1, fp, #32
 	add	r3, r1, r3
@@ -718,9 +718,9 @@ trainDriver:
 	mov	r2, #16
 	mov	r3, ip
 	bl	Send(PLT)
-	b	.L104
+	b	.L105
 .L49:
-.L104:
+.L105:
 	sub	r2, fp, #6976
 	sub	r2, r2, #32
 	sub	r2, r2, #52
@@ -731,18 +731,18 @@ trainDriver:
 	mov	r1, r2
 	mov	r2, #16
 	bl	Receive(PLT)
-	ldr	r3, .L106+16
+	ldr	r3, .L107+16
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-64]
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #0
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
-	ldr	r3, .L106+24
+	ldr	r3, .L107+20
 	sub	r0, fp, #32
 	ldr	r2, [r0, r3]
 	sub	r3, fp, #6976
@@ -752,7 +752,7 @@ trainDriver:
 	mov	r1, r3
 	mov	r2, #16
 	bl	Reply(PLT)
-	ldr	r3, .L106+16
+	ldr	r3, .L107+16
 	sub	r1, fp, #32
 	ldr	r3, [r1, r3]
 	cmp	r3, #0
@@ -768,30 +768,30 @@ trainDriver:
 	bne	.L52
 	ldr	r3, [fp, #-64]
 	str	r3, [fp, #-92]
-	ldr	r2, .L106+36
+	ldr	r2, .L107+24
 	mov	r3, #0
 	sub	r0, fp, #32
 	str	r3, [r0, r2]
-	ldr	r3, .L106+36
+	ldr	r3, .L107+24
 	mov	r2, #4
 	sub	r1, fp, #32
 	add	r3, r1, r3
 	add	r2, r3, r2
 	ldr	r3, [fp, #-92]
 	str	r3, [r2, #0]
-	ldr	r3, .L106+36
+	ldr	r3, .L107+24
 	mov	r2, #8
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r2, r3, r2
 	ldr	r3, [fp, #-76]
 	str	r3, [r2, #0]
-	sub	r2, fp, #7168
+	sub	r2, fp, #7232
 	sub	r2, r2, #32
-	sub	r2, r2, #52
+	sub	r2, r2, #4
 	sub	ip, fp, #7616
 	sub	ip, ip, #32
-	sub	ip, ip, #24
+	sub	ip, ip, #40
 	mov	r3, #404
 	str	r3, [sp, #0]
 	ldr	r0, [fp, #-112]
@@ -799,7 +799,7 @@ trainDriver:
 	mov	r2, #16
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r3, .L106+40
+	ldr	r3, .L107+28
 	mov	r2, #400
 	sub	r1, fp, #32
 	add	r3, r1, r3
@@ -809,7 +809,7 @@ trainDriver:
 	b	.L54
 .L55:
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -818,7 +818,7 @@ trainDriver:
 	cmp	r3, #79
 	ble	.L56
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -827,7 +827,7 @@ trainDriver:
 	cmp	r3, #123
 	bgt	.L56
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -839,7 +839,7 @@ trainDriver:
 	cmp	r3, #0
 	beq	.L56
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -848,7 +848,7 @@ trainDriver:
 	cmp	r3, #114
 	bgt	.L60
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -863,7 +863,7 @@ trainDriver:
 	b	.L62
 .L60:
 	ldr	r3, [fp, #-52]
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r3, r3, asl #3
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -878,7 +878,7 @@ trainDriver:
 .L62:
 	ldr	r3, [fp, #-52]
 	sub	r3, r3, #1
-	ldr	r2, .L106+40
+	ldr	r2, .L107+28
 	mov	r1, #4
 	mov	r3, r3, asl #3
 	sub	r0, fp, #32
@@ -895,18 +895,18 @@ trainDriver:
 	mov	r3, #33
 	str	r3, [fp, #-44]
 .L65:
-	ldr	r2, .L106+44
+	ldr	r2, .L107+32
 	mov	r3, #7
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
-	ldr	r3, .L106+44
+	ldr	r3, .L107+32
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r2, r3, r2
 	ldr	r3, [fp, #-44]
 	str	r3, [r2, #0]
-	ldr	r3, .L106+44
+	ldr	r3, .L107+32
 	mov	r2, #8
 	sub	r1, fp, #32
 	add	r3, r1, r3
@@ -915,7 +915,7 @@ trainDriver:
 	str	r3, [r2, #0]
 	sub	r2, fp, #7232
 	sub	r2, r2, #32
-	sub	r2, r2, #4
+	sub	r2, r2, #20
 	sub	ip, fp, #6976
 	sub	ip, ip, #32
 	sub	ip, ip, #52
@@ -935,33 +935,26 @@ trainDriver:
 	cmp	r3, #0
 	bgt	.L55
 .L52:
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #18
 	sub	r0, fp, #32
 	str	r3, [r0, r2]
 	ldr	r2, [fp, #-96]
 	ldr	r3, [fp, #-100]
 	rsb	r1, r3, r2
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #4
 	sub	r0, fp, #32
 	add	r3, r0, r3
 	add	r3, r3, r2
 	str	r1, [r3, #0]
-	ldr	r3, .L106+20
-	mov	r2, #4
+	ldr	r3, .L107+56
+	mov	r2, #8
 	sub	r1, fp, #32
 	add	r3, r1, r3
-	add	r3, r3, r2
-	ldr	r2, [r3, #0]
+	add	r2, r3, r2
 	ldr	r3, [fp, #-88]
-	rsb	r1, r2, r3
-	ldr	r3, .L106+20
-	mov	r2, #8
-	sub	r0, fp, #32
-	add	r3, r0, r3
-	add	r3, r3, r2
-	str	r1, [r3, #0]
+	str	r3, [r2, #0]
 	sub	r2, fp, #6976
 	sub	r2, r2, #32
 	sub	r2, r2, #36
@@ -977,7 +970,7 @@ trainDriver:
 	bl	Send(PLT)
 	sub	r2, fp, #7616
 	sub	r2, r2, #32
-	sub	r2, r2, #24
+	sub	r2, r2, #40
 	sub	ip, fp, #6976
 	sub	ip, ip, #32
 	sub	ip, ip, #20
@@ -990,138 +983,153 @@ trainDriver:
 	bl	findNextDistance(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-60]
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #2
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #3
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #30
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #31
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #64
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #65
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #32
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #33
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #28
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #29
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #48
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #49
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #54
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #55
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #56
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #57
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #36
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #37
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #74
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r2, fp, #32
-	ldr	r3, [r2, r3]
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #75
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r0, fp, #32
-	ldr	r3, [r0, r3]
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
 	cmp	r3, #6
 	beq	.L66
-	ldr	r3, .L106+48
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
-	cmp	r3, #7
-	beq	.L66
-	ldr	r3, .L106+48
+	ldr	r3, .L107+36
 	sub	r2, fp, #32
 	ldr	r3, [r2, r3]
-	cmp	r3, #8
+	cmp	r3, #7
 	beq	.L66
-	ldr	r3, .L106+48
+	ldr	r3, .L107+36
 	sub	r0, fp, #32
 	ldr	r3, [r0, r3]
-	cmp	r3, #9
+	cmp	r3, #8
 	beq	.L66
-	ldr	r3, .L106+48
+	ldr	r3, .L107+36
 	sub	r1, fp, #32
 	ldr	r3, [r1, r3]
+	cmp	r3, #9
+	beq	.L66
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
+	cmp	r3, #10
+	beq	.L66
+	ldr	r3, .L107+36
+	sub	r0, fp, #32
+	ldr	r3, [r0, r3]
 	cmp	r3, #11
-	bne	.L91
+	beq	.L66
+	ldr	r3, .L107+36
+	sub	r1, fp, #32
+	ldr	r3, [r1, r3]
+	cmp	r3, #12
+	beq	.L66
+	ldr	r3, .L107+36
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
+	cmp	r3, #13
+	bne	.L94
 .L66:
 	ldr	r0, [fp, #-60]
 	bl	__floatsidf(PLT)
 	mov	r5, r0
 	mov	r6, r1
 	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+52
+	ldr	r2, .L107+40
 	mov	r3, r3, asl #2
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -1153,14 +1161,14 @@ trainDriver:
 	str	r3, [fp, #-88]
 	mov	r3, #1
 	str	r3, [fp, #-84]
-	b	.L92
-.L91:
+	b	.L95
+.L94:
 	ldr	r0, [fp, #-60]
 	bl	__floatsidf(PLT)
 	mov	r5, r0
 	mov	r6, r1
 	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+56
+	ldr	r2, .L107+52
 	mov	r3, r3, asl #2
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -1192,10 +1200,14 @@ trainDriver:
 	str	r3, [fp, #-88]
 	mov	r3, #0
 	str	r3, [fp, #-84]
-.L92:
+.L95:
+	ldr	r3, .L107+44
+	ldr	r2, [fp, #-64]
+	sub	r0, fp, #32
+	str	r2, [r0, r3]
 	ldr	r3, [fp, #-80]
 	cmp	r3, #0
-	beq	.L93
+	beq	.L96
 	ldr	r0, [fp, #-80]
 	bl	__floatsidf(PLT)
 	mov	r5, r0
@@ -1229,63 +1241,10 @@ trainDriver:
 	str	r3, [fp, #-40]
 	ldr	r3, [fp, #-84]
 	cmp	r3, #0
-	beq	.L95
+	beq	.L98
 	ldr	r7, [fp, #-72]
 	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+52
-	mov	r3, r3, asl #2
-	sub	r0, fp, #32
-	add	r3, r3, r0
-	add	r3, r3, r2
-	ldr	r3, [r3, #0]
-	mov	r0, r3
-	bl	__floatsidf(PLT)
-	mov	r3, r0
-	mov	r4, r1
-	mov	r0, r3
-	mov	r1, r4
-	mov	r2, #1069547520
-	add	r2, r2, #2621440
-	mov	r3, #0
-	bl	__muldf3(PLT)
-	mov	r3, r0
-	mov	r4, r1
-	mov	r5, r3
-	mov	r6, r4
-	ldr	r0, [fp, #-40]
-	bl	__floatsidf(PLT)
-	mov	r3, r0
-	mov	r4, r1
-	mov	r0, r3
-	mov	r1, r4
-	mov	r2, #1069547520
-	add	r2, r2, #1048576
-	mov	r3, #0
-	bl	__muldf3(PLT)
-	mov	r3, r0
-	mov	r4, r1
-	mov	r0, r5
-	mov	r1, r6
-	mov	r2, r3
-	mov	r3, r4
-	bl	__adddf3(PLT)
-	mov	r3, r0
-	mov	r4, r1
-	mov	r0, r3
-	mov	r1, r4
-	bl	__fixdfsi(PLT)
-	mov	r1, r0
-	ldr	r2, .L106+52
-	mov	r3, r7, asl #2
-	sub	r0, fp, #32
-	add	r3, r3, r0
-	add	r3, r3, r2
-	str	r1, [r3, #0]
-	b	.L93
-.L95:
-	ldr	r7, [fp, #-72]
-	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+56
+	ldr	r2, .L107+40
 	mov	r3, r3, asl #2
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -1328,18 +1287,130 @@ trainDriver:
 	mov	r1, r4
 	bl	__fixdfsi(PLT)
 	mov	r1, r0
-	ldr	r2, .L106+56
+	ldr	r2, .L107+40
 	mov	r3, r7, asl #2
 	sub	r0, fp, #32
 	add	r3, r3, r0
 	add	r3, r3, r2
 	str	r1, [r3, #0]
-.L93:
+	ldr	r3, [fp, #-72]
+	ldr	r2, .L107+40
+	mov	r3, r3, asl #2
+	sub	r1, fp, #32
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r1, [r3, #0]
+	ldr	r3, .L107+44
+	mov	r2, #4
+	sub	r0, fp, #32
+	add	r3, r0, r3
+	add	r3, r3, r2
+	str	r1, [r3, #0]
+	b	.L96
+.L98:
+	ldr	r7, [fp, #-72]
+	ldr	r3, [fp, #-72]
+	ldr	r2, .L107+52
+	mov	r3, r3, asl #2
+	sub	r1, fp, #32
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r3, [r3, #0]
+	mov	r0, r3
+	bl	__floatsidf(PLT)
+	mov	r3, r0
+	mov	r4, r1
+	mov	r0, r3
+	mov	r1, r4
+	mov	r2, #1069547520
+	add	r2, r2, #2621440
+	mov	r3, #0
+	bl	__muldf3(PLT)
+	mov	r3, r0
+	mov	r4, r1
+	mov	r5, r3
+	mov	r6, r4
+	ldr	r0, [fp, #-40]
+	bl	__floatsidf(PLT)
+	mov	r3, r0
+	mov	r4, r1
+	mov	r0, r3
+	mov	r1, r4
+	mov	r2, #1069547520
+	add	r2, r2, #1048576
+	mov	r3, #0
+	bl	__muldf3(PLT)
+	mov	r3, r0
+	mov	r4, r1
+	mov	r0, r5
+	mov	r1, r6
+	mov	r2, r3
+	mov	r3, r4
+	bl	__adddf3(PLT)
+	mov	r3, r0
+	mov	r4, r1
+	mov	r0, r3
+	mov	r1, r4
+	bl	__fixdfsi(PLT)
+	mov	r1, r0
+	ldr	r2, .L107+52
+	mov	r3, r7, asl #2
+	sub	r0, fp, #32
+	add	r3, r3, r0
+	add	r3, r3, r2
+	str	r1, [r3, #0]
+	ldr	r3, [fp, #-72]
+	ldr	r2, .L107+52
+	mov	r3, r3, asl #2
+	sub	r1, fp, #32
+	add	r3, r3, r1
+	add	r3, r3, r2
+	ldr	r1, [r3, #0]
+	ldr	r3, .L107+44
+	mov	r2, #4
+	sub	r0, fp, #32
+	add	r3, r0, r3
+	add	r3, r3, r2
+	str	r1, [r3, #0]
+.L96:
 	ldr	r3, [fp, #-60]
 	str	r3, [fp, #-80]
+	ldr	r3, .L107+44
+	mov	r2, #8
+	sub	r1, fp, #32
+	add	r3, r1, r3
+	add	r2, r3, r2
+	ldr	r3, [fp, #-96]
+	str	r3, [r2, #0]
+	ldr	r2, .L107+56
+	mov	r3, #19
+	sub	r0, fp, #32
+	str	r3, [r0, r2]
+	sub	r2, fp, #7168
+	sub	r2, r2, #32
+	sub	r2, r2, #52
+	ldr	r3, .L107+56
+	mov	r1, #4
+	sub	r0, fp, #32
+	add	r3, r0, r3
+	add	r3, r3, r1
+	str	r2, [r3, #0]
+	sub	r2, fp, #6976
+	sub	r2, r2, #32
+	sub	r2, r2, #36
+	sub	ip, fp, #6976
+	sub	ip, ip, #32
+	sub	ip, ip, #52
+	mov	r3, #16
+	str	r3, [sp, #0]
+	ldr	r0, [fp, #-116]
+	mov	r1, r2
+	mov	r2, #16
+	mov	r3, ip
+	bl	Send(PLT)
 	sub	r3, fp, #7616
 	sub	r3, r3, #32
-	sub	r3, r3, #24
+	sub	r3, r3, #40
 	sub	r2, fp, #6976
 	sub	r2, r2, #32
 	sub	r2, r2, #20
@@ -1353,7 +1424,7 @@ trainDriver:
 	rsb	r1, r3, r2
 	ldr	r3, [fp, #-72]
 	sub	r3, r3, #1
-	ldr	r2, .L106+60
+	ldr	r2, .L107+48
 	mov	r3, r3, asl #2
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -1363,7 +1434,7 @@ trainDriver:
 	bgt	.L49
 	ldr	r3, [fp, #-72]
 	sub	r3, r3, #1
-	ldr	r2, .L106+60
+	ldr	r2, .L107+48
 	mov	r3, r3, asl #2
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -1372,19 +1443,12 @@ trainDriver:
 	ldr	r3, [fp, #-56]
 	rsb	r3, r2, r3
 	str	r3, [fp, #-36]
-	ldr	r3, [fp, #-76]
-	cmp	r3, #11
-	bne	.L98
-	ldr	r3, [fp, #-36]
-	add	r3, r3, #200
-	str	r3, [fp, #-36]
-.L98:
 	ldr	r3, [fp, #-84]
 	cmp	r3, #0
-	beq	.L100
+	beq	.L101
 	ldr	r5, [fp, #-108]
 	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+52
+	ldr	r2, .L107+40
 	mov	r3, r3, asl #2
 	sub	r0, fp, #32
 	add	r3, r3, r0
@@ -1408,7 +1472,7 @@ trainDriver:
 	mov	r4, r1
 	mov	r0, r3
 	mov	r1, r4
-	adr	r2, .L106+28
+	adr	r2, .L107+60
 	ldmia	r2, {r2-r3}
 	bl	__adddf3(PLT)
 	mov	r3, r0
@@ -1420,11 +1484,31 @@ trainDriver:
 	mov	r0, r5
 	mov	r1, r3
 	bl	Delay(PLT)
-	b	.L102
-.L100:
+	b	.L103
+.L108:
+	.align	2
+.L107:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L106+8)
+	.word	.LC0(GOTOFF)
+	.word	.LC1(GOTOFF)
+	.word	.LC2(GOTOFF)
+	.word	-7028
+	.word	-7032
+	.word	-7236
+	.word	-7656
+	.word	-7252
+	.word	-7204
+	.word	-7144
+	.word	-7220
+	.word	-7200
+	.word	-7088
+	.word	-7012
+	.word	1077968896
+	.word	0
+.L101:
 	ldr	r5, [fp, #-108]
 	ldr	r3, [fp, #-72]
-	ldr	r2, .L106+56
+	ldr	r2, .L107+52
 	mov	r3, r3, asl #2
 	sub	r1, fp, #32
 	add	r3, r3, r1
@@ -1448,7 +1532,7 @@ trainDriver:
 	mov	r4, r1
 	mov	r0, r3
 	mov	r1, r4
-	adr	r2, .L106+28
+	adr	r2, .L107+60
 	ldmia	r2, {r2-r3}
 	bl	__adddf3(PLT)
 	mov	r3, r0
@@ -1460,19 +1544,19 @@ trainDriver:
 	mov	r0, r5
 	mov	r1, r3
 	bl	Delay(PLT)
-.L102:
-	ldr	r2, .L106+20
+.L103:
+	ldr	r2, .L107+56
 	mov	r3, #6
 	sub	r0, fp, #32
 	str	r3, [r0, r2]
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #4
 	sub	r1, fp, #32
 	add	r3, r1, r3
 	add	r2, r3, r2
 	mov	r3, #0
 	str	r3, [r2, #0]
-	ldr	r3, .L106+20
+	ldr	r3, .L107+56
 	mov	r2, #8
 	sub	r0, fp, #32
 	add	r3, r0, r3
@@ -1492,7 +1576,7 @@ trainDriver:
 	mov	r2, #16
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r2, .L106+20
+	ldr	r2, .L107+56
 	mov	r3, #17
 	sub	r1, fp, #32
 	str	r3, [r1, r2]
@@ -1510,24 +1594,5 @@ trainDriver:
 	mov	r3, ip
 	bl	Send(PLT)
 	b	.L48
-.L107:
-	.align	2
-.L106:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L105+8)
-	.word	.LC0(GOTOFF)
-	.word	.LC1(GOTOFF)
-	.word	.LC2(GOTOFF)
-	.word	-7028
-	.word	-7012
-	.word	-7032
-	.word	1077968896
-	.word	0
-	.word	-7220
-	.word	-7640
-	.word	-7236
-	.word	-7204
-	.word	-7144
-	.word	-7088
-	.word	-7200
 	.size	trainDriver, .-trainDriver
 	.ident	"GCC: (GNU) 4.0.2"

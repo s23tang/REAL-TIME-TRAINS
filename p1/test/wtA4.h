@@ -43,6 +43,7 @@
 #define COURIER				16
 #define UNSUBSCRIBE         17
 #define UPDATE_STAT			18
+#define TRAIN_POS           19
 
 #define DATA_BUFFER			50
 

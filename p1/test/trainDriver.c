@@ -246,7 +246,7 @@ void trainDriver(){
 		//update the stat on the screen
 		send.type  = UPDATE_STAT;
 		send.data1 = curTime - previousTime;
-		send.data2 = expectedTime - send.data1;
+		send.data2 = expectedTime;
 		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 		int nextSensor;       // <---- use to decide which speed table to use.
@@ -256,7 +256,8 @@ void trainDriver(){
 			nextSensor == 28 || nextSensor == 29 || nextSensor == 48 || nextSensor == 49 ||
 			nextSensor == 54 || nextSensor == 55 || nextSensor == 56 || nextSensor == 57 ||
 			nextSensor == 36 || nextSensor == 37 || nextSensor == 74 || nextSensor == 75 ||
-			nextSensor == 6 || nextSensor == 7   || nextSensor == 8 || nextSensor == 9 || nextSensor == 11)
+			nextSensor == 6 || nextSensor == 7   || nextSensor == 8 || nextSensor == 9 || 
+			nextSensor == 10 || nextSensor == 11 || nextSensor == 12 || nextSensor == 13)
 		{    // use curve speed for those estimation
 			expectedTime = ((double)nextSensorDistance / (double)(curveVelocity[speed])) * (double)100;
 			updateTo = 1;
@@ -265,6 +266,8 @@ void trainDriver(){
 			updateTo = 0;
 		}
 
+		int locationInfo[4];  // <---- for demo, remove this later;
+		locationInfo[0] = triggeredSensor;
 		// dynamic calibration
 		if (lastDistance != 0)
 		{
@@ -272,11 +275,18 @@ void trainDriver(){
 			if (updateTo) // to curve table
 			{
 				curveVelocity[speed] = 0.75 * (double)curveVelocity[speed] + 0.25 * (double)lastSpeed;
+				locationInfo[1] = curveVelocity[speed];
 			} else {
 				straightVelocity[speed] = 0.75 * (double)straightVelocity[speed] + 0.25 * (double)lastSpeed;
+				locationInfo[1] = straightVelocity[speed];
 			}
 		}
 		lastDistance = nextSensorDistance;
+		locationInfo[2] = curTime;
+		send.type = TRAIN_POS;
+		send.data1 = locationInfo;
+		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
 
 		// check if we should slow down
 		int howFarFromDestination = howFarFromDest(&path, triggeredSensor, track);
@@ -284,10 +294,10 @@ void trainDriver(){
 		if ((howFarFromDestination - nextSensorDistance) <= stoppingTable[speed-1]) 
 		{
 			int canRunFor = howFarFromDestination - stoppingTable[speed-1];
-			if (dest == 11)
-			{
-				canRunFor += 200;
-			}
+			// if (dest == 11)
+			// {
+			// 	canRunFor += 200;
+			// }
 			if (updateTo)  // which velocity should be used for remaining
 			{
 				Delay(clkServer, ((double)(canRunFor / curveVelocity[speed])) * 100 + 33 );
