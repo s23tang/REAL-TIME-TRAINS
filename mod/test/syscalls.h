@@ -1,6 +1,6 @@
 // Kernel Primitive Macros
 #define FOREVER 		for( ; ; )
-#define PSR_USR			0x60000010
+#define PSR_USR			0x00000010
 #define LOAD_LOC		0x00218000
 #define MEM_END			0x01fdd000
 #define MEM_START		0x00044f88

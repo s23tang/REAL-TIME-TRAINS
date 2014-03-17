@@ -769,36 +769,30 @@ void firstUserTask(){
 	tid = Create( 0, func );
 	// bwprintf(COM2, "First: created Name Server\n\r");
 
-	// func = uart2GetServer;
-	// int in = Create( 1, func );
+	func = uart2GetServer;
+	tid = Create( 1, func );
 
-	// func = uart2PutServer;
-	// int out = Create( 1, func );
+	func = uart2PutServer;
+	tid = Create( 1, func );
 
-	// func = uart1PutServer;
-	// tid = Create( 1, func );
+	func = uart1PutServer;
+	tid = Create( 1, func );
 
-	// func = uart1GetServer;
-	// tid = Create( 1, func );
+	func = uart1GetServer;
+	tid = Create( 1, func );
 
 	func = clockServer;
-	int aaa = Create( 1, func );
+	tid = Create( 1, func );
 
-	// func = Printer;
-	// tid = Create( 3, func );
+	func = Printer;
+	tid = Create( 3, func );
 
 	// Idle task
 	func = T2;
 	tid = Create(9, func);
 
 
-	FOREVER {
-		int f = Time(aaa);
-		bwprintf( COM2, "Time: %d\n\r", f);
-	}
-
-	//exit
-	bwprintf(COM2, "First: exiting\n\r");
+	// bwprintf(COM2, "First: exiting\n\r");
 	Exit();
 } // firstUserTask
 
@@ -825,7 +819,7 @@ void getNextRequest(TD *active, Request *req){
 	labelAddr = &&HWint;
 	*(int *)(0x38) = (int)labelAddr;
 
-	asm("stmfd sp!, {r4-r9, sl, fp, ip}");
+	asm("stmfd sp!, {r4-r9, sl, fp, ip, lr}");
 	asm("ldr r1, [r0, #0]\n\t"
 		"ldr r2, [r0, #4]\n\t"
 		"ldr r3, [r0, #8]\n\t"
@@ -833,28 +827,30 @@ void getNextRequest(TD *active, Request *req){
 		"stmfd sp!, {r2-r4}");
 	asm("msr CPSR, #0xdf");
 	asm("mov sp, r1");
-	asm("ldmfd sp!, {r0-r9, sl, fp, ip}");
+	asm("ldmfd sp!, {r0-r9, sl, fp, ip, lr}");
 	asm("msr CPSR, #0xd3");
 	asm("ldmfd sp!, {r0}\n\t"
 		"msr SPSR, r0");
 	asm("ldmfd sp!, {r0, lr}");
 
-	// asm("stmfd sp!, {r0}\n\t"
+	// asm("stmfd sp!, {r0, r1}\n\t"
 	// 	"ldr r0, =0x55000\n\t"
-	// 	"str lr, [r0, #4]\n\t"
-	// 	"ldmfd sp!, {r0}");
-
+	// 	"mrs r1, SPSR\n\t"
+	// 	"str r1, [r0, #4]\n\t"
+	// 	"ldmfd sp!, {r0, r1}");
 	asm("movs pc, lr");
 
 HWint:
-	asm("stmfd sp!, {r0, lr}\n\t"
+	asm("stmfd sp!, {r0, r1, lr}\n\t"
 		"mov r0, sp\n\t"
-		"add sp, sp, #8");
+		"mrs r1, SPSR\n\t"
+		"add sp, sp, #12");
 	asm("msr CPSR, #0xd3");
-	asm("ldmfd r0, {r0, lr}\n\t"
+	asm("msr SPSR, r1\n\t"
+		"ldmfd r0, {r0, r1, lr}\n\t"
 		"sub lr, lr, #4");
 	asm("msr CPSR, #0xdf");
-	asm("stmfd sp!, {r0-r9, sl, fp, ip}\n\t"
+	asm("stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
 		"mov r0, sp\n\t");
 	asm("msr CPSR, #0xd3");
 	asm("ldmfd sp!, {r4-r9, sl, fp, ip}");
@@ -872,7 +868,7 @@ HWint:
 
 kerent:
 	asm("msr CPSR, #0xdf");
-	asm("stmfd sp!, {r0-r9, sl, fp, ip}\n\t"
+	asm("stmfd sp!, {r0-r9, sl, fp, ip, lr}\n\t"
 		"mov r0, sp\n\t"
 		"ldr r1, [fp, #4]");
 	asm("msr CPSR, #0xd3");
@@ -894,6 +890,7 @@ kerent:
 		"bic r1, r1, #0xFF000000\n\t"
 		"str r1, [r3, #20]");
 	asm("endCS:");
+	asm("ldmfd sp!, {lr}");
 } // getNextRequest
 
 //-----------------------------------------------------------------------------------------------
