@@ -302,7 +302,7 @@ getStackSize:
 .L30:
 	.align	2
 .L29:
-	.word	1003896
+	.word	1104285
 	.size	getStackSize, .-getStackSize
 	.align	2
 	.global	initialize
@@ -336,7 +336,7 @@ initialize:
 	str	r3, [fp, #-24]
 .L32:
 	ldr	r3, [fp, #-24]
-	cmp	r3, #7
+	cmp	r3, #9
 	bls	.L33
 	bl	getStackSize(PLT)
 	mov	r3, r0
@@ -460,7 +460,7 @@ schedule:
 	str	r3, [fp, #-20]
 .L43:
 	ldr	r3, [fp, #-20]
-	cmp	r3, #7
+	cmp	r3, #9
 	bls	.L44
 	mov	r3, #0
 	str	r3, [fp, #-32]
@@ -788,48 +788,42 @@ handle:
 	.global	main
 	.type	main, %function
 main:
-	@ args = 0, pretend = 0, frame = 1036
+	@ args = 0, pretend = 0, frame = 968
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #1024
-	sub	sp, sp, #12
-	str	r0, [fp, #-1044]
-	str	r1, [fp, #-1048]
-	sub	r3, fp, #940
-	sub	r1, fp, #1004
-	sub	r2, fp, #1024
-	sub	r2, r2, #12
-	sub	r2, r2, #4
+	sub	sp, sp, #968
+	str	r0, [fp, #-976]
+	str	r1, [fp, #-980]
+	sub	r3, fp, #856
+	sub	r2, fp, #936
+	sub	ip, fp, #972
 	mov	r0, r3
+	mov	r1, r2
+	mov	r2, ip
 	bl	initialize(PLT)
 .L77:
-	sub	r2, fp, #1004
-	sub	r3, fp, #1024
-	sub	r3, r3, #12
-	sub	r3, r3, #4
-	mov	r0, r2
-	mov	r1, r3
+	sub	r3, fp, #936
+	sub	r2, fp, #972
+	mov	r0, r3
+	mov	r1, r2
 	bl	schedule(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-16]
 	ldr	r3, [fp, #-16]
 	cmp	r3, #0
 	beq	.L78
-	sub	r3, fp, #1024
-	sub	r3, r3, #12
-	sub	r3, r3, #4
+	sub	r3, fp, #972
 	ldr	r0, [fp, #-16]
 	mov	r1, r3
 	bl	getNextRequest(PLT)
-	sub	r2, fp, #940
-	sub	r1, fp, #1004
-	sub	r3, fp, #1024
-	sub	r3, r3, #12
-	sub	r3, r3, #4
-	mov	r0, r2
-	mov	r2, r3
+	sub	r3, fp, #856
+	sub	r2, fp, #936
+	sub	ip, fp, #972
+	mov	r0, r3
+	mov	r1, r2
+	mov	r2, ip
 	bl	handle(PLT)
 	b	.L77
 .L78:

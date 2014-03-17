@@ -172,6 +172,7 @@ kerent:
 		"bic r0, r0, #0x1F\n\t"
 		"orr r0, r0, #0x13\n\t"
 		"msr CPSR, r0");
+
 	// 7.5 get SPSR of the active task from SP_SVC
 	asm("ldmfd sp!, {r1}");
 	// 10. fill in the request of the kernel from its stack
