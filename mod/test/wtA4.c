@@ -11,6 +11,7 @@
 #include "routeFinder.h"
 #include "trainDriver.h"
 #include "track_data.h"
+#include "courier.h"
 
 /*
  * User tasks are below
@@ -20,7 +21,7 @@ void Terminal() {
 	int server = WhoIs( "u2g" );
 	// int router = WhoIs( "route" );
 	int driver = WhoIs( "driver" );
-	int printer = MyParentTid();
+	int myAdmin = MyParentTid();
 	ComReqStruct send, reply;
 	char input[MAX_INPUT];
 	unsigned int inputIndex = 0;
@@ -291,7 +292,7 @@ void Terminal() {
 		}
 		if (send.type != GOTO_COMMAND)
 		{	// We want the trainDriver to send the command itself
-			Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 		}
 	}
 }
@@ -299,7 +300,7 @@ void Terminal() {
 void Train() {
 	int u1g = WhoIs( "u1g" );
 	int u1x = WhoIs( "u1x" );
-	int printer = MyParentTid();
+	int myAdmin = MyParentTid();
 	ComReqStruct send, reply;
 
 	// Hacking ........
@@ -321,22 +322,9 @@ void Train() {
 				send.data1 = i/2 + 1;
 				send.data2 = upper;
 				send.data3 = lower;
-				Send( printer, (char *)&send, sizeof( ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+				Send( myAdmin, (char *)&send, sizeof( ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 			}
 		}
-	}
-}
-
-void Timer() {
-	int server = WhoIs( "clock" );
-	int printer = MyParentTid();
-	ComReqStruct send, reply;
-
-	FOREVER {
-		Delay( server, 10 );
-
-		send.type = TIME_UPDATE;
-		Send( printer, (char*)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 	}
 }
 
@@ -364,6 +352,7 @@ void Printer( ) {
 	track_node track[TRACK_MAX];
 	init_tracka(track);
 
+	int myAdmin = MyParentTid();
 	int clk = WhoIs( "clock" );
 	int uart2XServer = WhoIs( "u2x" );
 	int uart1XServer = WhoIs( "u1x ");
@@ -404,23 +393,9 @@ void Printer( ) {
 
 	myprintf( uart2XServer, COM2,  "\033[33;1H>>\033[33;4H");
 	
-	void (*func)();
-	func = Terminal;
-	Create( 4, func );
-
-	func = Timer;
-	Create( 2, func );
-
-	func = routeFinder;
-	Create( 3, func );
-	func = trainDriver;
-	Create( 3, func );
 
 	// Start Train Controller Here
 	Putc(uart1XServer, COM1, (char) 0x60);
-
-	func = Train;
-	Create( 2, func );
 
 	int sender;
 	int cursor = 4;
@@ -448,6 +423,19 @@ void Printer( ) {
 		trainDrivers[counter] = 0;
 	}
 
+	void (*func)();
+	func = Courier;
+	int adminCour = Create( 2, func );
+
+	func = Courier;
+	int timeCour = Create( 2, func );
+
+	reply.data1 = myAdmin;
+	Send( adminCour, (char *)&reply, sizeof(ComReqStruct), (char *)&recv, sizeof(ComReqStruct) );
+
+	reply.data1 = clk;
+	Send( timeCour, (char *)&reply, sizeof(ComReqStruct), (char *)&recv, sizeof(ComReqStruct) );
+
 	// myprintf( uart2XServer, COM2, "\033[32m" );
 	// for ( counter = 0; counter < 22; counter++ ) {
 	// 	char swn;
@@ -469,6 +457,8 @@ void Printer( ) {
 	// 	myprintf( uart2XServer, COM2, "\033[6;%dHC", pos);
 	// }
 	// myprintf( uart2XServer, COM2, "\033[0m" );
+
+
 
 	myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mLoading, Please Wait\n\033[0m\033[33;4H");
 	Delay( clk, 300 );
@@ -665,7 +655,7 @@ void Printer( ) {
 				{
 					Putc( uart1XServer, COM1, recv.data1 );
 					Putc( uart1XServer, COM1, recv.data2 );
-					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d Loc: %d\n", recv.data2, recv.data1, recv.data3 );
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d Loc: %s\n", recv.data2, recv.data1, track[recv.data3].name );
 					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
 					cursor = 4;
 				}
@@ -700,68 +690,66 @@ void Printer( ) {
 	Exit();
 } // Printer
 
+void admin() {
+	ComReqStruct requests[MAX_REQUESTS];
+	int startIndex 	= 0;
+	int endIndex 	= 0;
+
+	ComReqStruct send, reply;
+	int sender;
+
+	void (*func)();
+	func = Printer;
+	Create( 3, func );
+
+	func = Train;
+	Create( 4, func );
+
+	func = Terminal;
+	Create( 4, func );
+
+	func = routeFinder;
+	Create( 4, func );
+	func = trainDriver;
+	Create( 4, func );
+
+	int waitingCourier = -1;
+	FOREVER {
+		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
+		switch( reply.type ) {
+			case COURIER:
+				if ( startIndex == endIndex ) {
+					waitingCourier = sender;
+				} else {
+					Reply( sender, (char *)&(requests[startIndex]), sizeof(ComReqStruct) );
+					startIndex = (startIndex + 1) % MAX_REQUESTS;
+				}
+				break;
+			default:
+				if ( waitingCourier != -1 ) {
+					Reply( waitingCourier, (char *)&reply, sizeof(ComReqStruct) );
+					waitingCourier = -1;
+				} else {
+					requests[endIndex].type = reply.type;
+					requests[endIndex].data1 = reply.data1;
+					requests[endIndex].data2 = reply.data2;
+					requests[endIndex].data3 = reply.data3;
+					endIndex = (endIndex + 1) % MAX_REQUESTS;
+				}
+		}
+	}
+}
+
 void T2(){
 
 	FOREVER{
-		char c = bwgetc( COM2 );
-		break;
+
 	}
 }
 
 // //-----------------------------------------------------------------------------------------------
 // //	First user task that will be placed by the kernel into the priority queue
 // //-----------------------------------------------------------------------------------------------
-// void firstUserTask(){
-// 	void (*func)();
-// 	func = nameServer;
-// 	unsigned int tid;
-// 	tid = Create( 0, func );
-// 	// bwprintf(COM2, "First: created Name Server\n\r");
-
-// 	func = uart2GetServer;
-// 	tid = Create( 1, func );
-
-// 	func = uart2PutServer;
-// 	tid = Create( 1, func );
-
-// 	func = uart1PutServer;
-// 	tid = Create( 1, func );
-
-// 	func = uart1GetServer;
-// 	tid = Create( 1, func );
-
-// 	func = clockServer;
-// 	tid = Create( 1, func );
-
-// 	func = Printer;
-// 	tid = Create( 3, func );
-
-// 	// Idle task
-// 	func = T2;
-// 	tid = Create(9, func);
-
-
-// 	// bwprintf(COM2, "First: exiting\n\r");
-// 	Exit();
-// } // firstUserTask
-
-
-//-----------------------------------------------------------------------------------------------
-//	Tasks that will be created by the first user task contains the following
-//-----------------------------------------------------------------------------------------------
-void theOtherTask(){
-	int myTid, myParentTid;
-	myTid = MyTid();
-	myParentTid = MyParentTid();
-	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
-	Pass();
-	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
-	Exit();
-} // theOtherTask
-
-//-----------------------------------------------------------------------------------------------
-//	First user task that will be placed by the kernel into the priority queue
-//-----------------------------------------------------------------------------------------------
 void firstUserTask(){
 	void (*func)();
 	func = nameServer;
@@ -784,8 +772,9 @@ void firstUserTask(){
 	func = clockServer;
 	tid = Create( 1, func );
 
-	func = Printer;
-	tid = Create( 3, func );
+	func = admin;
+	tid = Create( 2, func );
+
 
 	// Idle task
 	func = T2;
@@ -795,6 +784,20 @@ void firstUserTask(){
 	// bwprintf(COM2, "First: exiting\n\r");
 	Exit();
 } // firstUserTask
+
+
+//-----------------------------------------------------------------------------------------------
+//	Tasks that will be created by the first user task contains the following
+//-----------------------------------------------------------------------------------------------
+void theOtherTask(){
+	int myTid, myParentTid;
+	myTid = MyTid();
+	myParentTid = MyParentTid();
+	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
+	Pass();
+	bwprintf(COM2, "MyTid: %d, MyParentTid: %d\n\r", myTid, myParentTid);
+	Exit();
+} // theOtherTask
 
 /*
  *	The function getNextRequest will allow for context
@@ -809,9 +812,6 @@ void firstUserTask(){
 //	will switch to kernel execution
 //-----------------------------------------------------------------------------------------------
 void getNextRequest(TD *active, Request *req){
-	// asm("stmfd sp!, {r0-r9, sl, fp, ip}");
-	// bwprintf( COM2, "%x\n", active->lr );
-	// asm("ldmfd sp!, {r0-r9, sl, fp, ip}");
 	// Setup the jump table to branch to kerent on swi
 	void (*labelAddr)();
 	labelAddr = &&kerent;
@@ -832,12 +832,6 @@ void getNextRequest(TD *active, Request *req){
 	asm("ldmfd sp!, {r0}\n\t"
 		"msr SPSR, r0");
 	asm("ldmfd sp!, {r0, lr}");
-
-	// asm("stmfd sp!, {r0, r1}\n\t"
-	// 	"ldr r0, =0x55000\n\t"
-	// 	"mrs r1, SPSR\n\t"
-	// 	"str r1, [r0, #4]\n\t"
-	// 	"ldmfd sp!, {r0, r1}");
 	asm("movs pc, lr");
 
 HWint:
@@ -1139,9 +1133,9 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						// Currently not checking the IRQ state register for which interrupt type occured
 						if (notifiers[UART1GET].task == 0)  // No body is waiting
 						{
-							notifiers[UART1GET].data[notifiers[UART1GET].end] = *data;
-							notifiers[UART1GET].end = ( notifiers[UART1GET].end + 1 ) % DATA_BUFFER;
-							notifiers[UART1GET].eventWaiting++;
+							// notifiers[UART1GET].data[notifiers[UART1GET].end] = *data;
+							// notifiers[UART1GET].end = ( notifiers[UART1GET].end + 1 ) % DATA_BUFFER;
+							// notifiers[UART1GET].eventWaiting++;
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[UART1GET].task;
@@ -1191,9 +1185,9 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 						// Currently not checking the IRQ state register for which interrupt type occured
 						if (notifiers[UART2GET].task == 0)  // No body is waiting
 						{
-							notifiers[UART2GET].data[notifiers[UART2GET].end] = *data;
-							notifiers[UART2GET].end = ( notifiers[UART2GET].end + 1 ) % DATA_BUFFER;
-							notifiers[UART2GET].eventWaiting++;
+							// notifiers[UART2GET].data[notifiers[UART2GET].end] = *data;
+							// notifiers[UART2GET].end = ( notifiers[UART2GET].end + 1 ) % DATA_BUFFER;
+							// notifiers[UART2GET].eventWaiting++;
 						} 
 						else {    // Notifier is waiting, reschedule the task and put in the retVal
 							TD *notifier = (TD *)notifiers[UART2GET].task;

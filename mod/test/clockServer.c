@@ -67,14 +67,24 @@ void clockServer( ) {
 	send.type = CLOCK;
 	Send( notiTid, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
+	int waitingCourier = -1;
+
 	// Start server
 	FOREVER {
 		int temp = Receive( &reqTid, (char *)&reply, sizeof(ComReqStruct) );
 		switch( reply.type ) {
+			case COURIER:
+				waitingCourier = reqTid;
+				break;
 			case NOTI_REQ:
 				send.type = REQUEST_OK;
 				Reply( notiTid, (char *)&send, sizeof(ComReqStruct) );
 				currTime += 1;
+				if ( waitingCourier != -1 && (currTime % 10 == 0) ) {
+					send.type = TIME_UPDATE;
+					Reply( waitingCourier, (char *)&send, sizeof(ComReqStruct) );
+					waitingCourier = -1;
+				}
 				break;
 
 			case TIME_REQ:

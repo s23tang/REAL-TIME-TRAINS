@@ -182,6 +182,7 @@ void trainDriver(){
 	send.type  = GOTO_COMMAND;
 	send.data1 = speed;
 	send.data2 = train;
+	send.data3 = dest;
 	Send(printer, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
 
 	FOREVER{

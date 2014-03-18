@@ -44,7 +44,7 @@ void notifier( ){
 		case UART2GET:
 			{
 				int *ctrl = (int *)UART2CTRL;
-				*ctrl = *ctrl | 0x00000011;
+				*ctrl = *ctrl | 0x00000010;
 
 				int *vicEnable2 = (int *)(VIC2 + 0x10);
 				*(vicEnable2) = *(vicEnable2) | 0x00400000;

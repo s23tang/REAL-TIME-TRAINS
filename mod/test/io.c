@@ -460,8 +460,6 @@ void format ( int server, int channel, char *fmt, va_list va ) {
 
 	
 	while ( ( ch = *(fmt++) ) ) {
-		int i;
-		for ( i=0; i<600; i++ );
 		if ( ch != '%' )
 			Putc( server, channel, ch );
 		else {

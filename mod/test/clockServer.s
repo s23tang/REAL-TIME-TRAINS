@@ -109,16 +109,16 @@ DelayUntil:
 	.global	clockServer
 	.type	clockServer, %function
 clockServer:
-	@ args = 0, pretend = 0, frame = 436
+	@ args = 0, pretend = 0, frame = 440
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #440
-	ldr	sl, .L31
-.L30:
+	sub	sp, sp, #444
+	ldr	sl, .L36
+.L35:
 	add	sl, pc, sl
-	ldr	r3, .L31+4
+	ldr	r3, .L36+4
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	RegisterAs(PLT)
@@ -126,78 +126,124 @@ clockServer:
 	cmn	r3, #1
 	bne	.L11
 	mov	r0, #1
-	ldr	r3, .L31+8
+	ldr	r3, .L36+8
 	add	r3, sl, r3
 	mov	r1, r3
 	bl	bwprintf(PLT)
 	bl	Exit(PLT)
 .L11:
-	ldr	r3, .L31+12
+	ldr	r3, .L36+12
 	ldr	r3, [sl, r3]
-	str	r3, [fp, #-44]
+	str	r3, [fp, #-48]
 	mov	r0, #0
-	ldr	r1, [fp, #-44]
+	ldr	r1, [fp, #-48]
 	bl	Create(PLT)
 	mov	r3, r0
-	str	r3, [fp, #-48]
+	str	r3, [fp, #-52]
 	mov	r3, #0
-	str	r3, [fp, #-36]
+	str	r3, [fp, #-40]
 	mov	r3, #0
-	str	r3, [fp, #-416]
+	str	r3, [fp, #-420]
 	mov	r3, #0
-	str	r3, [fp, #-432]
-	ldr	r2, [fp, #-48]
-	sub	r1, fp, #432
-	sub	ip, fp, #448
+	str	r3, [fp, #-436]
+	ldr	r2, [fp, #-52]
+	sub	r1, fp, #436
+	sub	ip, fp, #452
 	mov	r3, #16
 	str	r3, [sp, #0]
 	mov	r0, r2
 	mov	r2, #16
 	mov	r3, ip
 	bl	Send(PLT)
-	b	.L29
+	mvn	r3, #0
+	str	r3, [fp, #-36]
+	b	.L34
 .L13:
-.L29:
-	sub	r3, fp, #448
-	sub	r2, fp, #52
-	mov	r0, r2
-	mov	r1, r3
+.L34:
+	sub	r2, fp, #452
+	sub	r3, fp, #56
+	mov	r0, r3
+	mov	r1, r2
 	mov	r2, #16
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
-	ldr	r2, [fp, #-448]
-	str	r2, [fp, #-452]
 	ldr	r3, [fp, #-452]
-	cmp	r3, #2
-	beq	.L16
-	ldr	r2, [fp, #-452]
-	cmp	r2, #3
-	beq	.L17
-	ldr	r3, [fp, #-452]
-	cmp	r3, #1
-	beq	.L15
+	sub	r3, r3, #1
+	cmp	r3, #15
+	addls	pc, pc, r3, asl #2
+	b	.L14
+	.p2align 2
+.L19:
+	b	.L15
+	b	.L16
+	b	.L17
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L14
+	b	.L18
+.L18:
+	ldr	r3, [fp, #-56]
+	str	r3, [fp, #-36]
 	b	.L14
 .L15:
 	mov	r3, #0
-	str	r3, [fp, #-432]
-	ldr	r3, [fp, #-48]
-	sub	r2, fp, #432
+	str	r3, [fp, #-436]
+	ldr	r3, [fp, #-52]
+	sub	r2, fp, #436
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
 	bl	Reply(PLT)
-	ldr	r3, [fp, #-36]
+	ldr	r3, [fp, #-40]
 	add	r3, r3, #1
+	str	r3, [fp, #-40]
+	ldr	r3, [fp, #-36]
+	cmn	r3, #1
+	beq	.L14
+	ldr	r1, [fp, #-40]
+	ldr	r3, .L36+16
+	smull	r2, r3, r1, r3
+	mov	r2, r3, asr #2
+	mov	r3, r1, asr #31
+	rsb	r2, r3, r2
+	str	r2, [fp, #-456]
+	ldr	r3, [fp, #-456]
+	mov	r3, r3, asl #2
+	ldr	r2, [fp, #-456]
+	add	r3, r3, r2
+	mov	r3, r3, asl #1
+	rsb	r1, r3, r1
+	str	r1, [fp, #-456]
+	ldr	r3, [fp, #-456]
+	cmp	r3, #0
+	bne	.L14
+	mov	r3, #3
+	str	r3, [fp, #-436]
+	sub	r3, fp, #436
+	ldr	r0, [fp, #-36]
+	mov	r1, r3
+	mov	r2, #16
+	bl	Reply(PLT)
+	mvn	r3, #0
 	str	r3, [fp, #-36]
 	b	.L14
 .L16:
 	mov	r3, #0
+	str	r3, [fp, #-436]
+	ldr	r3, [fp, #-40]
 	str	r3, [fp, #-432]
-	ldr	r3, [fp, #-36]
-	str	r3, [fp, #-428]
-	ldr	r3, [fp, #-52]
-	sub	r2, fp, #432
+	ldr	r3, [fp, #-56]
+	sub	r2, fp, #436
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
@@ -206,15 +252,15 @@ clockServer:
 	str	r3, [fp, #-32]
 	b	.L14
 .L17:
-	ldr	r2, [fp, #-444]
-	ldr	r3, [fp, #-36]
+	ldr	r2, [fp, #-448]
+	ldr	r3, [fp, #-40]
 	add	r3, r2, r3
 	str	r3, [fp, #-24]
-	ldr	r3, [fp, #-52]
+	ldr	r3, [fp, #-56]
 	sub	r3, r3, #1
-	str	r3, [fp, #-40]
-	ldr	r2, [fp, #-40]
-	ldr	r1, .L31+16
+	str	r3, [fp, #-44]
+	ldr	r2, [fp, #-44]
+	ldr	r1, .L36+20
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
@@ -224,10 +270,10 @@ clockServer:
 	add	r2, r3, r1
 	ldr	r3, [fp, #-24]
 	str	r3, [r2, #0]
-	ldr	r2, [fp, #-40]
-	ldr	r3, [fp, #-52]
+	ldr	r2, [fp, #-44]
+	ldr	r3, [fp, #-56]
 	mov	r1, r3
-	ldr	r0, .L31+20
+	ldr	r0, .L36+24
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
@@ -236,21 +282,21 @@ clockServer:
 	add	r3, r3, r2
 	add	r3, r3, r0
 	str	r1, [r3, #0]
-	sub	r3, fp, #416
+	sub	r3, fp, #420
 	str	r3, [fp, #-20]
-	b	.L18
-.L19:
+	b	.L23
+.L24:
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
 	ldr	r2, [r3, #0]
 	ldr	r3, [fp, #-24]
 	cmp	r2, r3
-	bcc	.L20
-	ldr	r2, [fp, #-40]
+	bcc	.L25
+	ldr	r2, [fp, #-44]
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
 	mov	r1, r3
-	ldr	r0, .L31+24
+	ldr	r0, .L36+28
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
@@ -259,34 +305,34 @@ clockServer:
 	add	r3, r3, r2
 	add	r3, r3, r0
 	str	r1, [r3, #0]
-	ldr	r2, [fp, #-40]
+	ldr	r2, [fp, #-44]
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	sub	r3, fp, #412
+	sub	r3, fp, #416
 	add	r3, r3, r2
 	ldr	r2, [fp, #-20]
 	str	r3, [r2, #0]
-	b	.L22
-.L20:
+	b	.L27
+.L25:
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
 	add	r3, r3, #8
 	str	r3, [fp, #-20]
-.L18:
+.L23:
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
 	cmp	r3, #0
-	bne	.L19
-.L22:
+	bne	.L24
+.L27:
 	ldr	r3, [fp, #-20]
 	ldr	r3, [r3, #0]
 	cmp	r3, #0
 	bne	.L14
-	ldr	r2, [fp, #-40]
-	ldr	r1, .L31+24
+	ldr	r2, [fp, #-44]
+	ldr	r1, .L36+28
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
@@ -296,55 +342,56 @@ clockServer:
 	add	r2, r3, r1
 	mov	r3, #0
 	str	r3, [r2, #0]
-	ldr	r2, [fp, #-40]
+	ldr	r2, [fp, #-44]
 	mov	r3, r2
 	mov	r3, r3, asl #1
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	sub	r3, fp, #412
+	sub	r3, fp, #416
 	add	r3, r3, r2
 	ldr	r2, [fp, #-20]
 	str	r3, [r2, #0]
 .L14:
-	ldr	r3, [fp, #-416]
+	ldr	r3, [fp, #-420]
 	str	r3, [fp, #-28]
-	b	.L24
-.L25:
+	b	.L29
+.L30:
 	ldr	r3, [fp, #-28]
 	ldr	r2, [r3, #0]
-	ldr	r3, [fp, #-36]
+	ldr	r3, [fp, #-40]
 	cmp	r2, r3
 	bne	.L13
 	mov	r3, #0
-	str	r3, [fp, #-432]
+	str	r3, [fp, #-436]
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #4]
-	sub	r2, fp, #432
+	sub	r2, fp, #436
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
 	bl	Reply(PLT)
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #8]
-	str	r3, [fp, #-416]
+	str	r3, [fp, #-420]
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #8]
 	str	r3, [fp, #-28]
-.L24:
+.L29:
 	ldr	r3, [fp, #-28]
 	cmp	r3, #0
-	bne	.L25
+	bne	.L30
 	b	.L13
-.L32:
+.L37:
 	.align	2
-.L31:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L30+8)
+.L36:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L35+8)
 	.word	.LC0(GOTOFF)
 	.word	.LC1(GOTOFF)
 	.word	notifier(GOT)
+	.word	1717986919
+	.word	-400
 	.word	-396
 	.word	-392
-	.word	-388
 	.size	clockServer, .-clockServer
 	.ident	"GCC: (GNU) 4.0.2"

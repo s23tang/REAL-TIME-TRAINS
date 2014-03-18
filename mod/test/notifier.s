@@ -78,7 +78,7 @@ notifier:
 	str	r3, [fp, #-40]
 	ldr	r3, [fp, #-40]
 	ldr	r3, [r3, #0]
-	orr	r2, r3, #17
+	orr	r2, r3, #16
 	ldr	r3, [fp, #-40]
 	str	r2, [r3, #0]
 	ldr	r3, .L20

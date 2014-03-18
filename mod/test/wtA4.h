@@ -46,6 +46,7 @@
 #define TRAIN_POS           19
 
 #define DATA_BUFFER			50
+#define MAX_REQUESTS		100
 
 struct TD;
 

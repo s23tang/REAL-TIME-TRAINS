@@ -705,6 +705,13 @@ trainDriver:
 	add	r2, r3, r2
 	ldr	r3, [fp, #-68]
 	str	r3, [r2, #0]
+	ldr	r3, .L107+56
+	mov	r2, #12
+	sub	r0, fp, #32
+	add	r3, r0, r3
+	add	r2, r3, r2
+	ldr	r3, [fp, #-76]
+	str	r3, [r2, #0]
 	sub	r2, fp, #6976
 	sub	r2, r2, #32
 	sub	r2, r2, #36
@@ -733,18 +740,18 @@ trainDriver:
 	bl	Receive(PLT)
 	ldr	r3, .L107+16
 	mov	r2, #4
-	sub	r0, fp, #32
-	add	r3, r0, r3
+	sub	r1, fp, #32
+	add	r3, r1, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
 	str	r3, [fp, #-64]
 	ldr	r2, .L107+56
 	mov	r3, #0
-	sub	r1, fp, #32
-	str	r3, [r1, r2]
-	ldr	r3, .L107+20
 	sub	r0, fp, #32
-	ldr	r2, [r0, r3]
+	str	r3, [r0, r2]
+	ldr	r3, .L107+20
+	sub	r1, fp, #32
+	ldr	r2, [r1, r3]
 	sub	r3, fp, #6976
 	sub	r3, r3, #32
 	sub	r3, r3, #36
@@ -753,8 +760,8 @@ trainDriver:
 	mov	r2, #16
 	bl	Reply(PLT)
 	ldr	r3, .L107+16
-	sub	r1, fp, #32
-	ldr	r3, [r1, r3]
+	sub	r2, fp, #32
+	ldr	r3, [r2, r3]
 	cmp	r3, #0
 	bne	.L49
 	ldr	r3, [fp, #-96]
