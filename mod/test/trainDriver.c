@@ -139,7 +139,7 @@ void trainDriver(){
 	track_node track[TRACK_MAX];
 	init_tracka(track);
 	RegisterAs( "driver" );
-	int printer = MyParentTid();
+	int myAdmin = MyParentTid();
 	int router  = WhoIs("route");
 	int clkServer = WhoIs( "clock" );
 	ComReqStruct send, reply;
@@ -176,14 +176,14 @@ void trainDriver(){
 	// subscribe in printer for sensor data. Trying to get the starting position
 	send.type  = SUBSCRIBE;
 	send.data1 = me;
-	Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	// Move the train
 	send.type  = GOTO_COMMAND;
 	send.data1 = speed;
 	send.data2 = train;
 	send.data3 = dest;
-	Send(printer, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
+	Send( myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
 
 	FOREVER{
 		// Wait for sensor data;
@@ -239,7 +239,7 @@ void trainDriver(){
 					reqSetSwitch.type  = SWITCH_COMMAND;
 					reqSetSwitch.data1 = cOrS;
 					reqSetSwitch.data2 = pos;
-					Send(printer, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
+					Send(myAdmin, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
 				}
 			}
 		}
@@ -248,7 +248,7 @@ void trainDriver(){
 		send.type  = UPDATE_STAT;
 		send.data1 = curTime - previousTime;
 		send.data2 = expectedTime;
-		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 		int nextSensor;       // <---- use to decide which speed table to use.
 		int nextSensorDistance = findNextDistance(&path, triggeredSensor, track, &nextSensor);
@@ -286,7 +286,7 @@ void trainDriver(){
 		locationInfo[2] = curTime;
 		send.type = TRAIN_POS;
 		send.data1 = locationInfo;
-		Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 
 		// check if we should slow down
@@ -309,10 +309,10 @@ void trainDriver(){
 			send.type = SPEED_COMMAND;
 			send.data1 = 0;
 			send.data2 = train;
-			Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 			send.type  = UNSUBSCRIBE;
-			Send( printer, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 			break;
 		}
 

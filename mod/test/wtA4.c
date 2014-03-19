@@ -425,10 +425,10 @@ void Printer( ) {
 
 	void (*func)();
 	func = Courier;
-	int adminCour = Create( 2, func );
+	int adminCour = Create( 4, func );
 
 	func = Courier;
-	int timeCour = Create( 2, func );
+	int timeCour = Create( 4, func );
 
 	reply.data1 = myAdmin;
 	Send( adminCour, (char *)&reply, sizeof(ComReqStruct), (char *)&recv, sizeof(ComReqStruct) );
@@ -605,7 +605,11 @@ void Printer( ) {
 								// Notify the trainDriver
 								Send( subscriber, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
 							}
-							myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[33;4H\033[0m", row, col, onOrOff );
+							if ( onOrOff == 1 ) {
+								myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[0m", row, col, onOrOff );
+							} else {
+								myprintf( uart2XServer, COM2, "\033[%d;%dH%d", row, col, onOrOff );
+							}
 							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
 							sensorStates[index] = onOrOff;
 						}
@@ -702,16 +706,16 @@ void admin() {
 	func = Printer;
 	Create( 3, func );
 
-	func = Train;
-	Create( 4, func );
-
-	func = Terminal;
-	Create( 4, func );
-
 	func = routeFinder;
 	Create( 4, func );
 	func = trainDriver;
-	Create( 4, func );
+	Create( 3, func );
+
+	func = Train;
+	Create( 3, func );
+
+	func = Terminal;
+	Create( 3, func );
 
 	int waitingCourier = -1;
 	FOREVER {
@@ -736,6 +740,8 @@ void admin() {
 					requests[endIndex].data3 = reply.data3;
 					endIndex = (endIndex + 1) % MAX_REQUESTS;
 				}
+				send.type = REQUEST_OK;
+				Reply( sender, (char *)&send.type, sizeof(ComReqStruct) );
 		}
 	}
 }
