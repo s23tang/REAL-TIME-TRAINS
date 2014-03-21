@@ -7,24 +7,41 @@
 #include "clockServer.h"
 #include "io.h"
 
-void init_table(int *table){
+// void init_table(int *table){ // train 45
+// 	table[0] = 0;
+// 	table[1] = 63;
+// 	table[2] = 135;
+// 	table[3] = 215;	
+// 	table[4] = 275; 
+// 	table[5] = 350;
+// 	table[6] = 425;
+// 	table[7] = 485;
+// 	table[8] = 535;
+// 	table[9] = 595;
+// 	table[10] = 680;
+// 	table[11] = 750;
+// 	table[12] = 805;
+// 	table[13] = 810;
+// }
+
+void init_table(int *table){ // train 49
 	table[0] = 0;
-	table[1] = 66;
-	table[2] = 147;
-	table[3] = 217;
-	table[4] = 289;
-	table[5] = 343;
-	table[6] = 439;
-	table[7] = 430;
-	table[8] = 576;
-	table[9] = 619;
-	table[10] = 711;
-	table[11] = 780;
-	table[12] = 830;
-	table[13] = 830;
+	table[1] = 65;  
+	table[2] = 150;	
+	table[3] = 220;	
+	table[4] = 280; 
+	table[5] = 360; 
+	table[6] = 440; 
+	table[7] = 480; 
+	table[8] = 560; 
+	table[9] = 640;	
+	table[10] = 720; 
+	table[11] = 760; 
+	table[12] = 830; 
+	table[13] = 830; 
 }
 
-void init_velocity(int *straightVelocity, int *curveVelocity){
+void init_velocity(int *straightVelocity, int *curveVelocity){ // train 49
 	straightVelocity[0]  = 9;
 	straightVelocity[1]  = 80;
 	straightVelocity[2]  = 140;
@@ -32,13 +49,13 @@ void init_velocity(int *straightVelocity, int *curveVelocity){
 	straightVelocity[4]  = 237;
 	straightVelocity[5]  = 285;
 	straightVelocity[6]  = 355;
-	straightVelocity[7]  = 420;
-	straightVelocity[8]  = 480;
-	straightVelocity[9]  = 560;
-	straightVelocity[10] = 612;
-	straightVelocity[11] = 680;
-	straightVelocity[12] = 758;
-	straightVelocity[13] = 760;
+	straightVelocity[7]  = 393;	// unsure above here
+	straightVelocity[8]  = 449;
+	straightVelocity[9]  = 511;
+	straightVelocity[10] = 561;
+	straightVelocity[11] = 651;
+	straightVelocity[12] = 663;
+	straightVelocity[13] = 671;
 
 	curveVelocity[0]  = 9;
 	curveVelocity[1]  = 61;
@@ -55,6 +72,38 @@ void init_velocity(int *straightVelocity, int *curveVelocity){
 	curveVelocity[12] = 489;
 	curveVelocity[13] = 498;
 }
+
+// void init_velocity(int *straightVelocity, int *curveVelocity){ // train 45 
+// 	straightVelocity[0]  = 9;
+// 	straightVelocity[1]  = 74;
+// 	straightVelocity[2]  = 126;
+// 	straightVelocity[3]  = 174;
+// 	straightVelocity[4]  = 228;
+// 	straightVelocity[5]  = 288;
+// 	straightVelocity[6]  = 352; // unsure above here
+// 	straightVelocity[7]  = 377;
+// 	straightVelocity[8]  = 424;
+// 	straightVelocity[9]  = 463;
+// 	straightVelocity[10] = 516;
+// 	straightVelocity[11] = 557;
+// 	straightVelocity[12] = 560;
+// 	straightVelocity[13] = 585;
+
+// 	curveVelocity[0]  = 9;
+// 	curveVelocity[1]  = 61;
+// 	curveVelocity[2]  = 108;
+// 	curveVelocity[3]  = 143;
+// 	curveVelocity[4]  = 179;
+// 	curveVelocity[5]  = 215;
+// 	curveVelocity[6]  = 240;
+// 	curveVelocity[7]  = 297;
+// 	curveVelocity[8]  = 350;
+// 	curveVelocity[9]  = 379;
+// 	curveVelocity[10] = 435;
+// 	curveVelocity[11] = 463;
+// 	curveVelocity[12] = 489;
+// 	curveVelocity[13] = 498;
+// }
 
 // Find the distance from the curSensor to next sensor along the path
 int findNextDistance(Path* path, int curSensor, track_node* track, int *nextSensor){

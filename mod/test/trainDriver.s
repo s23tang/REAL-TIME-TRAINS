@@ -16,66 +16,60 @@ init_table:
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #4
-	mov	r3, #66
+	mov	r3, #65
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #8
-	mov	r3, #147
+	mov	r3, #150
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #12
-	mov	r3, #217
+	mov	r3, #220
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #16
-	ldr	r3, .L3
+	mov	r3, #280
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #20
-	ldr	r3, .L3+4
+	mov	r3, #360
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #24
-	ldr	r3, .L3+8
+	mov	r3, #440
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #28
-	ldr	r3, .L3+12
+	mov	r3, #480
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #32
-	mov	r3, #576
+	mov	r3, #560
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #36
-	ldr	r3, .L3+16
+	mov	r3, #640
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #40
-	ldr	r3, .L3+20
+	mov	r3, #720
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #44
-	mov	r3, #780
+	mov	r3, #760
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #48
-	ldr	r3, .L3+24
+	ldr	r3, .L3
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #52
-	ldr	r3, .L3+24
+	ldr	r3, .L3
 	str	r3, [r2, #0]
 	ldmfd	sp, {r3, fp, sp, pc}
 .L4:
 	.align	2
 .L3:
-	.word	289
-	.word	343
-	.word	439
-	.word	430
-	.word	619
-	.word	711
 	.word	830
 	.size	init_table, .-init_table
 	.align	2
@@ -119,31 +113,31 @@ init_velocity:
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
 	add	r2, r3, #28
-	mov	r3, #420
-	str	r3, [r2, #0]
-	ldr	r3, [fp, #-16]
-	add	r2, r3, #32
-	mov	r3, #480
-	str	r3, [r2, #0]
-	ldr	r3, [fp, #-16]
-	add	r2, r3, #36
-	mov	r3, #560
-	str	r3, [r2, #0]
-	ldr	r3, [fp, #-16]
-	add	r2, r3, #40
-	mov	r3, #612
-	str	r3, [r2, #0]
-	ldr	r3, [fp, #-16]
-	add	r2, r3, #44
-	mov	r3, #680
-	str	r3, [r2, #0]
-	ldr	r3, [fp, #-16]
-	add	r2, r3, #48
 	ldr	r3, .L7+8
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-16]
+	add	r2, r3, #32
+	ldr	r3, .L7+12
+	str	r3, [r2, #0]
+	ldr	r3, [fp, #-16]
+	add	r2, r3, #36
+	ldr	r3, .L7+16
+	str	r3, [r2, #0]
+	ldr	r3, [fp, #-16]
+	add	r2, r3, #40
+	ldr	r3, .L7+20
+	str	r3, [r2, #0]
+	ldr	r3, [fp, #-16]
+	add	r2, r3, #44
+	ldr	r3, .L7+24
+	str	r3, [r2, #0]
+	ldr	r3, [fp, #-16]
+	add	r2, r3, #48
+	ldr	r3, .L7+28
+	str	r3, [r2, #0]
+	ldr	r3, [fp, #-16]
 	add	r2, r3, #52
-	mov	r3, #760
+	ldr	r3, .L7+32
 	str	r3, [r2, #0]
 	ldr	r2, [fp, #-20]
 	mov	r3, #9
@@ -174,31 +168,31 @@ init_velocity:
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #28
-	ldr	r3, .L7+12
+	ldr	r3, .L7+36
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #32
-	ldr	r3, .L7+16
+	ldr	r3, .L7+40
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #36
-	ldr	r3, .L7+20
+	ldr	r3, .L7+44
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #40
-	ldr	r3, .L7+24
+	ldr	r3, .L7+48
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #44
-	ldr	r3, .L7+28
+	ldr	r3, .L7+52
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #48
-	ldr	r3, .L7+32
+	ldr	r3, .L7+56
 	str	r3, [r2, #0]
 	ldr	r3, [fp, #-20]
 	add	r2, r3, #52
-	ldr	r3, .L7+36
+	ldr	r3, .L7+60
 	str	r3, [r2, #0]
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
@@ -207,7 +201,13 @@ init_velocity:
 .L7:
 	.word	285
 	.word	355
-	.word	758
+	.word	393
+	.word	449
+	.word	511
+	.word	561
+	.word	651
+	.word	663
+	.word	671
 	.word	297
 	.word	350
 	.word	379

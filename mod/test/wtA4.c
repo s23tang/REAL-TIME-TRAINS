@@ -425,10 +425,10 @@ void Printer( ) {
 
 	void (*func)();
 	func = Courier;
-	int adminCour = Create( 4, func );
+	int adminCour = Create( 2, func );
 
 	func = Courier;
-	int timeCour = Create( 4, func );
+	int timeCour = Create( 2, func );
 
 	reply.data1 = myAdmin;
 	Send( adminCour, (char *)&reply, sizeof(ComReqStruct), (char *)&recv, sizeof(ComReqStruct) );
@@ -467,6 +467,11 @@ void Printer( ) {
 	int stopSensor = -1;
 	int stopping = 0;
 	// int waitForTrip = 0;
+
+	int firstTime=0;
+	int sndTime=0;
+	int thrdTime=0;
+	int fthTime=0;
 
 	FOREVER {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
@@ -591,11 +596,52 @@ void Printer( ) {
 							if ( (recv.data2 & mask ) == mask ) onOrOff = 1;
 						}
 						index = (((row - 1)/4 - 2 ) - 1 ) * 16 + counter - 1;
-						if ( stopSensor != -1 ) {
-							if ( index == stopSensor && onOrOff == 1 ) {
-								Putc( uart1XServer, COM1, 0 );
-								Putc( uart1XServer, COM1, 50 );
-							}
+						// if ( stopSensor != -1 ) {
+						// 	if ( index == stopSensor && onOrOff == 1 ) {
+						// 		Putc( uart1XServer, COM1, 0 );
+						// 		Putc( uart1XServer, COM1, 45 );
+						// 		stopSensor = -1;
+						// 	}
+						// }
+						if ( index == 31 && onOrOff == 1 ) {
+							firstTime = Time(clk);
+						}
+						if ( index == 36 && onOrOff == 1 ) {
+							int check1 = Time(clk);
+							check1 = check1 - firstTime;
+							int velo = 401 / ((double)check1/100);
+							myprintf( uart2XServer, COM2, "\033[34;1H%d", velo );
+							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
+						}
+						if ( index == 74 && onOrOff == 1 ) {
+							sndTime = Time(clk);
+						}
+						if ( index == 57 && onOrOff == 1 ) {
+							int check1 = Time(clk);
+							check1 = check1 - sndTime;
+							int velo = 401 / ((double)check1/100);
+							myprintf( uart2XServer, COM2, "\033[35;1H%d", velo );
+							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
+						}
+						if ( index == 52 && onOrOff == 1 ) {
+							thrdTime = Time(clk);
+						}
+						if ( index == 69 && onOrOff == 1 ) {
+							int check1 = Time(clk);
+							check1 = check1 - thrdTime;
+							int velo = 401 / ((double)check1/100);
+							myprintf( uart2XServer, COM2, "\033[36;1H%d", velo );
+							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
+						}
+						if ( index == 43 && onOrOff == 1 ) {
+							fthTime = Time(clk);
+						}
+						if ( index == 3 && onOrOff == 1 ) {
+							int check1 = Time(clk);
+							check1 = check1 - fthTime;
+							int velo = 401 / ((double)check1/100);
+							myprintf( uart2XServer, COM2, "\033[37;1H%d", velo );
+							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
 						}
 						if ( sensorStates[index] != onOrOff ) {
 							if ( subscriber && onOrOff == 1 ) {  // Someone has subscribe for data!! Give him.
@@ -707,15 +753,15 @@ void admin() {
 	Create( 3, func );
 
 	func = routeFinder;
-	Create( 4, func );
+	Create( 3, func );
 	func = trainDriver;
 	Create( 3, func );
 
 	func = Train;
-	Create( 3, func );
+	Create( 4, func );
 
 	func = Terminal;
-	Create( 3, func );
+	Create( 4, func );
 
 	int waitingCourier = -1;
 	FOREVER {
