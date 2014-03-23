@@ -468,11 +468,6 @@ void Printer( ) {
 	int stopping = 0;
 	// int waitForTrip = 0;
 
-	int firstTime=0;
-	int sndTime=0;
-	int thrdTime=0;
-	int fthTime=0;
-
 	FOREVER {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
 
@@ -603,46 +598,7 @@ void Printer( ) {
 						// 		stopSensor = -1;
 						// 	}
 						// }
-						if ( index == 31 && onOrOff == 1 ) {
-							firstTime = Time(clk);
-						}
-						if ( index == 36 && onOrOff == 1 ) {
-							int check1 = Time(clk);
-							check1 = check1 - firstTime;
-							int velo = 401 / ((double)check1/100);
-							myprintf( uart2XServer, COM2, "\033[34;1H%d", velo );
-							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
-						}
-						if ( index == 74 && onOrOff == 1 ) {
-							sndTime = Time(clk);
-						}
-						if ( index == 57 && onOrOff == 1 ) {
-							int check1 = Time(clk);
-							check1 = check1 - sndTime;
-							int velo = 401 / ((double)check1/100);
-							myprintf( uart2XServer, COM2, "\033[35;1H%d", velo );
-							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
-						}
-						if ( index == 52 && onOrOff == 1 ) {
-							thrdTime = Time(clk);
-						}
-						if ( index == 69 && onOrOff == 1 ) {
-							int check1 = Time(clk);
-							check1 = check1 - thrdTime;
-							int velo = 401 / ((double)check1/100);
-							myprintf( uart2XServer, COM2, "\033[36;1H%d", velo );
-							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
-						}
-						if ( index == 43 && onOrOff == 1 ) {
-							fthTime = Time(clk);
-						}
-						if ( index == 3 && onOrOff == 1 ) {
-							int check1 = Time(clk);
-							check1 = check1 - fthTime;
-							int velo = 401 / ((double)check1/100);
-							myprintf( uart2XServer, COM2, "\033[37;1H%d", velo );
-							myprintf( uart2XServer, COM2, "\033[33;%dH", cursor );
-						}
+
 						if ( sensorStates[index] != onOrOff ) {
 							if ( subscriber && onOrOff == 1 ) {  // Someone has subscribe for data!! Give him.
 								ComReqStruct junk;
@@ -723,7 +679,7 @@ void Printer( ) {
 				break;
 			case UPDATE_STAT:
 				{
-					myprintf( uart2XServer, COM2, "\033[7;1H\033[KActual: %d, Expected: %d\n", recv.data1, recv.data2);
+					myprintf( uart2XServer, COM2, "\033[7;1H\033[KstartPos %d, dest: %d, startI:%d\n", recv.data1, recv.data2, recv.data3);
 				}
 				break;
 		}

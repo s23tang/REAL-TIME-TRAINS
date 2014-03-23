@@ -183,6 +183,40 @@ int howFarFromDest(Path* path, int curSensor, track_node* track){
 	return distance;
 }
 
+void getShortestPath(int router, int myAdmin, int startPos, int dest, Path*path){
+	ComReqStruct reqForPath, reqSetSwitch, reply;
+	reqForPath.type  = REQUEST_OK;
+	reqForPath.data1 = startPos;
+	reqForPath.data2 = dest;
+	// Ask for shortest path
+	Send( router, (char *)&reqForPath, sizeof(ComReqStruct), (char *)path, sizeof(Path) );
+			
+	int c;
+	// set switches along the path
+	for ( c = path->startIndex; c > 0; c-- ) {
+		// Search for "even" num switch. Because they are "brach". And set them.
+		if ( path->path[c].index > 79 && path->path[c].index < 124 && (path->path[c].index % 2 == 0) ) {
+			int pos;
+			int cOrS;
+			if ( path->path[c].index <= 114 ) {
+				pos = ( path->path[c].index - 80 ) / 2 + 1;
+			} else { // 3 digits switches
+				pos = ( path->path[c].index - 116 ) / 2 + 153;
+			}
+			if ( path->path[c-1].curved == 1 ) {
+				cOrS = 34;
+			} else {
+				cOrS = 33;
+			}
+			// Tell the admin to set the switch
+			reqSetSwitch.type  = SWITCH_COMMAND;
+			reqSetSwitch.data1 = cOrS;
+			reqSetSwitch.data2 = pos;
+			Send(myAdmin, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
+		}
+	}
+}
+
 void trainDriver(){
 	// Initialize
 	track_node track[TRACK_MAX];
@@ -195,24 +229,25 @@ void trainDriver(){
 	int sender;
 	int me = MyTid();
 
-	int previousTime = 0;    // Time for last sensor triggered
-	int curTime      = 0;    // Time for current sensor triggered
-
-
 	int straightVelocity[14];
 	int curveVelocity[14];
 	init_velocity(straightVelocity, curveVelocity);
 	int stoppingTable[14];
 	init_table(stoppingTable);
 
+	// the starting position of the train.
+	int startPos = -1;
 	// Always wait for command
 	FOREVER{
 
 	Path path;
-	int startPos = -1;
 	int expectedTime = 0;       // The expected time to reach next sensor
 	int updateTo = 0;           // 0 means update to straight, 1 to curved
 	int lastDistance = 0;
+	int triggeredSensor = -1;
+	int previousTime = 0;    // Time for last sensor triggered
+	int curTime      = 0;    // Time for current sensor triggered
+
 	// Wait for GOTO_COMMAND
 	Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
 
@@ -222,10 +257,32 @@ void trainDriver(){
 	send.type = REQUEST_OK;
 	Reply( sender, (char *)&send, sizeof(ComReqStruct) );   // <--- unblocking terminal
 			
-	// subscribe in printer for sensor data. Trying to get the starting position
+	// subscribe in admin for sensor data. Trying to get the starting position
 	send.type  = SUBSCRIBE;
 	send.data1 = me;
 	Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+		// Check if the train knows its current position
+	// if not, wait for first sensor trigger
+	if (startPos == -1)
+	{
+		// Move the train
+		send.type  = GOTO_COMMAND;
+		send.data1 = speed;      // Start with a slow speed, until triger a sensor        
+		send.data2 = train;
+		send.data3 = dest;
+		Send(myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
+		// Wait for sensor data;
+		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
+
+		triggeredSensor = reply.data1;
+		send.type = REQUEST_OK;
+		Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
+		startPos = triggeredSensor;
+	}
+
+	GET_ROUTE:
+	getShortestPath(router, myAdmin, startPos, dest, &path);   // get the shortest route
 
 	// Move the train
 	send.type  = GOTO_COMMAND;
@@ -234,70 +291,12 @@ void trainDriver(){
 	send.data3 = dest;
 	Send( myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
 
+	triggeredSensor = startPos;
+
 	FOREVER{
-		// Wait for sensor data;
-		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
-		// Putc(uart2XServer, COM2, 'a');
-		int triggeredSensor = reply.data1;
-		send.type = REQUEST_OK;
-		Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
-		if (reply.type != REQUEST_OK) // prevent some strange case(user type too much command for driver)
-		{
-			continue;
-		}
-
-		// Reach dest! Un-subscribe for sensor data!!!
-		// if (triggeredSensor == dest)
-		// {
-
-		// }
-
 		// calculate the time difference
 		previousTime = curTime;
 		curTime = Time(clkServer);
-	
-		if (startPos == -1) //First time got sensor data. Use it as startPos
-		{
-			startPos = triggeredSensor;
-
-			ComReqStruct reqForPath, reqSetSwitch;
-			reqForPath.type  = REQUEST_OK;
-			reqForPath.data1 = startPos;
-			reqForPath.data2 = dest;
-			// Ask for shortest path
-			Send( router, (char *)&reqForPath, sizeof(ComReqStruct), (char *)&path, sizeof(Path) );
-			
-			int c;
-			// set switches along the path
-			for ( c = path.startIndex; c > 0; c-- ) {
-				// Search for "even" num switch. Because they are "brach". And set them.
-				if ( path.path[c].index > 79 && path.path[c].index < 124 && (path.path[c].index % 2 == 0) ) {
-					int pos;
-					int cOrS;
-					if ( path.path[c].index <= 114 ) {
-						pos = ( path.path[c].index - 80 ) / 2 + 1;
-					} else { // 3 digits switches
-						pos = ( path.path[c].index - 116 ) / 2 + 153;
-					}
-					if ( path.path[c-1].curved == 1 ) {
-						cOrS = 34;
-					} else {
-						cOrS = 33;
-					}
-					// Tell the printer to set the switch
-					reqSetSwitch.type  = SWITCH_COMMAND;
-					reqSetSwitch.data1 = cOrS;
-					reqSetSwitch.data2 = pos;
-					Send(myAdmin, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
-				}
-			}
-		}
-
-		//update the stat on the screen
-		send.type  = UPDATE_STAT;
-		send.data1 = curTime - previousTime;
-		send.data2 = expectedTime;
-		Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 		int nextSensor;       // <---- use to decide which speed table to use.
 		int nextSensorDistance = findNextDistance(&path, triggeredSensor, track, &nextSensor);
@@ -337,12 +336,22 @@ void trainDriver(){
 		send.data1 = locationInfo;
 		Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
-
 		// check if we should slow down
 		int howFarFromDestination = howFarFromDest(&path, triggeredSensor, track);
+
 		// have to send out stop command before next sensor
 		if ((howFarFromDestination - nextSensorDistance) <= stoppingTable[speed-1]) 
 		{
+
+		// //update the stat on the screen
+		// send.type  = UPDATE_STAT;
+		// send.data1 = howFarFromDestination;
+		// send.data2 = nextSensorDistance;
+		// // send.data1 = nextSensorDistance;
+		// // send.data2 = howFarFromDestination;
+		// send.data3 = stoppingTable[speed-1];
+		// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
 			int canRunFor = howFarFromDestination - stoppingTable[speed-1];
 			// if (dest == 11)
 			// {
@@ -362,9 +371,33 @@ void trainDriver(){
 
 			send.type  = UNSUBSCRIBE;
 			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+			
+			// remember my current position for next GOTO command
+			startPos = dest;
 			break;
 		}
+		// Wait for sensor data;
+		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
+		// Putc(uart2XServer, COM2, 'a');
+		triggeredSensor = reply.data1;
+		send.type = REQUEST_OK;
+		Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
+		if (reply.type != REQUEST_OK) // prevent some strange case(user type too much command for driver)
+		{
+			continue;
+		}
 
+		// not the sensor that we expected, we need to recalculate for a new route
+		if (triggeredSensor != nextSensor)
+		{	// Re-initialize the values
+			expectedTime = 0;       // The expected time to reach next sensor
+			updateTo = 0;           // 0 means update to straight, 1 to curved
+			lastDistance = 0;
+			previousTime = 0;    // Time for last sensor triggered
+			curTime      = 0;    // Time for current sensor triggered
+			startPos = triggeredSensor;
+			goto GET_ROUTE;
+		}
 
 	}
 
