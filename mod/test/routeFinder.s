@@ -399,83 +399,180 @@ route:
 	.align	2
 .LC0:
 	.ascii	"route\000"
+	.align	2
+.LC1:
+	.ascii	"monitor\000"
 	.text
 	.align	2
 	.global	routeFinder
 	.type	routeFinder, %function
 routeFinder:
-	@ args = 0, pretend = 0, frame = 7344
+	@ args = 0, pretend = 0, frame = 7800
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #7296
-	sub	sp, sp, #48
-	ldr	sl, .L51
-.L50:
+	sub	sp, sp, #7744
+	sub	sp, sp, #56
+	ldr	sl, .L57
+.L56:
 	add	sl, pc, sl
 	sub	r3, fp, #6912
 	sub	r3, r3, #16
-	sub	r3, r3, #8
+	sub	r3, r3, #20
 	mov	r0, r3
 	bl	init_tracka(PLT)
-	ldr	r3, .L51+4
+	ldr	r3, .L57+4
 	add	r3, sl, r3
 	mov	r0, r3
 	bl	RegisterAs(PLT)
+	bl	MyParentTid(PLT)
+	mov	r3, r0
+	str	r3, [fp, #-36]
+	ldr	r3, .L57+8
+	add	r3, sl, r3
+	mov	r0, r3
+	bl	WhoIs(PLT)
+	mov	r3, r0
+	str	r3, [fp, #-32]
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r2, r1, r3
+	mov	r3, #0
+	str	r3, [r2, #0]
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r2, r1, r3
+	mov	r3, #0
+	str	r3, [r2, #4]
 .L48:
 	sub	r2, fp, #6912
 	sub	r2, r2, #16
-	sub	r2, r2, #24
-	sub	r3, fp, #6912
+	sub	r2, r2, #36
+	sub	r3, fp, #6976
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #8
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
 	bl	Receive(PLT)
-	ldr	r3, .L51+8
+	ldr	r3, .L57+16
 	mov	r2, #4
 	sub	r1, fp, #16
 	add	r3, r1, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
-	str	r3, [fp, #-24]
-	ldr	r3, .L51+8
+	str	r3, [fp, #-28]
+	ldr	r3, .L57+16
 	mov	r2, #8
 	sub	r1, fp, #16
 	add	r3, r1, r3
 	add	r3, r3, r2
 	ldr	r3, [r3, #0]
-	str	r3, [fp, #-20]
-	sub	r2, fp, #6912
-	sub	r2, r2, #16
-	sub	r2, r2, #8
-	sub	r3, fp, #7296
-	sub	r3, r3, #16
-	sub	r3, r3, #48
-	mov	r0, r2
-	mov	r1, r3
-	ldr	r2, [fp, #-24]
-	ldr	r3, [fp, #-20]
-	bl	route(PLT)
-	ldr	r3, .L51+12
+	str	r3, [fp, #-24]
+	ldr	r3, .L57+12
+	sub	r2, fp, #16
+	add	r3, r2, r3
+	ldr	r3, [r3, #0]
+	cmp	r3, #0
+	beq	.L49
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r3, r1, r3
+	ldr	r2, [r3, #0]
+	ldr	r3, .L57+20
+	sub	r1, fp, #16
+	ldr	r3, [r1, r3]
+	cmp	r2, r3
+	bne	.L51
+.L49:
+	ldr	r3, .L57+20
 	sub	r1, fp, #16
 	ldr	r2, [r1, r3]
-	sub	r3, fp, #7296
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r3, r1, r3
+	str	r2, [r3, #0]
+	mov	r3, #0
+	str	r3, [fp, #-20]
+	b	.L52
+.L51:
+	ldr	r3, .L57+12
+	sub	r2, fp, #16
+	add	r3, r2, r3
+	ldr	r3, [r3, #4]
+	cmp	r3, #0
+	beq	.L53
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r3, r1, r3
+	ldr	r2, [r3, #4]
+	ldr	r3, .L57+20
+	sub	r1, fp, #16
+	ldr	r3, [r1, r3]
+	cmp	r2, r3
+	bne	.L52
+.L53:
+	ldr	r3, .L57+20
+	sub	r1, fp, #16
+	ldr	r2, [r1, r3]
+	ldr	r3, .L57+12
+	sub	r1, fp, #16
+	add	r3, r1, r3
+	str	r2, [r3, #4]
+	mov	r3, #1
+	str	r3, [fp, #-20]
+.L52:
+	ldr	r1, [fp, #-20]
+	mov	r3, r1
+	mov	r3, r3, asl #2
+	add	r3, r3, r1
+	mov	r2, r3, asl #2
+	add	r3, r3, r2
+	mov	r3, r3, asl #2
+	add	r3, r3, r1
+	mov	r3, r3, asl #2
+	sub	r2, fp, #7744
+	sub	r2, r2, #16
+	sub	r2, r2, #56
+	add	r2, r2, r3
+	sub	r3, fp, #6912
 	sub	r3, r3, #16
-	sub	r3, r3, #48
-	mov	r0, r2
+	sub	r3, r3, #20
+	mov	r0, r3
+	mov	r1, r2
+	ldr	r2, [fp, #-28]
+	ldr	r3, [fp, #-24]
+	bl	route(PLT)
+	ldr	r3, .L57+20
+	sub	r2, fp, #16
+	ldr	r0, [r2, r3]
+	ldr	r1, [fp, #-20]
+	mov	r3, r1
+	mov	r3, r3, asl #2
+	add	r3, r3, r1
+	mov	r2, r3, asl #2
+	add	r3, r3, r2
+	mov	r3, r3, asl #2
+	add	r3, r3, r1
+	mov	r3, r3, asl #2
+	mov	r2, r3
+	sub	r3, fp, #7744
+	sub	r3, r3, #16
+	sub	r3, r3, #56
+	add	r3, r3, r2
 	mov	r1, r3
 	mov	r2, #404
 	bl	Reply(PLT)
 	b	.L48
-.L52:
+.L58:
 	.align	2
-.L51:
-	.word	_GLOBAL_OFFSET_TABLE_-(.L50+8)
+.L57:
+	.word	_GLOBAL_OFFSET_TABLE_-(.L56+8)
 	.word	.LC0(GOTOFF)
-	.word	-6936
-	.word	-6940
+	.word	.LC1(GOTOFF)
+	.word	-6992
+	.word	-6948
+	.word	-6984
 	.size	routeFinder, .-routeFinder
 	.ident	"GCC: (GNU) 4.0.2"

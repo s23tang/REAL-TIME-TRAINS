@@ -1,5 +1,5 @@
 make clean
-make mt=30 mp=10
+make mt=40 mp=10
 rm /u/cs452/tftp/ARM/wt/wtP1.elf
 cp wtA4.elf /u/cs452/tftp/ARM/wt/wtP1.elf
 chmod a+rw /u/cs452/tftp/ARM/wt/wtP1.elf

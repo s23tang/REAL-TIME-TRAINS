@@ -109,12 +109,12 @@ DelayUntil:
 	.global	clockServer
 	.type	clockServer, %function
 clockServer:
-	@ args = 0, pretend = 0, frame = 440
+	@ args = 0, pretend = 0, frame = 560
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #444
+	sub	sp, sp, #564
 	ldr	sl, .L36
 .L35:
 	add	sl, pc, sl
@@ -143,12 +143,12 @@ clockServer:
 	mov	r3, #0
 	str	r3, [fp, #-40]
 	mov	r3, #0
-	str	r3, [fp, #-420]
+	str	r3, [fp, #-540]
 	mov	r3, #0
-	str	r3, [fp, #-436]
+	str	r3, [fp, #-556]
 	ldr	r2, [fp, #-52]
-	sub	r1, fp, #436
-	sub	ip, fp, #452
+	sub	r1, fp, #556
+	sub	ip, fp, #572
 	mov	r3, #16
 	str	r3, [sp, #0]
 	mov	r0, r2
@@ -160,7 +160,7 @@ clockServer:
 	b	.L34
 .L13:
 .L34:
-	sub	r2, fp, #452
+	sub	r2, fp, #572
 	sub	r3, fp, #56
 	mov	r0, r3
 	mov	r1, r2
@@ -168,7 +168,7 @@ clockServer:
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
-	ldr	r3, [fp, #-452]
+	ldr	r3, [fp, #-572]
 	sub	r3, r3, #1
 	cmp	r3, #15
 	addls	pc, pc, r3, asl #2
@@ -197,9 +197,9 @@ clockServer:
 	b	.L14
 .L15:
 	mov	r3, #0
-	str	r3, [fp, #-436]
+	str	r3, [fp, #-556]
 	ldr	r3, [fp, #-52]
-	sub	r2, fp, #436
+	sub	r2, fp, #556
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
@@ -216,20 +216,20 @@ clockServer:
 	mov	r2, r3, asr #2
 	mov	r3, r1, asr #31
 	rsb	r2, r3, r2
-	str	r2, [fp, #-456]
-	ldr	r3, [fp, #-456]
+	str	r2, [fp, #-576]
+	ldr	r3, [fp, #-576]
 	mov	r3, r3, asl #2
-	ldr	r2, [fp, #-456]
+	ldr	r2, [fp, #-576]
 	add	r3, r3, r2
 	mov	r3, r3, asl #1
 	rsb	r1, r3, r1
-	str	r1, [fp, #-456]
-	ldr	r3, [fp, #-456]
+	str	r1, [fp, #-576]
+	ldr	r3, [fp, #-576]
 	cmp	r3, #0
 	bne	.L14
 	mov	r3, #3
-	str	r3, [fp, #-436]
-	sub	r3, fp, #436
+	str	r3, [fp, #-556]
+	sub	r3, fp, #556
 	ldr	r0, [fp, #-36]
 	mov	r1, r3
 	mov	r2, #16
@@ -239,11 +239,11 @@ clockServer:
 	b	.L14
 .L16:
 	mov	r3, #0
-	str	r3, [fp, #-436]
+	str	r3, [fp, #-556]
 	ldr	r3, [fp, #-40]
-	str	r3, [fp, #-432]
+	str	r3, [fp, #-552]
 	ldr	r3, [fp, #-56]
-	sub	r2, fp, #436
+	sub	r2, fp, #556
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
@@ -252,7 +252,7 @@ clockServer:
 	str	r3, [fp, #-32]
 	b	.L14
 .L17:
-	ldr	r2, [fp, #-448]
+	ldr	r2, [fp, #-568]
 	ldr	r3, [fp, #-40]
 	add	r3, r2, r3
 	str	r3, [fp, #-24]
@@ -282,7 +282,7 @@ clockServer:
 	add	r3, r3, r2
 	add	r3, r3, r0
 	str	r1, [r3, #0]
-	sub	r3, fp, #420
+	sub	r3, fp, #540
 	str	r3, [fp, #-20]
 	b	.L23
 .L24:
@@ -311,7 +311,7 @@ clockServer:
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	sub	r3, fp, #416
+	sub	r3, fp, #536
 	add	r3, r3, r2
 	ldr	r2, [fp, #-20]
 	str	r3, [r2, #0]
@@ -348,12 +348,12 @@ clockServer:
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	sub	r3, fp, #416
+	sub	r3, fp, #536
 	add	r3, r3, r2
 	ldr	r2, [fp, #-20]
 	str	r3, [r2, #0]
 .L14:
-	ldr	r3, [fp, #-420]
+	ldr	r3, [fp, #-540]
 	str	r3, [fp, #-28]
 	b	.L29
 .L30:
@@ -363,17 +363,17 @@ clockServer:
 	cmp	r2, r3
 	bne	.L13
 	mov	r3, #0
-	str	r3, [fp, #-436]
+	str	r3, [fp, #-556]
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #4]
-	sub	r2, fp, #436
+	sub	r2, fp, #556
 	mov	r0, r3
 	mov	r1, r2
 	mov	r2, #16
 	bl	Reply(PLT)
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #8]
-	str	r3, [fp, #-420]
+	str	r3, [fp, #-540]
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #8]
 	str	r3, [fp, #-28]
@@ -390,8 +390,8 @@ clockServer:
 	.word	.LC1(GOTOFF)
 	.word	notifier(GOT)
 	.word	1717986919
-	.word	-400
-	.word	-396
-	.word	-392
+	.word	-520
+	.word	-516
+	.word	-512
 	.size	clockServer, .-clockServer
 	.ident	"GCC: (GNU) 4.0.2"

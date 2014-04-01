@@ -4,6 +4,7 @@
 #include "track_data.h"
 #include "io.h"
 #include "nameServer.h"
+#include "trackMonitor.h"
 
 // Pass the index in just to be consistent (for src and dest)
 void route( track_node *track, Path *shortest, int src, int dest ) {
@@ -99,10 +100,16 @@ void routeFinder( ) {
 	init_tracka(track);
 
 	RegisterAs( "route" );
+	int myAdmin = MyParentTid();
+	int monitor = WhoIs( "monitor" );
 
 	// int printer = MyParentTid();
-	ComReqStruct reply;
+	ComReqStruct reply, reservation,send;
 	int sender;
+	int trains[2]; // first train use the first Path structure, second train use the second path
+	trains[0] = 0;
+	trains[1] = 0;
+	Path paths[2];
 
 	FOREVER {
 		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
@@ -110,10 +117,25 @@ void routeFinder( ) {
 		int src  = reply.data1;	// No offset right now
 		int dest = reply.data2;
 
-		// Begin finding the shortest path from the src to the dest
-		Path shortest;
-		route( track, &shortest, src, dest );
+		// decide which path structure should be used for the train driver
+		int i;
+		if(trains[0] == 0 || sender == trains[0]) {
+			// no trains has registered yet
+			trains[0] = sender; // register the train driver
+			i = 0;
+		} else if(trains[1] == 0 || sender == trains[1]){
+			trains[1] = sender;
+			i = 1;
+		}
 
-		Reply( sender, (char *)&shortest, sizeof(Path) );
+		// Begin finding the shortest path from the src to the dest
+		route( track, &paths[i], src, dest );
+		// Send the path to the trackMonitor for reservation
+		// reservation.type = RESERVE_TRACK;
+		// reservation.data1 = (int)&paths[i];
+		// reservation.data2 = sender;
+		// Send( monitor, (char *)&reservation, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+		Reply( sender, (char *)&paths[i], sizeof(Path) );
 	}
 }

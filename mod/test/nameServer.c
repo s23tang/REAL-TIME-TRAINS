@@ -43,6 +43,7 @@ void nameServer() {
     serverTable[UART2XMIT_S].name 	= "u2x";
     serverTable[ROUTE_FINDER].name  = "route";
     serverTable[DRIVER].name  = "driver";
+    serverTable[MONITOR].name = "monitor";
 
     int senderTid;
     NSstruct request;
@@ -92,7 +93,12 @@ void nameServer() {
                         reply.type = REQUEST_OK;
                         serverIndex = DRIVER;
                         serverTable[serverIndex].tid = senderTid;
-                    } else {
+                    } else if (reqName[0] == 'm') {
+                        reply.type = REQUEST_OK;
+                        serverIndex = MONITOR;
+                        serverTable[serverIndex].tid = senderTid;
+                    }
+                    else {
                     	reply.type = REQUEST_BAD;
                     }
 
@@ -132,7 +138,11 @@ void nameServer() {
                         reply.type = REQUEST_OK;
                         serverIndex = DRIVER;
                         reply.tid = serverTable[serverIndex].tid;
-                    } else {
+                    } else if (reqName[0] == 'm') {
+                        reply.type = REQUEST_OK;
+                        serverIndex = MONITOR;
+                        reply.tid = serverTable[serverIndex].tid;
+                    }else {
                     	reply.type = REQUEST_BAD;
                     }
 

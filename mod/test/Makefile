@@ -16,7 +16,7 @@ ASFLAGS	= -mcpu=arm920t -mapcs-32
 
 LDFLAGS = -init main -Map wtA4.map -N  -T orex.ld -L/u/wbcowan/gnuarm-4.0.2/lib/gcc/arm-elf/4.0.2 -L../lib -L.
 
-all: syscalls.s courier.s nameServer.s track_data.s routeFinder.s trainDriver.s calibrateServer.s notifier.s clockServer.s wtA4.s io.s wtA4.elf
+all: syscalls.s courier.s nameServer.s trackMonitor.s track_data.s routeFinder.s trainDriver.s calibrateServer.s notifier.s clockServer.s wtA4.s io.s wtA4.elf
 
 
 syscalls.s: syscalls.c syscalls.h
@@ -36,6 +36,13 @@ nameServer.s: nameServer.c nameServer.h
 
 nameServer.o: nameServer.s
 	$(AS) $(ASFLAGS) -o nameServer.o nameServer.s
+
+trackMonitor.s: trackMonitor.c trackMonitor.h
+	$(XCC) -S $(CFLAGS) trackMonitor.c
+
+trackMonitor.o: trackMonitor.s
+	$(AS) $(ASFLAGS) -o trackMonitor.o trackMonitor.s
+
 
 track_data.s: track_data.c track_data.h track_node.h
 	$(XCC) -S $(CFLAGS) track_data.c
@@ -91,8 +98,8 @@ wtA4.s: wtA4.c wtA4.h
 wtA4.o: wtA4.s
 	$(AS) $(ASFLAGS) -o wtA4.o wtA4.s
 
-wtA4.elf: syscalls.o courier.o nameServer.o track_data.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o
-	$(LD) $(LDFLAGS) -o $@ syscalls.o courier.o nameServer.o track_data.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o -lbwio -lgcc
+wtA4.elf: syscalls.o courier.o nameServer.o trackMonitor.o track_data.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o
+	$(LD) $(LDFLAGS) -o $@ syscalls.o courier.o nameServer.o trackMonitor.o track_data.o routeFinder.o trainDriver.o calibrateServer.o notifier.o clockServer.o io.o wtA4.o -lbwio -lgcc
 
 clean:
 	-rm -f wtA4.elf *.s *.o wtA4.map

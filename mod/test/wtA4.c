@@ -12,6 +12,7 @@
 #include "trainDriver.h"
 #include "track_data.h"
 #include "courier.h"
+#include "trackMonitor.h"
 
 /*
  * User tasks are below
@@ -20,11 +21,17 @@
 void Terminal() {
 	int server = WhoIs( "u2g" );
 	// int router = WhoIs( "route" );
-	int driver = WhoIs( "driver" );
-	int myAdmin = MyParentTid();
+	// int driver = WhoIs( "driver" );
+	// int myAdmin = MyParentTid();
 	ComReqStruct send, reply;
 	char input[MAX_INPUT];
 	unsigned int inputIndex = 0;
+
+	int myAdmin, driver;
+	Receive(&myAdmin, (char *)&send, sizeof(ComReqStruct));
+	Reply(myAdmin, (char *)&send, sizeof(ComReqStruct));
+	int train1 = send.data1;
+	int train2 = send.data2;
 
 	FOREVER {
 		char c = Getc( server, COM2 );
@@ -150,7 +157,12 @@ void Terminal() {
 								send.data2 = speed;
 								send.data3 = train;
 								// Pass the command to the driver
-								Send( driver, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+								if (train == 49)
+								{
+									Send( train1, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+								} else if(train == 45){
+									Send( train2, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+								}
 							}
 						}
 					} else if ( input[i] == 'r' && input[i+1] == 'v' ) {
@@ -356,6 +368,7 @@ void Printer( ) {
 	int clk = WhoIs( "clock" );
 	int uart2XServer = WhoIs( "u2x" );
 	int uart1XServer = WhoIs( "u1x ");
+	int monitor = 0;
 	myprintf( uart2XServer, COM2, "\033[2J");
 
 	myprintf( uart2XServer, COM2, "\033[H\033[KTIME 00:00:0");
@@ -391,8 +404,7 @@ void Printer( ) {
 	myprintf( uart2XServer, COM2,  " 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 \n");
 	myprintf( uart2XServer, COM2,  "---------------------------------------------------------------");
 
-	myprintf( uart2XServer, COM2,  "\033[33;1H>>\033[33;4H");
-	
+	myprintf( uart2XServer, COM2,  "\033[33;1H>>\033[33;4H");	
 
 	// Start Train Controller Here
 	Putc(uart1XServer, COM1, (char) 0x60);
@@ -404,6 +416,8 @@ void Printer( ) {
 	int min = 0;
 	int sec = 0;
 	int tenth = 0;
+	int first = 0;
+	int second = 0;
 
 	int reverseTrains[80];
 	int speedTrains[80];
@@ -412,7 +426,6 @@ void Printer( ) {
 	// subscriber: Used to find out who is subscribing for sensor data.
 	//        	   Should be an array in the future
 	int subscriber = 0; 
-	int *locationInfo = -1;
 	int timeCount = 0;
 
 	int counter;
@@ -486,17 +499,16 @@ void Printer( ) {
 					//myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\033[33;%dH", min/10, min%10, sec/10, sec%10, tenth, cursor );
 					myprintf( uart2XServer, COM2, "\033[H\033[KTIME %d%d:%d%d:%d\n", min/10, min%10, sec/10, sec%10, tenth );
 					myprintf( uart2XServer, COM2, "Idle Usage: %d%%\033[33;%dH", percent, cursor );
-					if (locationInfo != -1)
-					{ 
-						int t = Time(clk);
-						int d = ((double)(t - locationInfo[2]) / 100) * locationInfo[1];
-						myprintf( uart2XServer, COM2, "\033[8;1H\033[KLocation: %dmm past sensor: %s\033[33;%dH",  d, track[locationInfo[0]].name, cursor);
-					}
+					// if (locationInfo != -1)
+					// { 
+					// 	int t = Time(clk);
+					// 	int d = ((double)(t - locationInfo[2]) / 100) * locationInfo[1];
+					// 	myprintf( uart2XServer, COM2, "\033[8;1H\033[KLocation: %dmm past sensor: %s\033[33;%dH",  d, track[locationInfo[0]].name, cursor);
+					// }
 				}
 				break;
 			case TRAIN_POS:
 				{
-					locationInfo = recv.data1;
 				}
 				break;
 			case PRINT_CHAR:
@@ -598,14 +610,26 @@ void Printer( ) {
 						// 		stopSensor = -1;
 						// 	}
 						// }
+						if ( index == 16 && onOrOff == 1 ) {
+							first = Time(clk);
+						}
+						if ( index == 61 && onOrOff == 1 ) {
+							second = Time(clk);
+							int wtfReal = 398/(((double)second - first)/100);
+							myprintf( uart2XServer, COM2, "\033[K\033[34;1H%d\033[33;%dH", wtfReal, cursor);
+						}
 
 						if ( sensorStates[index] != onOrOff ) {
 							if ( subscriber && onOrOff == 1 ) {  // Someone has subscribe for data!! Give him.
 								ComReqStruct junk;
-								reply.type = REQUEST_OK;
+								reply.type = SENSOR_TRIGGERED;
 								reply.data1 = index;
 								// Notify the trainDriver
-								Send( subscriber, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
+								if (monitor == 0)
+								{
+									monitor = WhoIs("monitor");
+								}
+								Send( monitor, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
 							}
 							if ( onOrOff == 1 ) {
 								myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[0m", row, col, onOrOff );
@@ -674,12 +698,19 @@ void Printer( ) {
 			case UNSUBSCRIBE:
 				{   // Do not send sensor data to driver anymore!!
 					subscriber = 0;
-					locationInfo = -1;
 				}
 				break;
 			case UPDATE_STAT:
 				{
-					myprintf( uart2XServer, COM2, "\033[7;1H\033[KstartPos %d, dest: %d, startI:%d\n", recv.data1, recv.data2, recv.data3);
+					// myprintf( uart2XServer, COM2, "\033[7;1H\033[Ktrain1: %d, train2: %d\n", recv.data1,recv.data2);
+					// myprintf( uart2XServer, COM2, "Start %d, End: %d\n", recv.data1,recv.data2);
+
+					int i;
+					Sensor *sensors = recv.data1;
+					for ( i = 0; i < recv.data2; i++)
+					{
+						myprintf(uart2XServer, COM2, "sensor: %d, id: %d\n", sensors[i].index, recv.data3);
+					}
 				}
 				break;
 		}
@@ -705,19 +736,27 @@ void admin() {
 	int sender;
 
 	void (*func)();
+	func = trackMonitor;
+	Create( 2, func );
+
 	func = Printer;
 	Create( 3, func );
 
 	func = routeFinder;
 	Create( 3, func );
 	func = trainDriver;
-	Create( 3, func );
+	int tid1 = Create( 3, func );
+	int tid2 = Create( 3, func );
 
 	func = Train;
 	Create( 4, func );
 
 	func = Terminal;
-	Create( 4, func );
+	int tid3 = Create( 4, func );
+
+	send.data1 = tid1;
+	send.data2 = tid2;
+	Send(tid3, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 
 	int waitingCourier = -1;
 	FOREVER {
@@ -782,7 +821,6 @@ void firstUserTask(){
 
 	func = admin;
 	tid = Create( 2, func );
-
 
 	// Idle task
 	func = T2;
@@ -1342,7 +1380,7 @@ void handle( TD *tds, Queue *priorityQueues, Request *req, Notifier *notifiers, 
 					receiver->retVal = copyLen;
 					*(receiver->senderTid) = senderTid;        // Indicate who the sender is
 				}
-				else { 
+				else {
 					sender->state = RCV_BLOCKED;
 					// Add the sender to receiver's sendQ
 					sendQ[receiverTid-1].queue[sendQ[receiverTid-1].endIndex] = senderTid;

@@ -5,6 +5,7 @@
 #include "nameServer.h"
 #include "routeFinder.h"
 #include "clockServer.h"
+#include "trackMonitor.h"
 #include "io.h"
 
 // void init_table(int *table){ // train 45
@@ -191,19 +192,110 @@ void getShortestPath(int router, int myAdmin, int startPos, int dest, Path*path)
 	// Ask for shortest path
 	Send( router, (char *)&reqForPath, sizeof(ComReqStruct), (char *)path, sizeof(Path) );
 			
-	int c;
-	// set switches along the path
-	for ( c = path->startIndex; c > 0; c-- ) {
-		// Search for "even" num switch. Because they are "brach". And set them.
-		if ( path->path[c].index > 79 && path->path[c].index < 124 && (path->path[c].index % 2 == 0) ) {
+	// int c;
+	// // set switches along the path
+	// for ( c = path->startIndex; c > 0; c-- ) {
+	// 	// Search for "even" num switch. Because they are "brach". And set them.
+	// 	if ( path->path[c].index > 79 && path->path[c].index < 124 && (path->path[c].index % 2 == 0) ) {
+	// 		int pos;
+	// 		int cOrS;
+	// 		if ( path->path[c].index <= 114 ) {
+	// 			pos = ( path->path[c].index - 80 ) / 2 + 1;
+	// 		} else { // 3 digits switches
+	// 			pos = ( path->path[c].index - 116 ) / 2 + 153;
+	// 		}
+	// 		if ( path->path[c-1].curved == 1 ) {
+	// 			cOrS = 34;
+	// 		} else {
+	// 			cOrS = 33;
+	// 		}
+	// 		// Tell the admin to set the switch
+	// 		reqSetSwitch.type  = SWITCH_COMMAND;
+	// 		reqSetSwitch.data1 = cOrS;
+	// 		reqSetSwitch.data2 = pos;
+	// 		Send(myAdmin, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
+	// 	}
+	// }
+}
+
+// find the index of the current landmark on the path
+int findIndexAlongPath(Path *path, int curLandmark){
+	int i;
+	for( i = 0; i <= path->startIndex; i++ ){
+		if (path->path[i].index == curLandmark)
+		{
+			return i;
+		}
+	}
+	return 0;
+}
+
+
+// reserve the edges along the path. the total distance of the edges must be greater than
+// the stopping distance of current speed. 
+// Also set the switches within the reserved edges
+int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark, track_node *track, int speed, int *stoppingTable, int me){
+	Sensor targets[15];   // a place to hold the edges that I want to reserve
+	int branches[15];   // branches that we need to set after reservation
+	int numOfBranches = 0;
+	int numOfTarget = 0;    // number of edges that I want to reserve.
+	ComReqStruct send, reply, reqSetSwitch;
+
+	int reservedDistance = 0;         // the total distance of the edges that we want to reserve
+	int nextSensor;
+	
+	int count = 0;
+	int buffer = findNextDistance(path, curLandmark, track, &nextSensor);
+	// while (reservedDistance <= stoppingTable[speed] + buffer){ // loop when we havent got enough edges
+	while (count <= 2){ // loop when we havent got enough edges
+		int nextDistance = findNextDistance(path, curLandmark, track, &nextSensor);
+		// reservedDistance = reservedDistance + nextDistance;
+			// count++;
+			// send.type  = UPDATE_STAT;
+			// send.data1 = me;
+			// send.data2 = nextDistance;
+			// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		while(curLandmark != nextSensor) { // add the edges that we want to reserve
+			if (track[curLandmark].type == NODE_BRANCH)
+			{	// record the branches that we need to set
+				branches[numOfBranches] = curLandmark;
+				numOfBranches++;
+			}
+			if (track[curLandmark].type == NODE_SENSOR){
+				targets[numOfTarget].index = curLandmark;
+				targets[numOfTarget].reservedBy = me;
+				numOfTarget++;
+			}
+			int index = findIndexAlongPath(path, curLandmark);
+			curLandmark = path->path[index-1].index;
+		}
+		count++;
+		if (nextDistance == 0)  // in dest already
+		{
+			return 3;
+		}
+	}
+
+	// send out the reserve request
+	send.type = RESERVE_TRACK;
+	send.data1 = targets;
+	send.data2 = numOfTarget;
+	Send( monitor, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+	// check the reply to see if reservation successed
+	if (reply.type == REQUEST_OK)
+	{	//set the switches
+		int i;
+		for(i = 0; i < numOfBranches; i++){
 			int pos;
 			int cOrS;
-			if ( path->path[c].index <= 114 ) {
-				pos = ( path->path[c].index - 80 ) / 2 + 1;
+			if ( branches[i] <= 114 ) {
+				pos = ( branches[i] - 80 ) / 2 + 1;
 			} else { // 3 digits switches
-				pos = ( path->path[c].index - 116 ) / 2 + 153;
+				pos = ( branches[i] - 116 ) / 2 + 153;
 			}
-			if ( path->path[c-1].curved == 1 ) {
+			int next = findIndexAlongPath(path, branches[i]) - 1;
+			if ( path->path[next].curved == 1 ) {
 				cOrS = 34;
 			} else {
 				cOrS = 33;
@@ -214,17 +306,23 @@ void getShortestPath(int router, int myAdmin, int startPos, int dest, Path*path)
 			reqSetSwitch.data2 = pos;
 			Send(myAdmin, (char *)&reqSetSwitch, sizeof(ComReqStruct), (char*)&reply, sizeof(ComReqStruct));
 		}
+	} else {
+		// send the stop command
+		return 0;
 	}
+
+	return 1;
 }
 
 void trainDriver(){
 	// Initialize
 	track_node track[TRACK_MAX];
 	init_tracka(track);
-	RegisterAs( "driver" );
+	// RegisterAs( "driver" );
 	int myAdmin = MyParentTid();
 	int router  = WhoIs("route");
 	int clkServer = WhoIs( "clock" );
+	int monitor = WhoIs( "monitor" );
 	ComReqStruct send, reply;
 	int sender;
 	int me = MyTid();
@@ -240,166 +338,200 @@ void trainDriver(){
 	// Always wait for command
 	FOREVER{
 
-	Path path;
-	int expectedTime = 0;       // The expected time to reach next sensor
-	int updateTo = 0;           // 0 means update to straight, 1 to curved
-	int lastDistance = 0;
-	int triggeredSensor = -1;
-	int previousTime = 0;    // Time for last sensor triggered
-	int curTime      = 0;    // Time for current sensor triggered
+		Path path;
+		int expectedTime = 0;       // The expected time to reach next sensor
+		int updateTo = 0;           // 0 means update to straight, 1 to curved
+		int lastDistance = 0;
+		int triggeredSensor = -1;
+		int previousTime = 0;    // Time for last sensor triggered
+		int curTime      = 0;    // Time for current sensor triggered
 
-	// Wait for GOTO_COMMAND
-	Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
-
-	int dest  = reply.data1;
-	int speed = reply.data2;
-	int train = reply.data3;
-	send.type = REQUEST_OK;
-	Reply( sender, (char *)&send, sizeof(ComReqStruct) );   // <--- unblocking terminal
-			
-	// subscribe in admin for sensor data. Trying to get the starting position
-	send.type  = SUBSCRIBE;
-	send.data1 = me;
-	Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
-		// Check if the train knows its current position
-	// if not, wait for first sensor trigger
-	if (startPos == -1)
-	{
-		// Move the train
-		send.type  = GOTO_COMMAND;
-		send.data1 = speed;      // Start with a slow speed, until triger a sensor        
-		send.data2 = train;
-		send.data3 = dest;
-		Send(myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
-		// Wait for sensor data;
+		// Wait for GOTO_COMMAND
 		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
 
-		triggeredSensor = reply.data1;
+		int dest  = reply.data1;
+		int speed = reply.data2;
+		int train = reply.data3;
 		send.type = REQUEST_OK;
-		Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
-		startPos = triggeredSensor;
-	}
+		Reply( sender, (char *)&send, sizeof(ComReqStruct) );   // <--- unblocking terminal
+				
+		// subscribe in monitor for sensor data. Trying to get the starting position
+		send.type  = SENSOR_SUBSCRIBE;
+		send.data1 = -1; // not sure where i am. No guess for now
+		send.data2 = -1;
+		Send( monitor, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
-	GET_ROUTE:
-	getShortestPath(router, myAdmin, startPos, dest, &path);   // get the shortest route
+			// Check if the train knows its current position
+		// if not, wait for first sensor trigger
+		if (startPos == -1)
+		{
+			// Move the train
+			send.type  = GOTO_COMMAND;
+			send.data1 = speed;      // Start with a slow speed, until triger a sensor        
+			send.data2 = train;
+			send.data3 = dest;
+			Send(myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
 
-	// Move the train
-	send.type  = GOTO_COMMAND;
-	send.data1 = speed;
-	send.data2 = train;
-	send.data3 = dest;
-	Send( myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
+			// Wait for sensor data;
+			Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
 
-	triggeredSensor = startPos;
-
-	FOREVER{
-		// calculate the time difference
-		previousTime = curTime;
-		curTime = Time(clkServer);
-
-		int nextSensor;       // <---- use to decide which speed table to use.
-		int nextSensorDistance = findNextDistance(&path, triggeredSensor, track, &nextSensor);
-		if (nextSensor == 2 || nextSensor == 3 || nextSensor == 30 || nextSensor == 31 || 
-			nextSensor == 64 || nextSensor == 65 || nextSensor == 32 || nextSensor == 33 ||
-			nextSensor == 28 || nextSensor == 29 || nextSensor == 48 || nextSensor == 49 ||
-			nextSensor == 54 || nextSensor == 55 || nextSensor == 56 || nextSensor == 57 ||
-			nextSensor == 36 || nextSensor == 37 || nextSensor == 74 || nextSensor == 75 ||
-			nextSensor == 6 || nextSensor == 7   || nextSensor == 8 || nextSensor == 9 || 
-			nextSensor == 10 || nextSensor == 11 || nextSensor == 12 || nextSensor == 13)
-		{    // use curve speed for those estimation
-			expectedTime = ((double)nextSensorDistance / (double)(curveVelocity[speed])) * (double)100;
-			updateTo = 1;
-		} else{
-			expectedTime = ((double)nextSensorDistance / (double)(straightVelocity[speed])) * (double)100;
-			updateTo = 0;
+			triggeredSensor = reply.data1;
+			send.type = REQUEST_OK;
+			Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
+			startPos = triggeredSensor;
 		}
 
-		int locationInfo[4];  // <---- for demo, remove this later;
-		locationInfo[0] = triggeredSensor;
-		// dynamic calibration
-		if (lastDistance != 0)
-		{
-			int lastSpeed = lastDistance / ((double)(curTime - previousTime) / 100);
-			if (updateTo) // to curve table
-			{
-				curveVelocity[speed] = 0.75 * (double)curveVelocity[speed] + 0.25 * (double)lastSpeed;
-				locationInfo[1] = curveVelocity[speed];
-			} else {
-				straightVelocity[speed] = 0.75 * (double)straightVelocity[speed] + 0.25 * (double)lastSpeed;
-				locationInfo[1] = straightVelocity[speed];
-			}
-		}
-		lastDistance = nextSensorDistance;
-		locationInfo[2] = curTime;
-		send.type = TRAIN_POS;
-		send.data1 = locationInfo;
-		Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+		GET_ROUTE:
+		getShortestPath(router, myAdmin, startPos, dest, &path);   // get the shortest route
 
-		// check if we should slow down
-		int howFarFromDestination = howFarFromDest(&path, triggeredSensor, track);
+		// Move the train
+		send.type  = GOTO_COMMAND;
+		send.data1 = speed;
+		send.data2 = train;
+		send.data3 = dest;
+		Send( myAdmin, (char*)&send, sizeof(ComReqStruct), (char*)&reply, sizeof(reply));
 
-		// have to send out stop command before next sensor
-		if ((howFarFromDestination - nextSensorDistance) <= stoppingTable[speed-1]) 
-		{
-
-		// //update the stat on the screen
-		// send.type  = UPDATE_STAT;
-		// send.data1 = howFarFromDestination;
-		// send.data2 = nextSensorDistance;
-		// // send.data1 = nextSensorDistance;
-		// // send.data2 = howFarFromDestination;
-		// send.data3 = stoppingTable[speed-1];
-		// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
-			int canRunFor = howFarFromDestination - stoppingTable[speed-1];
-			// if (dest == 11)
-			// {
-			// 	canRunFor += 200;
-			// }
-			if (updateTo)  // which velocity should be used for remaining
-			{
-				Delay(clkServer, ((double)(canRunFor / curveVelocity[speed])) * 100 + 33 );
-			} else {
-				Delay(clkServer, ((double)(canRunFor / straightVelocity[speed])) * 100 + 33 );
-			}
+		triggeredSensor = startPos;
+		
+		int result = reserveAndSetSwitches(monitor, myAdmin, &path, triggeredSensor, track, speed, stoppingTable, me);
+		if (result == 0) // fail to reserve
+		{	// stop the train
 			// send the stop command
 			send.type = SPEED_COMMAND;
 			send.data1 = 0;
 			send.data2 = train;
 			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-
-			send.type  = UNSUBSCRIBE;
-			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 			
 			// remember my current position for next GOTO command
-			startPos = dest;
-			break;
-		}
-		// Wait for sensor data;
-		Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
-		// Putc(uart2XServer, COM2, 'a');
-		triggeredSensor = reply.data1;
-		send.type = REQUEST_OK;
-		Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
-		if (reply.type != REQUEST_OK) // prevent some strange case(user type too much command for driver)
-		{
+			startPos = triggeredSensor;
 			continue;
 		}
 
-		// not the sensor that we expected, we need to recalculate for a new route
-		if (triggeredSensor != nextSensor)
-		{	// Re-initialize the values
-			expectedTime = 0;       // The expected time to reach next sensor
-			updateTo = 0;           // 0 means update to straight, 1 to curved
-			lastDistance = 0;
-			previousTime = 0;    // Time for last sensor triggered
-			curTime      = 0;    // Time for current sensor triggered
-			startPos = triggeredSensor;
-			goto GET_ROUTE;
-		}
+		FOREVER{
+			// calculate the time difference
+			previousTime = curTime;
+			curTime = Time(clkServer);
 
-	}
+			// //update the stat on the screen
+			// send.type  = UPDATE_STAT;
+			// send.data1 = (curTime - previousTime) - expectedTime;
+			// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+			int nextSensor;       // <---- use to decide which speed table to use.
+			int nextSensorDistance = findNextDistance(&path, triggeredSensor, track, &nextSensor);
+			if (nextSensor == 2 || nextSensor == 3 || nextSensor == 30 || nextSensor == 31 || 
+				nextSensor == 64 || nextSensor == 65 || nextSensor == 32 || nextSensor == 33 ||
+				nextSensor == 28 || nextSensor == 29 || nextSensor == 48 || nextSensor == 49 ||
+				nextSensor == 54 || nextSensor == 55 || nextSensor == 56 || nextSensor == 57 ||
+				nextSensor == 36 || nextSensor == 37 || nextSensor == 74 || nextSensor == 75 ||
+				nextSensor == 6 || nextSensor == 7   || nextSensor == 8 || nextSensor == 9 || 
+				nextSensor == 10 || nextSensor == 11 || nextSensor == 12 || nextSensor == 13)
+			{    // use curve speed for those estimation
+				expectedTime = ((double)nextSensorDistance / (double)(curveVelocity[speed])) * (double)100;
+				updateTo = 1;
+			} else{
+				expectedTime = ((double)nextSensorDistance / (double)(straightVelocity[speed])) * (double)100;
+				updateTo = 0;
+			}
+
+			// tell the monitor about my next position
+			send.type  = UPDATE_LOCATION;
+			send.data1 = nextSensor; // not sure where i am. No guess for now
+			send.data2 = expectedTime + curTime;
+			Send( monitor, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+			// int locationInfo[4];  // <---- for demo, remove this later;
+			// locationInfo[0] = triggeredSensor;
+			// dynamic calibration
+			if (lastDistance != 0)
+			{
+				int lastSpeed = lastDistance / ((double)(curTime - previousTime) / 100);
+				if (updateTo) // to curve table
+				{
+					curveVelocity[speed] = 0.75 * (double)curveVelocity[speed] + 0.25 * (double)lastSpeed;
+					// locationInfo[1] = curveVelocity[speed];
+				} else {
+					straightVelocity[speed] = 0.75 * (double)straightVelocity[speed] + 0.25 * (double)lastSpeed;
+					// locationInfo[1] = straightVelocity[speed];
+				}
+			}
+			lastDistance = nextSensorDistance;
+			// locationInfo[2] = curTime;
+			// send.type = TRAIN_POS;
+			// send.data1 = locationInfo;
+			// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+			// check if we should slow down
+			int howFarFromDestination = howFarFromDest(&path, triggeredSensor, track);
+
+			// have to send out stop command before next sensor
+			if ((howFarFromDestination - nextSensorDistance) <= stoppingTable[speed-1]) 
+			{
+
+				send.type  = SENSOR_UNSUBSCRIBE;
+				Send( monitor, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+				int canRunFor = howFarFromDestination - stoppingTable[speed-1];
+				// if (dest == 11)
+				// {
+				// 	canRunFor += 200;
+				// }
+				if (updateTo)  // which velocity should be used for remaining
+				{
+					Delay(clkServer, ((double)(canRunFor / curveVelocity[speed])) * 100 + 33 );
+				} else {
+					Delay(clkServer, ((double)(canRunFor / straightVelocity[speed])) * 100 + 33 );
+				}
+				// send the stop command
+				send.type = SPEED_COMMAND;
+				send.data1 = 0;
+				send.data2 = train;
+				Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+				
+				// remember my current position for next GOTO command
+				startPos = dest;
+				break;
+			}
+			// Wait for sensor data;
+			Receive( &sender, (char *)&reply, sizeof(ComReqStruct) );
+			// Putc(uart2XServer, COM2, 'a');
+			triggeredSensor = reply.data1;
+			send.type = REQUEST_OK;
+			Reply(sender, (char *)&send, sizeof(ComReqStruct));    // Unblock sender
+			if (reply.type != SENSOR_TRIGGERED) // prevent some strange case(user type too much command for driver)
+			{
+				continue;
+				// break;
+			}
+
+			// not the sensor that we expected, we need to recalculate for a new route
+			if (triggeredSensor != nextSensor)
+			{	// Re-initialize the values
+				expectedTime = 0;       // The expected time to reach next sensor
+				updateTo = 0;           // 0 means update to straight, 1 to curved
+				lastDistance = 0;
+				previousTime = 0;    // Time for last sensor triggered
+				curTime      = 0;    // Time for current sensor triggered
+				startPos = triggeredSensor;
+				// shoud also release the edges here!!!!!!!!!!!!!!
+				goto GET_ROUTE;
+			} else { // reserve the edges and set swtiches
+				int result = reserveAndSetSwitches(monitor, myAdmin, &path, triggeredSensor, track, speed, stoppingTable, me);
+				if (result == 0) // fail to reserve
+				{	// stop the train
+					// send the stop command
+					send.type = SPEED_COMMAND;
+					send.data1 = 0;
+					send.data2 = train;
+					Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+					
+					// remember my current position for next GOTO command
+					startPos = triggeredSensor;
+					break;
+				}
+			}
+
+		}
 
 	}
 
