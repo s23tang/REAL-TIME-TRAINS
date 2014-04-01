@@ -4,19 +4,19 @@
 	.global	notifier
 	.type	notifier, %function
 notifier:
-	@ args = 0, pretend = 0, frame = 88
+	@ args = 0, pretend = 0, frame = 96
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #92
-	sub	r2, fp, #100
+	sub	sp, sp, #100
+	sub	r2, fp, #108
 	sub	r3, fp, #68
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
-	ldr	r3, [fp, #-100]
+	ldr	r3, [fp, #-108]
 	str	r3, [fp, #-64]
 	ldr	r3, [fp, #-64]
 	cmp	r3, #5
@@ -121,12 +121,12 @@ notifier:
 	str	r2, [r3, #0]
 .L2:
 	mov	r3, #0
-	str	r3, [fp, #-84]
+	str	r3, [fp, #-88]
 	ldr	r3, [fp, #-68]
-	sub	r2, fp, #84
+	sub	r2, fp, #88
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	b	.L19
 .L10:
@@ -135,23 +135,23 @@ notifier:
 	cmp	r3, #5
 	bne	.L11
 	mov	r3, #8
-	str	r3, [fp, #-84]
+	str	r3, [fp, #-88]
 	b	.L13
 .L11:
 	mov	r3, #1
-	str	r3, [fp, #-84]
+	str	r3, [fp, #-88]
 .L13:
 	ldr	r0, [fp, #-64]
 	bl	AwaitEvent(PLT)
 	mov	r3, r0
-	str	r3, [fp, #-80]
+	str	r3, [fp, #-84]
 	ldr	r2, [fp, #-68]
-	sub	r1, fp, #84
-	sub	ip, fp, #100
-	mov	r3, #16
+	sub	r1, fp, #88
+	sub	ip, fp, #108
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	ldr	r3, [fp, #-64]
@@ -159,7 +159,7 @@ notifier:
 	bne	.L14
 	ldr	r3, .L20+24
 	str	r3, [fp, #-20]
-	ldr	r3, [fp, #-96]
+	ldr	r3, [fp, #-104]
 	and	r3, r3, #255
 	mov	r2, r3
 	ldr	r3, [fp, #-20]
@@ -171,7 +171,7 @@ notifier:
 	bne	.L10
 	ldr	r3, .L20+28
 	str	r3, [fp, #-16]
-	ldr	r3, [fp, #-96]
+	ldr	r3, [fp, #-104]
 	and	r3, r3, #255
 	mov	r2, r3
 	ldr	r3, [fp, #-16]

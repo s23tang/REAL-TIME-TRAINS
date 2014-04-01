@@ -71,34 +71,34 @@ setfifo:
 	.global	Getc
 	.type	Getc, %function
 Getc:
-	@ args = 0, pretend = 0, frame = 40
+	@ args = 0, pretend = 0, frame = 48
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #44
-	str	r0, [fp, #-48]
-	str	r1, [fp, #-52]
-	ldr	r3, [fp, #-52]
+	sub	sp, sp, #52
+	str	r0, [fp, #-56]
+	str	r1, [fp, #-60]
+	ldr	r3, [fp, #-60]
 	cmp	r3, #0
 	bne	.L14
 	mov	r3, #5
-	str	r3, [fp, #-28]
+	str	r3, [fp, #-32]
 	b	.L16
 .L14:
 	mov	r3, #7
-	str	r3, [fp, #-28]
+	str	r3, [fp, #-32]
 .L16:
-	sub	r2, fp, #28
-	sub	ip, fp, #44
-	mov	r3, #16
+	sub	r2, fp, #32
+	sub	ip, fp, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
-	ldr	r0, [fp, #-48]
+	ldr	r0, [fp, #-56]
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r3, [fp, #-40]
+	ldr	r3, [fp, #-48]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
@@ -107,38 +107,38 @@ Getc:
 	.global	Putc
 	.type	Putc, %function
 Putc:
-	@ args = 0, pretend = 0, frame = 44
+	@ args = 0, pretend = 0, frame = 52
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #48
-	str	r0, [fp, #-48]
-	str	r1, [fp, #-52]
+	sub	sp, sp, #56
+	str	r0, [fp, #-56]
+	str	r1, [fp, #-60]
 	mov	r3, r2
-	strb	r3, [fp, #-56]
-	ldr	r3, [fp, #-52]
+	strb	r3, [fp, #-64]
+	ldr	r3, [fp, #-60]
 	cmp	r3, #0
 	bne	.L19
 	mov	r3, #4
-	str	r3, [fp, #-28]
+	str	r3, [fp, #-32]
 	b	.L21
 .L19:
 	mov	r3, #6
-	str	r3, [fp, #-28]
+	str	r3, [fp, #-32]
 .L21:
-	ldrb	r3, [fp, #-56]	@ zero_extendqisi2
-	str	r3, [fp, #-24]
-	sub	r2, fp, #28
-	sub	ip, fp, #44
-	mov	r3, #16
+	ldrb	r3, [fp, #-64]	@ zero_extendqisi2
+	str	r3, [fp, #-28]
+	sub	r2, fp, #32
+	sub	ip, fp, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
-	ldr	r0, [fp, #-48]
+	ldr	r0, [fp, #-56]
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r3, [fp, #-44]
+	ldr	r3, [fp, #-52]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
@@ -155,13 +155,13 @@ Putc:
 	.global	uart2GetServer
 	.type	uart2GetServer, %function
 uart2GetServer:
-	@ args = 0, pretend = 0, frame = 5232
+	@ args = 0, pretend = 0, frame = 5240
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #5184
-	sub	sp, sp, #52
+	sub	sp, sp, #60
 	ldr	sl, .L38
 .L37:
 	add	sl, pc, sl
@@ -202,15 +202,15 @@ uart2GetServer:
 	ldr	r1, [fp, #-48]
 	sub	r2, fp, #5184
 	sub	r2, r2, #16
-	sub	r2, r2, #28
+	sub	r2, r2, #32
 	sub	ip, fp, #5184
 	sub	ip, ip, #16
-	sub	ip, ip, #44
-	mov	r3, #16
+	sub	ip, ip, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r1
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	b	.L36
@@ -218,11 +218,11 @@ uart2GetServer:
 .L36:
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #44
+	sub	r3, r3, #52
 	sub	r2, fp, #52
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -230,13 +230,13 @@ uart2GetServer:
 	sub	r1, fp, #16
 	ldr	r2, [r1, r3]
 	sub	r1, fp, #4096
-	str	r2, [r1, #-1152]
+	str	r2, [r1, #-1160]
 	sub	r3, fp, #4096
-	ldr	r3, [r3, #-1152]
+	ldr	r3, [r3, #-1160]
 	cmp	r3, #1
 	beq	.L28
 	sub	ip, fp, #4096
-	ldr	ip, [ip, #-1152]
+	ldr	ip, [ip, #-1160]
 	cmp	ip, #7
 	beq	.L29
 	b	.L26
@@ -248,10 +248,10 @@ uart2GetServer:
 	ldr	r2, [fp, #-48]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	ldr	r2, [fp, #-32]
 	ldr	r3, [fp, #-28]
@@ -325,10 +325,10 @@ uart2GetServer:
 	str	r1, [r3, #0]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	ldr	r0, [fp, #-20]
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	b	.L26
 .L29:
@@ -396,10 +396,10 @@ uart2GetServer:
 	ldr	r2, [fp, #-52]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -411,8 +411,8 @@ uart2GetServer:
 	.word	.LC0(GOTOFF)
 	.word	.LC1(GOTOFF)
 	.word	notifier(GOT)
-	.word	-5212
-	.word	-5228
+	.word	-5216
+	.word	-5236
 	.word	-5036
 	.word	1759218605
 	.word	-5196
@@ -430,13 +430,13 @@ uart2GetServer:
 	.global	uart2PutServer
 	.type	uart2PutServer, %function
 uart2PutServer:
-	@ args = 0, pretend = 0, frame = 5068
+	@ args = 0, pretend = 0, frame = 5076
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #5056
-	sub	sp, sp, #16
+	sub	sp, sp, #24
 	ldr	sl, .L56
 .L55:
 	add	sl, pc, sl
@@ -475,15 +475,15 @@ uart2PutServer:
 	ldr	r1, [fp, #-44]
 	sub	r2, fp, #4992
 	sub	r2, r2, #16
-	sub	r2, r2, #56
+	sub	r2, r2, #60
 	sub	ip, fp, #5056
 	sub	ip, ip, #16
-	sub	ip, ip, #8
-	mov	r3, #16
+	sub	ip, ip, #16
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r1
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	b	.L54
@@ -491,11 +491,11 @@ uart2PutServer:
 .L54:
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #8
+	sub	r3, r3, #16
 	sub	r2, fp, #48
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -503,13 +503,13 @@ uart2PutServer:
 	sub	r1, fp, #16
 	ldr	r2, [r1, r3]
 	sub	r1, fp, #4096
-	str	r2, [r1, #-988]
+	str	r2, [r1, #-996]
 	sub	r3, fp, #4096
-	ldr	r3, [r3, #-988]
+	ldr	r3, [r3, #-996]
 	cmp	r3, #1
 	beq	.L45
 	sub	ip, fp, #4096
-	ldr	ip, [ip, #-988]
+	ldr	ip, [ip, #-996]
 	cmp	ip, #6
 	beq	.L46
 	b	.L43
@@ -556,10 +556,10 @@ uart2PutServer:
 	ldr	r2, [fp, #-44]
 	sub	r3, fp, #4992
 	sub	r3, r3, #16
-	sub	r3, r3, #56
+	sub	r3, r3, #60
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, #0
 	str	r3, [fp, #-28]
@@ -620,10 +620,10 @@ uart2PutServer:
 	ldr	r2, [fp, #-44]
 	sub	r3, fp, #4992
 	sub	r3, r3, #16
-	sub	r3, r3, #56
+	sub	r3, r3, #60
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -644,10 +644,10 @@ uart2PutServer:
 	ldr	r2, [fp, #-48]
 	sub	r3, fp, #4992
 	sub	r3, r3, #16
-	sub	r3, r3, #56
+	sub	r3, r3, #60
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	b	.L43
 .L57:
@@ -657,8 +657,8 @@ uart2PutServer:
 	.word	.LC2(GOTOFF)
 	.word	.LC3(GOTOFF)
 	.word	notifier(GOT)
-	.word	-5048
-	.word	-5064
+	.word	-5052
+	.word	-5072
 	.word	-5032
 	.word	1759218605
 	.size	uart2PutServer, .-uart2PutServer
@@ -674,13 +674,13 @@ uart2PutServer:
 	.global	uart1GetServer
 	.type	uart1GetServer, %function
 uart1GetServer:
-	@ args = 0, pretend = 0, frame = 5232
+	@ args = 0, pretend = 0, frame = 5240
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #5184
-	sub	sp, sp, #52
+	sub	sp, sp, #60
 	ldr	sl, .L73
 .L72:
 	add	sl, pc, sl
@@ -721,15 +721,15 @@ uart1GetServer:
 	ldr	r1, [fp, #-48]
 	sub	r2, fp, #5184
 	sub	r2, r2, #16
-	sub	r2, r2, #28
+	sub	r2, r2, #32
 	sub	ip, fp, #5184
 	sub	ip, ip, #16
-	sub	ip, ip, #44
-	mov	r3, #16
+	sub	ip, ip, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r1
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	b	.L71
@@ -737,11 +737,11 @@ uart1GetServer:
 .L71:
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #44
+	sub	r3, r3, #52
 	sub	r2, fp, #52
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -749,13 +749,13 @@ uart1GetServer:
 	sub	r1, fp, #16
 	ldr	r2, [r1, r3]
 	sub	r1, fp, #4096
-	str	r2, [r1, #-1152]
+	str	r2, [r1, #-1160]
 	sub	r3, fp, #4096
-	ldr	r3, [r3, #-1152]
+	ldr	r3, [r3, #-1160]
 	cmp	r3, #1
 	beq	.L63
 	sub	ip, fp, #4096
-	ldr	ip, [ip, #-1152]
+	ldr	ip, [ip, #-1160]
 	cmp	ip, #5
 	beq	.L64
 	b	.L61
@@ -767,10 +767,10 @@ uart1GetServer:
 	ldr	r2, [fp, #-48]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	ldr	r2, [fp, #-32]
 	ldr	r3, [fp, #-28]
@@ -844,10 +844,10 @@ uart1GetServer:
 	str	r1, [r3, #0]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	ldr	r0, [fp, #-20]
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	b	.L61
 .L64:
@@ -915,10 +915,10 @@ uart1GetServer:
 	ldr	r2, [fp, #-52]
 	sub	r3, fp, #5184
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #32
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-24]
@@ -930,8 +930,8 @@ uart1GetServer:
 	.word	.LC4(GOTOFF)
 	.word	.LC5(GOTOFF)
 	.word	notifier(GOT)
-	.word	-5212
-	.word	-5228
+	.word	-5216
+	.word	-5236
 	.word	-5036
 	.word	1759218605
 	.word	-5196
@@ -949,13 +949,13 @@ uart1GetServer:
 	.global	uart1PutServer
 	.type	uart1PutServer, %function
 uart1PutServer:
-	@ args = 0, pretend = 0, frame = 5088
+	@ args = 0, pretend = 0, frame = 5096
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
 	sub	sp, sp, #5056
-	sub	sp, sp, #36
+	sub	sp, sp, #44
 	ldr	sl, .L107
 .L106:
 	add	sl, pc, sl
@@ -1018,15 +1018,15 @@ uart1PutServer:
 	ldr	r1, [fp, #-64]
 	sub	r2, fp, #5056
 	sub	r2, r2, #16
-	sub	r2, r2, #12
+	sub	r2, r2, #16
 	sub	ip, fp, #5056
 	sub	ip, ip, #16
-	sub	ip, ip, #28
-	mov	r3, #16
+	sub	ip, ip, #36
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r1
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	ldr	r2, .L107+20
@@ -1036,15 +1036,15 @@ uart1PutServer:
 	ldr	r1, [fp, #-60]
 	sub	r2, fp, #5056
 	sub	r2, r2, #16
-	sub	r2, r2, #12
+	sub	r2, r2, #16
 	sub	ip, fp, #5056
 	sub	ip, ip, #16
-	sub	ip, ip, #28
-	mov	r3, #16
+	sub	ip, ip, #36
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r1
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	b	.L105
@@ -1052,11 +1052,11 @@ uart1PutServer:
 .L105:
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #28
+	sub	r3, r3, #36
 	sub	r2, fp, #68
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
@@ -1064,17 +1064,17 @@ uart1PutServer:
 	sub	r2, fp, #16
 	ldr	ip, [r2, r3]
 	sub	r2, fp, #4096
-	str	ip, [r2, #-1008]
+	str	ip, [r2, #-1016]
 	sub	r0, fp, #4096
-	ldr	r0, [r0, #-1008]
+	ldr	r0, [r0, #-1016]
 	cmp	r0, #4
 	beq	.L84
 	sub	r1, fp, #4096
-	ldr	r1, [r1, #-1008]
+	ldr	r1, [r1, #-1016]
 	cmp	r1, #8
 	beq	.L85
 	sub	r2, fp, #4096
-	ldr	r2, [r2, #-1008]
+	ldr	r2, [r2, #-1016]
 	cmp	r2, #1
 	beq	.L83
 	b	.L81
@@ -1120,10 +1120,10 @@ uart1PutServer:
 	ldr	r2, [fp, #-64]
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #16
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, #0
 	str	r3, [fp, #-44]
@@ -1149,10 +1149,10 @@ uart1PutServer:
 	ldr	r2, [fp, #-68]
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #16
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	ldr	r3, [fp, #-40]
 	cmp	r3, #0
@@ -1179,10 +1179,10 @@ uart1PutServer:
 	ldr	r2, [fp, #-64]
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #16
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
@@ -1281,10 +1281,10 @@ uart1PutServer:
 	ldr	r2, [fp, #-64]
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #16
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, #0
 	str	r3, [fp, #-44]
@@ -1310,10 +1310,10 @@ uart1PutServer:
 	ldr	r2, [fp, #-60]
 	sub	r3, fp, #5056
 	sub	r3, r3, #16
-	sub	r3, r3, #12
+	sub	r3, r3, #16
 	mov	r0, r2
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	b	.L81
 .L108:
@@ -1324,8 +1324,8 @@ uart1PutServer:
 	.word	.LC7(GOTOFF)
 	.word	notifier(GOT)
 	.word	-2138308584
-	.word	-5068
-	.word	-5084
+	.word	-5072
+	.word	-5092
 	.word	-5052
 	.word	1759218605
 	.size	uart1PutServer, .-uart1PutServer

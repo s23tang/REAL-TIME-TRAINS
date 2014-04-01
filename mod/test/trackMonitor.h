@@ -6,6 +6,7 @@
 
 // typedef struct Edge Edge;
 typedef struct Sensor Sensor;
+typedef struct Branch Branch;
 
 // a structure to store the reserved edge
 // struct Edge {
@@ -19,6 +20,13 @@ struct Sensor {
 	int index;
 	int reserved;
 	int reservedBy;
+};
+
+struct Branch {
+	int index;
+	int reserved;
+	int reservedBy;
+	int nextLandmark; //used to determine which direction is the branch
 };
 
 void trackMonitor();

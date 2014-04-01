@@ -4,25 +4,25 @@
 	.global	Time
 	.type	Time, %function
 Time:
-	@ args = 0, pretend = 0, frame = 36
+	@ args = 0, pretend = 0, frame = 44
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #40
-	str	r0, [fp, #-48]
+	sub	sp, sp, #48
+	str	r0, [fp, #-56]
 	mov	r3, #2
-	str	r3, [fp, #-28]
-	sub	r2, fp, #28
-	sub	ip, fp, #44
-	mov	r3, #16
+	str	r3, [fp, #-32]
+	sub	r2, fp, #32
+	sub	ip, fp, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
-	ldr	r0, [fp, #-48]
+	ldr	r0, [fp, #-56]
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
-	ldr	r3, [fp, #-40]
+	ldr	r3, [fp, #-48]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
@@ -31,38 +31,38 @@ Time:
 	.global	Delay
 	.type	Delay, %function
 Delay:
-	@ args = 0, pretend = 0, frame = 44
+	@ args = 0, pretend = 0, frame = 52
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #48
-	str	r0, [fp, #-48]
-	str	r1, [fp, #-52]
-	ldr	r3, [fp, #-52]
+	sub	sp, sp, #56
+	str	r0, [fp, #-56]
+	str	r1, [fp, #-60]
+	ldr	r3, [fp, #-60]
 	cmp	r3, #0
 	bge	.L4
 	mvn	r3, #0
-	str	r3, [fp, #-56]
+	str	r3, [fp, #-64]
 	b	.L6
 .L4:
 	mov	r3, #3
+	str	r3, [fp, #-32]
+	ldr	r3, [fp, #-60]
 	str	r3, [fp, #-28]
-	ldr	r3, [fp, #-52]
-	str	r3, [fp, #-24]
-	ldr	r2, [fp, #-48]
-	sub	r1, fp, #28
-	sub	ip, fp, #44
-	mov	r3, #16
+	ldr	r2, [fp, #-56]
+	sub	r1, fp, #32
+	sub	ip, fp, #52
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	mov	r3, #0
-	str	r3, [fp, #-56]
+	str	r3, [fp, #-64]
 .L6:
-	ldr	r3, [fp, #-56]
+	ldr	r3, [fp, #-64]
 	mov	r0, r3
 	sub	sp, fp, #12
 	ldmfd	sp, {fp, sp, pc}
@@ -109,12 +109,12 @@ DelayUntil:
 	.global	clockServer
 	.type	clockServer, %function
 clockServer:
-	@ args = 0, pretend = 0, frame = 560
+	@ args = 0, pretend = 0, frame = 568
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #564
+	sub	sp, sp, #572
 	ldr	sl, .L36
 .L35:
 	add	sl, pc, sl
@@ -145,14 +145,14 @@ clockServer:
 	mov	r3, #0
 	str	r3, [fp, #-540]
 	mov	r3, #0
-	str	r3, [fp, #-556]
+	str	r3, [fp, #-560]
 	ldr	r2, [fp, #-52]
-	sub	r1, fp, #556
-	sub	ip, fp, #572
-	mov	r3, #16
+	sub	r1, fp, #560
+	sub	ip, fp, #580
+	mov	r3, #20
 	str	r3, [sp, #0]
 	mov	r0, r2
-	mov	r2, #16
+	mov	r2, #20
 	mov	r3, ip
 	bl	Send(PLT)
 	mvn	r3, #0
@@ -160,15 +160,15 @@ clockServer:
 	b	.L34
 .L13:
 .L34:
-	sub	r2, fp, #572
+	sub	r2, fp, #580
 	sub	r3, fp, #56
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
-	ldr	r3, [fp, #-572]
+	ldr	r3, [fp, #-580]
 	sub	r3, r3, #1
 	cmp	r3, #15
 	addls	pc, pc, r3, asl #2
@@ -197,12 +197,12 @@ clockServer:
 	b	.L14
 .L15:
 	mov	r3, #0
-	str	r3, [fp, #-556]
+	str	r3, [fp, #-560]
 	ldr	r3, [fp, #-52]
-	sub	r2, fp, #556
+	sub	r2, fp, #560
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	ldr	r3, [fp, #-40]
 	add	r3, r3, #1
@@ -216,43 +216,43 @@ clockServer:
 	mov	r2, r3, asr #2
 	mov	r3, r1, asr #31
 	rsb	r2, r3, r2
-	str	r2, [fp, #-576]
-	ldr	r3, [fp, #-576]
+	str	r2, [fp, #-584]
+	ldr	r3, [fp, #-584]
 	mov	r3, r3, asl #2
-	ldr	r2, [fp, #-576]
+	ldr	r2, [fp, #-584]
 	add	r3, r3, r2
 	mov	r3, r3, asl #1
 	rsb	r1, r3, r1
-	str	r1, [fp, #-576]
-	ldr	r3, [fp, #-576]
+	str	r1, [fp, #-584]
+	ldr	r3, [fp, #-584]
 	cmp	r3, #0
 	bne	.L14
 	mov	r3, #3
-	str	r3, [fp, #-556]
-	sub	r3, fp, #556
+	str	r3, [fp, #-560]
+	sub	r3, fp, #560
 	ldr	r0, [fp, #-36]
 	mov	r1, r3
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mvn	r3, #0
 	str	r3, [fp, #-36]
 	b	.L14
 .L16:
 	mov	r3, #0
-	str	r3, [fp, #-556]
+	str	r3, [fp, #-560]
 	ldr	r3, [fp, #-40]
-	str	r3, [fp, #-552]
+	str	r3, [fp, #-556]
 	ldr	r3, [fp, #-56]
-	sub	r2, fp, #556
+	sub	r2, fp, #560
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	mov	r3, r0
 	str	r3, [fp, #-32]
 	b	.L14
 .L17:
-	ldr	r2, [fp, #-568]
+	ldr	r2, [fp, #-576]
 	ldr	r3, [fp, #-40]
 	add	r3, r2, r3
 	str	r3, [fp, #-24]
@@ -363,13 +363,13 @@ clockServer:
 	cmp	r2, r3
 	bne	.L13
 	mov	r3, #0
-	str	r3, [fp, #-556]
+	str	r3, [fp, #-560]
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #4]
-	sub	r2, fp, #556
+	sub	r2, fp, #560
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Reply(PLT)
 	ldr	r3, [fp, #-28]
 	ldr	r3, [r3, #8]

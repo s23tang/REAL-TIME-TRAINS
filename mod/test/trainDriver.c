@@ -236,7 +236,7 @@ int findIndexAlongPath(Path *path, int curLandmark){
 // Also set the switches within the reserved edges
 int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark, track_node *track, int speed, int *stoppingTable, int me){
 	Sensor targets[15];   // a place to hold the edges that I want to reserve
-	int branches[15];   // branches that we need to set after reservation
+	Branch branches[15];   // branches that we need to set after reservation
 	int numOfBranches = 0;
 	int numOfTarget = 0;    // number of edges that I want to reserve.
 	ComReqStruct send, reply, reqSetSwitch;
@@ -245,7 +245,7 @@ int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark,
 	int nextSensor;
 	
 	int count = 0;
-	int buffer = findNextDistance(path, curLandmark, track, &nextSensor);
+	// int buffer = findNextDistance(path, curLandmark, track, &nextSensor);
 	// while (reservedDistance <= stoppingTable[speed] + buffer){ // loop when we havent got enough edges
 	while (count <= 2){ // loop when we havent got enough edges
 		int nextDistance = findNextDistance(path, curLandmark, track, &nextSensor);
@@ -256,9 +256,11 @@ int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark,
 			// send.data2 = nextDistance;
 			// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 		while(curLandmark != nextSensor) { // add the edges that we want to reserve
+			int index = findIndexAlongPath(path, curLandmark);
 			if (track[curLandmark].type == NODE_BRANCH)
 			{	// record the branches that we need to set
-				branches[numOfBranches] = curLandmark;
+				branches[numOfBranches].index = curLandmark;
+				branches[numOfBranches].nextLandmark = path->path[index-1].index;
 				numOfBranches++;
 			}
 			if (track[curLandmark].type == NODE_SENSOR){
@@ -266,7 +268,6 @@ int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark,
 				targets[numOfTarget].reservedBy = me;
 				numOfTarget++;
 			}
-			int index = findIndexAlongPath(path, curLandmark);
 			curLandmark = path->path[index-1].index;
 		}
 		count++;
@@ -280,6 +281,8 @@ int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark,
 	send.type = RESERVE_TRACK;
 	send.data1 = targets;
 	send.data2 = numOfTarget;
+	send.data3 = branches;
+	send.data4 = numOfBranches;
 	Send( monitor, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 
 	// check the reply to see if reservation successed
@@ -289,12 +292,12 @@ int reserveAndSetSwitches(int monitor, int myAdmin, Path *path, int curLandmark,
 		for(i = 0; i < numOfBranches; i++){
 			int pos;
 			int cOrS;
-			if ( branches[i] <= 114 ) {
-				pos = ( branches[i] - 80 ) / 2 + 1;
+			if ( branches[i].index <= 114 ) {
+				pos = ( branches[i].index - 80 ) / 2 + 1;
 			} else { // 3 digits switches
-				pos = ( branches[i] - 116 ) / 2 + 153;
+				pos = ( branches[i].index - 116 ) / 2 + 153;
 			}
-			int next = findIndexAlongPath(path, branches[i]) - 1;
+			int next = findIndexAlongPath(path, branches[i].index) - 1;
 			if ( path->path[next].curved == 1 ) {
 				cOrS = 34;
 			} else {

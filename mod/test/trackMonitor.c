@@ -19,6 +19,16 @@ int findIndex(track_node *track, track_node* landmark){
 	return 0; 
 }
 
+void initBranches(Branch *branches){
+	int i;
+	for (i = 0; i < TRACK_MAX; i++)
+	{
+		branches[i].index = i;
+		branches[i].reserved = 0;
+		branches[i].reservedBy = -1;
+	}
+}
+
 void initSensors(track_node *track, Sensor *sensors, int *numOfSensors){
 	int i;
 	for(i = 0; i < 100; i++){
@@ -92,25 +102,26 @@ void initSensors(track_node *track, Sensor *sensors, int *numOfSensors){
 
 // check if an edge is reserved and not reserved by the sender
 int checkReserved(int index, Sensor* sensors, int sender, track_node* track){
-	int i;
 	// find the reverse side of the sensor and see if it's reserved
 	track_node *reverse = track[index].reverse;
 	if (sensors[reverse->num].reserved == 1)
 	{
 		return 1;
 	}	
-	// for (i = 0; i < 100; i++)
-	// {
-	// 	if (sensors[i].index == index && sensors[i].reserved == 1 &&sensors[i].reservedBy != sender)
-	// 	{
-	// 		return 1;
-	// 	}
-	// }
+	return 0;
+}
+
+// check if a branch is reserved
+int checkBranches(int index, Branch *branches, int sender, int nextLandmark){
+	if (branches[index].reserved == 1 && branches[index].reservedBy != sender && branches[index].nextLandmark != nextLandmark)
+	{
+		return 1;
+	}
 	return 0;
 }
 
 // release all the landmark reserved by me
-void releaseAllMyReservation(int sender, Sensor *sensors){
+void releaseAllMyReservation(int sender, Sensor *sensors, Branch *branches){
 	int i;
 	for (i = 0; i < 100; i++)
 	{
@@ -120,6 +131,22 @@ void releaseAllMyReservation(int sender, Sensor *sensors){
 			sensors[i].reservedBy = -1;
 		}
 	}
+	for (i = 0; i < TRACK_MAX; i++)
+	{
+		if (branches[i].reservedBy == sender && branches[i].reserved == 1)
+		{
+			branches[i].reserved = 0;
+			branches[i].reservedBy = -1;
+		}
+	}
+}
+
+// reserve the branch
+void reserveBranch(int index, Branch *branches, int sender, int nextLandmark){
+	int i;
+	branches[index].reserved = 1;
+	branches[index].reservedBy = sender;
+	branches[index].nextLandmark = nextLandmark;
 }
 
 // reserve the edge
@@ -139,6 +166,7 @@ void trackMonitor(){
 	// initialize
 	track_node track[TRACK_MAX];
 	Sensor sensors[100];
+	Branch branches[TRACK_MAX];
 	// int reservedEdge[200];
 	int numOfReserved = 0;
 	int numOfSensors = 0;
@@ -160,6 +188,7 @@ void trackMonitor(){
 	int sender;
 
 	initSensors(track, sensors, &numOfSensors);
+	initBranches(branches);
 
 	FOREVER {
 		Receive( &sender, (char*)&send, sizeof(ComReqStruct));
@@ -238,17 +267,24 @@ void trackMonitor(){
 				{
 					Sensor *requestSensors = (Sensor *)send.data1;
 					int numOfRequest = send.data2;
+					Branch *requestBranches = (Branch *)send.data3;
+					int numOfBranches = send.data4;
 					// make sure we can allocate all the edges to the driver
 					int i;
 					int foundReserved = 0;
-			send.type  = UPDATE_STAT;
-			send.data1 = requestSensors;
-			send.data2 = numOfRequest;
-			send.data3 = sender;
-			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+					// check if any sensor is reserved
 					for( i = 0; i < numOfRequest; i++) {
 						if (checkReserved(requestSensors[i].index, sensors,requestSensors[i].reservedBy, track))
 						{	// reserved by someone else
+							foundReserved = 1;
+							break;
+						}
+					}
+					// check if any branch is reserved
+					for (i = 0; i < numOfBranches; i++)
+					{
+						if (checkBranches(requestBranches[i].index, branches, sender, requestBranches[i].nextLandmark))
+						{
 							foundReserved = 1;
 							break;
 						}
@@ -258,9 +294,13 @@ void trackMonitor(){
 						reply.type = REQUEST_BAD;
 					} else {
 						// release all previous reserved landmarks
-						releaseAllMyReservation(requestSensors[i].reservedBy, sensors);
+						releaseAllMyReservation(requestSensors[i].reservedBy, sensors, branches);
 						for( i = 0; i < numOfRequest; i++) {
 							reserveSensor(requestSensors[i].index, sensors, requestSensors[i].reservedBy);
+						}
+						for (i = 0; i < numOfBranches; i++)
+						{
+							reserveBranch(requestBranches[i].index, branches, sender, requestBranches[i].nextLandmark);
 						}
 						reply.type = REQUEST_OK;
 					}

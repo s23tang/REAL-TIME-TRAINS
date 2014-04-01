@@ -407,13 +407,13 @@ route:
 	.global	routeFinder
 	.type	routeFinder, %function
 routeFinder:
-	@ args = 0, pretend = 0, frame = 7800
+	@ args = 0, pretend = 0, frame = 7812
 	@ frame_needed = 1, uses_anonymous_args = 0
 	mov	ip, sp
 	stmfd	sp!, {sl, fp, ip, lr, pc}
 	sub	fp, ip, #4
-	sub	sp, sp, #7744
-	sub	sp, sp, #56
+	sub	sp, sp, #7808
+	sub	sp, sp, #4
 	ldr	sl, .L57
 .L56:
 	add	sl, pc, sl
@@ -448,13 +448,13 @@ routeFinder:
 .L48:
 	sub	r2, fp, #6912
 	sub	r2, r2, #16
-	sub	r2, r2, #36
+	sub	r2, r2, #40
 	sub	r3, fp, #6976
 	sub	r3, r3, #16
-	sub	r3, r3, #8
+	sub	r3, r3, #20
 	mov	r0, r3
 	mov	r1, r2
-	mov	r2, #16
+	mov	r2, #20
 	bl	Receive(PLT)
 	ldr	r3, .L57+16
 	mov	r2, #4
@@ -532,9 +532,9 @@ routeFinder:
 	mov	r3, r3, asl #2
 	add	r3, r3, r1
 	mov	r3, r3, asl #2
-	sub	r2, fp, #7744
+	sub	r2, fp, #7808
 	sub	r2, r2, #16
-	sub	r2, r2, #56
+	sub	r2, r2, #4
 	add	r2, r2, r3
 	sub	r3, fp, #6912
 	sub	r3, r3, #16
@@ -557,9 +557,9 @@ routeFinder:
 	add	r3, r3, r1
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	sub	r3, fp, #7744
+	sub	r3, fp, #7808
 	sub	r3, r3, #16
-	sub	r3, r3, #56
+	sub	r3, r3, #4
 	add	r3, r3, r2
 	mov	r1, r3
 	mov	r2, #404
@@ -571,8 +571,8 @@ routeFinder:
 	.word	_GLOBAL_OFFSET_TABLE_-(.L56+8)
 	.word	.LC0(GOTOFF)
 	.word	.LC1(GOTOFF)
-	.word	-6992
-	.word	-6948
-	.word	-6984
+	.word	-7004
+	.word	-6952
+	.word	-6996
 	.size	routeFinder, .-routeFinder
 	.ident	"GCC: (GNU) 4.0.2"
