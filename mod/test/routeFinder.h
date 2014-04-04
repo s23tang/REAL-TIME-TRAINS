@@ -1,6 +1,7 @@
 typedef struct {
 	int index;
 	char curved;
+	char reverse;
 } Loc;
 
 typedef struct {

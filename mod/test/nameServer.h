@@ -2,7 +2,8 @@
 #define REGISTERAS		1
 #define WHOIS			2
 #define NAME_SERVER		2
-#define NUM_SERVERS		8		// Clock Server, UART[1,2] Get/Xmit (4 servers), router
+#define NUM_SERVERS		9		// Clock Server, UART[1,2] Get/Xmit (4 servers), router, 
+								// driver, printer, monitor
 
 // Server index in database
 #define CLK_INDEX		0 		// Clock Server
@@ -11,8 +12,9 @@
 #define UART2GET_S		3		// UART 2 Get Server
 #define UART2XMIT_S		4		// UART 2 Xmit Server
 #define ROUTE_FINDER	5		// Routing server
-#define DRIVER          6 		// Train driver
-#define MONITOR			7       // Track Monitor
+#define DRIVER    		6 		// Train driver
+#define PRINTER 		7		// Printer 
+#define MONITOR 		8		// Monitor
 
 //#define RPS_INDEX		1 		// rps server index, for testing
 

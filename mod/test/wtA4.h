@@ -43,10 +43,22 @@
 #define COURIER				16
 #define UNSUBSCRIBE         17
 #define UPDATE_STAT			18
-#define TRAIN_POS           19
+#define TRAIN_POS			19
+#define SPEED_NOPRINT		20
+#define GOTO_NOSPEED		21
+#define DEBUG				22
+#define MARK_SENSOR			23
+#define SENSOR_QUERY 		24
+#define DEBUG_AGAIN			25
+#define LINE_DEBUG			26
 
 #define DATA_BUFFER			50
 #define MAX_REQUESTS		100
+
+// Train Driver COMM
+#define PASSED_SENSOR		0
+#define NOT_PASSED_SENSOR	1
+#define ON_SENSOR			2
 
 struct TD;
 
@@ -88,5 +100,11 @@ typedef struct {
 	int interval;
 	int iteration;
 } DelayInfo;
+
+
+typedef struct {
+	int sensor;
+	int triggered;
+} StopSensor;
 
 void copyMsg( char *destBuf, char *srcBuf, int len);

@@ -3,6 +3,7 @@
 #define RESERVE_TRACK 2
 #define SENSOR_UNSUBSCRIBE 3
 #define UPDATE_LOCATION 4
+#define RELEASE_ALL		5
 
 // typedef struct Edge Edge;
 typedef struct Sensor Sensor;

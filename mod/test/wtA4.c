@@ -360,7 +360,17 @@ void reverseTask( ) {
 void Printer( ) {
 	// int u2get = WhoIs( "u2g" );
 	// char throwAway = Getc( u2get, COM2 );
+	int sender;
+	ComReqStruct recv, reply;
 
+	Receive(&sender, (char *)&recv, sizeof(ComReqStruct));
+	int train49 = recv.data1;
+	int train45 = recv.data2;
+	reply.type = REQUEST_OK;
+	Reply(sender, (char *)&reply, sizeof(ComReqStruct));
+
+
+	RegisterAs( "printer" );
 	track_node track[TRACK_MAX];
 	init_tracka(track);
 
@@ -409,9 +419,7 @@ void Printer( ) {
 	// Start Train Controller Here
 	Putc(uart1XServer, COM1, (char) 0x60);
 
-	int sender;
 	int cursor = 4;
-	ComReqStruct recv, reply;
 
 	int min = 0;
 	int sec = 0;
@@ -481,6 +489,22 @@ void Printer( ) {
 	int stopping = 0;
 	// int waitForTrip = 0;
 
+	// int first;
+	// int second;
+	// int capture = 0;
+
+	// Flag for stopping sensor queries
+	StopSensor sensorTrain49;
+	sensorTrain49.sensor = -1;
+	sensorTrain49.triggered = 0;
+
+	StopSensor sensorTrain45;
+	sensorTrain45.sensor = -1;
+	sensorTrain45.triggered = 0;
+
+	int train49sub = 0;
+	int train45sub = 0;
+
 	FOREVER {
 		Receive( &sender, (char *)&recv, sizeof(ComReqStruct) );
 
@@ -541,8 +565,10 @@ void Printer( ) {
 				break;
 			case SPEED_COMMAND:
 				{
+					// first = Time(clk);
 					Putc( uart1XServer, COM1, recv.data1 );
 					Putc( uart1XServer, COM1, recv.data2 );
+					// capture = 1;
 					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d\n", recv.data2, recv.data1);
 					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
 					int loc = recv.data2;
@@ -610,14 +636,44 @@ void Printer( ) {
 						// 		stopSensor = -1;
 						// 	}
 						// }
-						if ( index == 16 && onOrOff == 1 ) {
-							first = Time(clk);
+
+						if ( sensorTrain49.sensor != -1 ) {
+							if ( index == sensorTrain49.sensor && onOrOff == 1 ) {
+								sensorTrain49.triggered = 1;
+							}
 						}
-						if ( index == 61 && onOrOff == 1 ) {
-							second = Time(clk);
-							int wtfReal = 398/(((double)second - first)/100);
-							myprintf( uart2XServer, COM2, "\033[K\033[34;1H%d\033[33;%dH", wtfReal, cursor);
+
+						if ( sensorTrain45.sensor != -1 ) {
+							if ( index == sensorTrain45.sensor && onOrOff == 1 ) {
+								sensorTrain45.triggered = 1;
+							}
 						}
+
+						// if ( index == 16 && onOrOff == 1 ) {
+						// 	first = Time(clk);
+						// }
+						// if ( index == 61 && onOrOff == 1 ) {
+						// 	second = Time(clk);
+						// 	int wtfReal = 398/(((double)second - first)/100);
+						// 	myprintf( uart2XServer, COM2, "\033[K\033[34;1H%d\033[33;%dH", wtfReal, cursor);
+						// }
+
+						// if ( index == 38 && onOrOff == 1 && capture ) {
+						// 	second = Time(clk);
+						// 	int wtf = second - first;
+						// 	myprintf( uart2XServer, COM2, "\033[K\033[34;1H%d\033[33;%dH", wtf, cursor);
+						// 	Putc( uart1XServer, COM1, 0 );
+						// 	Putc( uart1XServer, COM1, 45 );
+						// 	capture = 0;
+						// }
+						// if ( index == 16 && onOrOff == 1 ) {
+						// 	first = Time(clk);
+						// }
+						// if ( index == 61 && onOrOff == 1 ) {
+						// 	second = Time(clk);
+						// 	int wtfReal = 398/(((double)second - first)/100);
+						// 	myprintf( uart2XServer, COM2, "\033[K\033[34;1H%d\033[33;%dH", wtfReal, cursor);
+						// }
 
 						if ( sensorStates[index] != onOrOff ) {
 							if ( subscriber && onOrOff == 1 ) {  // Someone has subscribe for data!! Give him.
@@ -630,6 +686,22 @@ void Printer( ) {
 									monitor = WhoIs("monitor");
 								}
 								Send( monitor, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
+							}
+							if ( train49sub && onOrOff == 1 ) {
+								//myprintf( uart2XServer, COM2, "\033[44;1H\033[K49 bug\033[33;%dH", cursor );
+
+								ComReqStruct junk;
+								reply.type = SENSOR_TRIGGERED;
+								reply.data1 = index;
+								Send( train49, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
+							}
+							if ( train45sub && onOrOff == 1 ) {
+								//myprintf( uart2XServer, COM2, "\033[45;1H\033[K45 bug\033[33;%dH", cursor );
+
+								ComReqStruct junk;
+								reply.type = SENSOR_TRIGGERED;
+								reply.data1 = index;
+								Send( train45, (char *)&reply, sizeof(ComReqStruct), (char *)&junk, sizeof(ComReqStruct) );
 							}
 							if ( onOrOff == 1 ) {
 								myprintf( uart2XServer, COM2, "\033[32m\033[%d;%dH%d\033[0m", row, col, onOrOff );
@@ -692,32 +764,115 @@ void Printer( ) {
 				break;
 			case SUBSCRIBE:
 				{
-					subscriber = recv.data1;
+					if ( recv.data1 == train49 ) {
+						train49sub = 1;
+					} else if ( recv.data1 == train45 ) {
+						train45sub = 1;
+					} else {
+						subscriber = recv.data1;
+					}
 				}
 				break;
 			case UNSUBSCRIBE:
 				{   // Do not send sensor data to driver anymore!!
-					subscriber = 0;
+					if ( recv.data1 == train49 ) {
+						train49sub = 0;
+					} else if ( recv.data1 == train45 ) {
+						train45sub = 0;
+					} else {
+						subscriber = 0;
+					}
 				}
 				break;
 			case UPDATE_STAT:
 				{
-					// myprintf( uart2XServer, COM2, "\033[7;1H\033[Ktrain1: %d, train2: %d\n", recv.data1,recv.data2);
-					// myprintf( uart2XServer, COM2, "Start %d, End: %d\n", recv.data1,recv.data2);
-
-					int i;
-					Sensor *sensors = recv.data1;
-					for ( i = 0; i < recv.data2; i++)
-					{
-						myprintf(uart2XServer, COM2, "sensor: %d, id: %d\n", sensors[i].index, recv.data3);
+					// myprintf( uart2XServer, COM2, "\033[31;1H\033[KRun For %d, Speed: %d, Distance:%d\n", recv.data1, recv.data2, recv.data3);
+					int l;
+					myprintf( uart2XServer, COM2, "\033[38;1H\033[K");
+					for ( l = ((Path *)recv.data1)->startIndex; l >= 0; l-- ) {
+						myprintf( uart2XServer, COM2, "%s ", track[((Path *)recv.data1)->path[l].index] );
 					}
+					myprintf( uart2XServer, COM2, "\033[33;%dH", cursor);
+
+					myprintf( uart2XServer, COM2, "\033[39;1H\033[K");
+					for ( l = ((Path *)recv.data1)->startIndex; l >= 0; l-- ) {
+						myprintf( uart2XServer, COM2, "%d ", ((Path *)recv.data1)->path[l].reverse );
+					}
+					myprintf( uart2XServer, COM2, "\033[33;%dH", cursor);
 				}
+				break;
+			case SPEED_NOPRINT:
+				{
+					Putc( uart1XServer, COM1, recv.data1 );
+					Putc( uart1XServer, COM1, recv.data2 );
+				}
+				break;
+			case GOTO_NOSPEED:
+				{
+					myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mSetting Train: %d Speed: %d Loc: %s\n", recv.data2, recv.data1, track[recv.data3].name );
+					myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+					cursor = 4;
+				}
+				break;
+			case DEBUG:
+				if ( recv.data4 == train49 ) {
+					myprintf( uart2XServer, COM2, "\033[34;1H\033[KTrain 49: How far: %d Offset: %d Speed: %d\033[33;%dH", recv.data1, recv.data2, recv.data3, cursor );
+				} else if ( recv.data4 == train45 ) {
+					myprintf( uart2XServer, COM2, "\033[35;1H\033[KTrain 45: How far: %d Offset: %d Speed: %d\033[33;%dH", recv.data1, recv.data2, recv.data3, cursor );
+				}
+				break;
+			case MARK_SENSOR:
+				if ( recv.data2 == train49 ) {
+					sensorTrain49.sensor = recv.data1;
+					myprintf( uart2XServer, COM2, "\033[40;1H\033[KStop at sensor %s train 49\033[33;%dH", track[recv.data1].name, cursor );
+				} else if ( recv.data2 == train45 ) {
+					sensorTrain45.sensor = recv.data1;
+					myprintf( uart2XServer, COM2, "\033[41;1H\033[KStop at sensor %s train 45\033[33;%dH", track[recv.data1].name, cursor );
+				}
+				break;
+			case SENSOR_QUERY:
+				reply.type == SENSOR_QUERY;
+				if ( sender == train49 ) {
+					if ( sensorStates[sensorTrain49.sensor] == 1 ) {
+						reply.data1 = ON_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[36;1H\033[KTrain 49 On Sensor\033[33;%dH", cursor );
+					} else if ( sensorTrain49.triggered == 1 ) {
+						reply.data1 = PASSED_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[36;1H\033[KTrain 49 Passed Sensor\033[33;%dH", cursor );
+					} else {
+						reply.data1 = NOT_PASSED_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[36;1H\033[KTrain 49 Have not hit Sensor\033[33;%dH", cursor );
+					}
+					sensorTrain49.sensor = -1;
+					sensorTrain49.triggered = 0;
+					Reply( sender, (char *)&reply, sizeof(ComReqStruct) );
+				} else if ( sender == train45 ) {
+					if ( sensorStates[sensorTrain45.sensor] == 1 ) {
+						reply.data1 = ON_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[37;1H\033[KTrain 45 On Sensor\033[33;%dH", cursor );
+					} else if ( sensorTrain45.triggered == 1 ) {
+						reply.data1 = PASSED_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[37;1H\033[KTrain 45 Passed Sensor\033[33;%dH", cursor );
+					} else {
+						reply.data1 = NOT_PASSED_SENSOR;
+						myprintf( uart2XServer, COM2, "\033[37;1H\033[KTrain 45 Have not hit Sensor\033[33;%dH", cursor );
+					}
+					sensorTrain45.sensor = -1;
+					sensorTrain45.triggered = 0;
+					Reply( sender, (char *)&reply, sizeof(ComReqStruct) );
+				}
+				break;
+			case DEBUG_AGAIN:
+				myprintf( uart2XServer, COM2, "\033[42;1H\033[KGot this %d and %d\033[33;%dH", recv.data1, recv.data2, cursor );
+				break;
+			case LINE_DEBUG:
+				myprintf( uart2XServer, COM2, "\033[%d;1H\033[KData1: %d, Data2: %d, Data3: %d\033[33;%dH", recv.data4, recv.data1, recv.data2, recv.data3, cursor );
 				break;
 		}
 
 		if ( stopping ) break;
 
-		if ( recv.type != WAITING_STOP ) {
+		if ( recv.type != WAITING_STOP && recv.type != SENSOR_QUERY ) {
 			reply.type = REQUEST_OK;
 			Reply( sender, (char *)&reply, sizeof(ComReqStruct) );
 		}
@@ -740,13 +895,23 @@ void admin() {
 	Create( 2, func );
 
 	func = Printer;
-	Create( 3, func );
+	int ptr = Create( 3, func );
 
 	func = routeFinder;
 	Create( 3, func );
 	func = trainDriver;
 	int tid1 = Create( 3, func );
 	int tid2 = Create( 3, func );
+
+	send.data1 = 49;
+	Send(tid1, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
+
+	send.data2 = 45;
+	Send(tid2, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
+
+	send.data1 = tid1;
+	send.data2 = tid2;
+	Send(ptr, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct));
 
 	func = Train;
 	Create( 4, func );
@@ -779,10 +944,11 @@ void admin() {
 					requests[endIndex].data1 = reply.data1;
 					requests[endIndex].data2 = reply.data2;
 					requests[endIndex].data3 = reply.data3;
+					requests[endIndex].data4 = reply.data4;
 					endIndex = (endIndex + 1) % MAX_REQUESTS;
 				}
 				send.type = REQUEST_OK;
-				Reply( sender, (char *)&send.type, sizeof(ComReqStruct) );
+				Reply( sender, (char *)&send, sizeof(ComReqStruct) );
 		}
 	}
 }
@@ -794,9 +960,9 @@ void T2(){
 	}
 }
 
-// //-----------------------------------------------------------------------------------------------
-// //	First user task that will be placed by the kernel into the priority queue
-// //-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+//	First user task that will be placed by the kernel into the priority queue
+//-----------------------------------------------------------------------------------------------
 void firstUserTask(){
 	void (*func)();
 	func = nameServer;

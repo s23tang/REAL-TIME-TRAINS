@@ -43,6 +43,7 @@ void nameServer() {
     serverTable[UART2XMIT_S].name 	= "u2x";
     serverTable[ROUTE_FINDER].name  = "route";
     serverTable[DRIVER].name  = "driver";
+    serverTable[PRINTER].name = "printer";
     serverTable[MONITOR].name = "monitor";
 
     int senderTid;
@@ -93,12 +94,15 @@ void nameServer() {
                         reply.type = REQUEST_OK;
                         serverIndex = DRIVER;
                         serverTable[serverIndex].tid = senderTid;
-                    } else if (reqName[0] == 'm') {
+                    } else if (reqName[0] == 'p' ) {
+                        reply.type = REQUEST_OK;
+                        serverIndex = PRINTER;
+                        serverTable[serverIndex].tid = senderTid;
+                    } else if (reqName[0] == 'm' ) {
                         reply.type = REQUEST_OK;
                         serverIndex = MONITOR;
                         serverTable[serverIndex].tid = senderTid;
-                    }
-                    else {
+                    } else {
                     	reply.type = REQUEST_BAD;
                     }
 
@@ -138,11 +142,15 @@ void nameServer() {
                         reply.type = REQUEST_OK;
                         serverIndex = DRIVER;
                         reply.tid = serverTable[serverIndex].tid;
-                    } else if (reqName[0] == 'm') {
+                    } else if (reqName[0] == 'p' ) {
+                        reply.type = REQUEST_OK;
+                        serverIndex = PRINTER;
+                        reply.tid = serverTable[serverIndex].tid;
+                    } else if (reqName[0] == 'm' ) {
                         reply.type = REQUEST_OK;
                         serverIndex = MONITOR;
                         reply.tid = serverTable[serverIndex].tid;
-                    }else {
+                    } else {
                     	reply.type = REQUEST_BAD;
                     }
 

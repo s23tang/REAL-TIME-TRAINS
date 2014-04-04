@@ -104,7 +104,7 @@ void initSensors(track_node *track, Sensor *sensors, int *numOfSensors){
 int checkReserved(int index, Sensor* sensors, int sender, track_node* track){
 	// find the reverse side of the sensor and see if it's reserved
 	track_node *reverse = track[index].reverse;
-	if (sensors[reverse->num].reserved == 1)
+	if (sensors[reverse->num].reserved == 1 && sensors[reverse->num].reservedBy != sender )
 	{
 		return 1;
 	}	
@@ -162,6 +162,19 @@ void reserveSensor(int index, Sensor *sensors, int sender){
 	}
 }
 
+// check if a sensor is along the path
+int isInPath(int triggeredSensor, Path *path){
+	int searchPos = path->startIndex;
+	for (; searchPos >= 0; searchPos--)
+	{
+		if (path->path[searchPos].index == triggeredSensor)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void trackMonitor(){
 	// initialize
 	track_node track[TRACK_MAX];
@@ -174,6 +187,8 @@ void trackMonitor(){
 	int trains[2];
 	trains[0] = 0;
 	trains[1] = 0;
+	Path *train1Path;
+	Path *train2Path;
 	Path paths[2];
 	int expectedSensor[2];
 	int expectedTime[2];
@@ -190,6 +205,9 @@ void trackMonitor(){
 	initSensors(track, sensors, &numOfSensors);
 	initBranches(branches);
 
+	int times = 1;
+	int times2 = 1;
+
 	FOREVER {
 		Receive( &sender, (char*)&send, sizeof(ComReqStruct));
 		switch(send.type) {
@@ -200,10 +218,12 @@ void trackMonitor(){
 						trains[0] = sender; // subscribe the train driver
 						expectedSensor[0] = send.data1;
 						expectedTime[0] = send.data2;
+						train1Path = send.data3;
 					} else if(trains[1] == 0 || sender == trains[1]){
 						trains[1] = sender;
 						expectedSensor[1] = send.data1;
 						expectedTime[1] = send.data2;
+						train2Path = send.data3;
 					}
 					// subscribe to the printer for sensor trigger
 					send.type  = SUBSCRIBE;
@@ -229,17 +249,20 @@ void trackMonitor(){
 					int triggeredSensor = send.data1;
 					int curTime = Time(clkServer);
 					// find out who should I send the trigger data to
-					if (expectedSensor[0] == triggeredSensor && expectedTime[0] >= curTime - 200 && expectedTime[0] <= curTime + 200)
+// bwprintf(COM2, "qqqqq");
+					if (expectedSensor[0] == triggeredSensor && expectedTime[0] >= curTime - 300 && expectedTime[0] <= curTime + 300)
 					{
 						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-					} else if(expectedSensor[1] == triggeredSensor && expectedTime[1] >= curTime - 200 && expectedTime[1] <= curTime + 200) {
+					} else if(expectedSensor[1] == triggeredSensor && expectedTime[1] >= curTime - 300 && expectedTime[1] <= curTime + 300) {
 						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-					}else if (trains[0] != 0 && expectedSensor[0] == -1)  // subscribed and not yet received
+					}
+					else if (trains[0] != 0 && expectedSensor[0] == -1)  // subscribed and not yet received
 					{
 						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 					} else if (trains[1] != 0 && expectedSensor[1] == -1){
 						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-					} 
+					} else {
+					}
 					reply.type = REQUEST_OK;
 					// some one go to the wrong place
 					// NEED TO IMPLEMENT HERE!!!!!!
@@ -248,18 +271,38 @@ void trackMonitor(){
 				break;
 			case SENSOR_UNSUBSCRIBE:
 				{
-					if(trains[0] == 0 || sender == trains[0]) {
+
+					if(sender == trains[0]) {
+						// ComReqStruct fo, real;
+						// fo.type = LINE_DEBUG;
+						// fo.data4 = 45;
+						// fo.data1 = times;
+						// fo.data2 = 66666666;
+						// fo.data3 = 55555555;
+						// Send( myAdmin, (char *)&fo, sizeof(ComReqStruct), (char *)&real, sizeof(ComReqStruct) );
+						// times++;
+
 						// no trains has unsubscribe yet
 						trains[0] = 0; // unsubscribe the train driver
 						expectedSensor[0] = -1;
 						expectedTime[0] = -1;
-					} else if(trains[1] == 0 || sender == trains[1]){
+					} else if(sender == trains[1]){
+						// ComReqStruct fo, real;
+						// fo.type = LINE_DEBUG;
+						// fo.data4 = 46;
+						// fo.data1 = times2;
+						// fo.data2 = 88888888;
+						// fo.data3 = 77777777;
+						// Send( myAdmin, (char *)&fo, sizeof(ComReqStruct), (char *)&real, sizeof(ComReqStruct) );
+						// times2++;
+
 						trains[1] = 0;
 						expectedSensor[1] = -1;
 						expectedTime[1] = -1;
 					}
-					send.type  = SENSOR_UNSUBSCRIBE;
-					Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+
+					// send.type  = SENSOR_UNSUBSCRIBE;
+					// Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 					reply.type = REQUEST_OK;
 				}
 				break;
@@ -274,7 +317,7 @@ void trackMonitor(){
 					int foundReserved = 0;
 					// check if any sensor is reserved
 					for( i = 0; i < numOfRequest; i++) {
-						if (checkReserved(requestSensors[i].index, sensors,requestSensors[i].reservedBy, track))
+						if (checkReserved(requestSensors[i].index, sensors, sender, track))
 						{	// reserved by someone else
 							foundReserved = 1;
 							break;
@@ -306,6 +349,9 @@ void trackMonitor(){
 					}
 				}
 				break; 
+			case RELEASE_ALL:
+				releaseAllMyReservation(sender, sensors, branches);
+				break;
 		}
 		Reply(sender, (char *)&reply, sizeof(ComReqStruct));
 	}
