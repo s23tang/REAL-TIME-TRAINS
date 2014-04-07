@@ -52,6 +52,8 @@
 #define DEBUG_AGAIN			25
 #define LINE_DEBUG			26
 #define TRAIN_NUM			27
+#define CATCH_COMMAND       28
+#define KEEP_RUNNING        29
 
 #define DATA_BUFFER			50
 #define MAX_REQUESTS		100

@@ -197,6 +197,9 @@ void trackMonitor(){
 	Path paths[2];
 	int expectedSensor[2];
 	int expectedTime[2];
+	int train1Loc = -1;  // the sensor that train1 last trigger
+	int train2Loc = -2;	 // the sensor that train1 last trigger
+	int needSwap = 0;
 
 	init_tracka(track);
 	RegisterAs( "monitor" );
@@ -257,19 +260,37 @@ void trackMonitor(){
 					if (expectedSensor[0] == triggeredSensor && expectedTime[0] >= curTime - 300 && expectedTime[0] <= curTime + 300)
 					{
 						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train1Loc = triggeredSensor;
 					} else if(expectedSensor[1] == triggeredSensor && expectedTime[1] >= curTime - 300 && expectedTime[1] <= curTime + 300) {
 						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train2Loc = triggeredSensor;
 					}
 					else if (trains[0] != 0 && expectedSensor[0] == -1 && !isInPath(triggeredSensor, train2Path))  // subscribed and not yet received
 					{
 						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train1Loc = triggeredSensor;
 					} else if (trains[1] != 0 && expectedSensor[1] == -1 && !isInPath(triggeredSensor, train1Path)){
 						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
-					} else if ( isInPath(triggeredSensor, train1Path) ) {
+						train2Loc = triggeredSensor;
+					} else if (expectedSensor[0] == triggeredSensor){
 						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train1Loc = triggeredSensor;
+					} else if (expectedSensor[1] == triggeredSensor){
+						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train2Loc = triggeredSensor;
+					}else if ( isInPath(triggeredSensor, train1Path) ) {
+						Send( trains[0], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train1Loc = triggeredSensor;
 					} else if ( isInPath(triggeredSensor, train2Path) ) {
 						Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+						train2Loc = triggeredSensor;
+
 					} else {
+						if (trains[1] != 0)
+						{
+							Send( trains[1], (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+							train2Loc = triggeredSensor;
+						}
 					}
 					reply.type = REQUEST_OK;
 					// some one go to the wrong place
@@ -363,6 +384,19 @@ void trackMonitor(){
 			case ARRAY_ADDRESS:
 				reply.data1 = &sensors;
 				reply.data2 = &branches;
+				break;
+			case TARGET_LOC:
+				{
+					int target = send.data1; 
+					if (target == 1) // request for train1's location
+					{
+						reply.data1 = train1Loc;
+						reply.data2 = train2Loc;
+					} else {
+						reply.data1 = train2Loc;
+						reply.data2 = train1Loc;
+					}
+				}
 				break;
 		}
 		Reply(sender, (char *)&reply, sizeof(ComReqStruct));

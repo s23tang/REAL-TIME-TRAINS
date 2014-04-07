@@ -165,7 +165,45 @@ void Terminal() {
 								}
 							}
 						}
-					} else if ( input[i] == 'r' && input[i+1] == 'v' ) {
+					} 
+	                else if ( input[i] == 'c' && input[i + 1] == 'a')
+                    {
+                        int train = -1;
+                        int target = -1;
+                        for (i = i + 2; i < inputIndex; i++)
+                        {
+                            if ( input[i] != ' ')
+                            {
+                                train = input[i + 1] - NUM_OFFSET + ( input[i] - NUM_OFFSET) * 10;
+                                target = input[i + 4] - NUM_OFFSET + ( input[i + 3] - NUM_OFFSET) * 10;
+                                
+
+                                if (train == 49)
+                                {
+                                    send.type = KEEP_RUNNING;
+                                    send.data1 = target;
+                                    Send( train2, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+                                	send.type = CATCH_COMMAND;
+	                                send.data1 = train;
+	                                send.data2 = target;
+                                    Send( train1, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+                                }
+                                else if (train == 45)
+                                {
+                                	send.type = KEEP_RUNNING;
+                                	send.data1 = target;
+                                    Send( train1, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+                                    send.type = CATCH_COMMAND;
+	                                send.data1 = train;
+	                                send.data2 = target;
+                                    Send( train2, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
+	                                
+                                }
+                                break;
+                            }
+                        }
+
+                    }else if ( input[i] == 'r' && input[i+1] == 'v' ) {
 						int train = -1;
 						int cmdBad = -1;
 						for ( i = i+2; i < inputIndex; i++ ) {
@@ -302,7 +340,7 @@ void Terminal() {
 			input[inputIndex] = c;
 			inputIndex++;
 		}
-		if (send.type != GOTO_COMMAND)
+		if (send.type != GOTO_COMMAND && send.type != CATCH_COMMAND)
 		{	// We want the trainDriver to send the command itself
 			Send( myAdmin, (char *)&send, sizeof(ComReqStruct), (char *)&reply, sizeof(ComReqStruct) );
 		}
@@ -478,8 +516,6 @@ void Printer( ) {
 	// 	myprintf( uart2XServer, COM2, "\033[6;%dHC", pos);
 	// }
 	// myprintf( uart2XServer, COM2, "\033[0m" );
-
-
 
 	myprintf( uart2XServer, COM2, "\033[32;1H\033[K\033[32mLoading, Please Wait\n\033[0m\033[33;4H");
 	Delay( clk, 300 );
@@ -716,6 +752,15 @@ void Printer( ) {
 					}
 				}
 				break;
+	        case CATCH_COMMAND:
+		        {
+		            int train = recv.data1;
+		            int target = recv.data2;
+		            myprintf(uart2XServer, COM2, "\033[32;1H\033[K\033[32mTrain %d catch train %d\n", train, target);
+		            myprintf( uart2XServer, COM2, "\033[0m\033[33;4H\033[K" );
+		            cursor = 4;
+		        }
+		        break;
 			case REVERSE_COMMAND:
 				{
 					int loc = recv.data1;

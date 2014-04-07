@@ -5,6 +5,8 @@
 #define UPDATE_LOCATION 4
 #define RELEASE_ALL		5
 #define ARRAY_ADDRESS	6
+#define TARGET_LOC      7
+#define SWAP            8
 
 // typedef struct Edge Edge;
 typedef struct Sensor Sensor;
