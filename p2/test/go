@@ -1,6 +1,6 @@
 make clean
 make mt=30 mp=10
-rm /u/cs452/tftp/ARM/wt/mod.elf
-cp wtA4.elf /u/cs452/tftp/ARM/wt/mod.elf
-chmod a+rw /u/cs452/tftp/ARM/wt/mod.elf
-chgrp cs452_05 /u/cs452/tftp/ARM/wt/mod.elf
+rm /u/cs452/tftp/ARM/wt/p2.elf
+cp wtA4.elf /u/cs452/tftp/ARM/wt/p2.elf
+chmod a+rw /u/cs452/tftp/ARM/wt/p2.elf
+chgrp cs452_05 /u/cs452/tftp/ARM/wt/p2.elf
